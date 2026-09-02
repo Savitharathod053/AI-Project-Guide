@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}Student Dashboard — ProjectGuard{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+    <!-- Header with Quick Action -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">Student Project Dashboard</h2>
+            <p class="text-muted small mb-0">Welcome back, <span class="fw-semibold text-dark">{{ current_user.name }}</span>! Track milestone health and failure risks in real-time.</p>
+        </div>
+        <a href="{{ url_for('student.create_project') }}" class="btn btn-primary shadow-sm">
+            <i class="fas fa-plus-circle me-1"></i> Create New Project
+        </a>
+    </div>
+
+    <!-- Early Warning Alerts -->
+    {% if alerts %}
+        {% for alert in alerts %}
+            <div class="alert alert-warning border-warning border-2 shadow-sm d-flex justify-content-between align-items-center mb-4 p-3 rounded-3" role="alert">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="fs-3 text-warning"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div>
+                        <div class="fw-bold text-dark mb-0">⚠️ PROJECT RISK INCREASED (+{{ alert.risk_jump }}%) — {{ alert.project.project_name }}</div>
+                        <div class="small text-muted">{{ alert.message }}</div>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('student.project_detail', project_id=alert.project.id) }}" class="btn btn-warning btn-sm fw-semibold">View Project</a>
+                    <form method="POST" action="{{ url_for('student.mark_alert_read', alert_id=alert.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <button type="submit" class="btn btn-outline-secondary btn-sm">Dismiss</button>
+                    </form>
+                </div>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Overall Statistics Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4 col-lg">
+            <div class="card card-modern card-stat p-3">
+                <div class="text-muted small fw-semibold text-uppercase">Total Projects</div>
+                <div class="fs-3 fw-bold text-dark mt-1">{{ stats.total }}</div>
+            </div>
+        </div>
+        <div class="col-md-4 col-lg">
+            <div class="card card-modern card-stat stat-low p-3">
+                <div class="text-muted small fw-semibold text-uppercase">Low Risk</div>
+                <div class="fs-3 fw-bold text-success mt-1">{{ stats.low }}</div>
+            </div>
+        </div>
+        <div class="col-md-4 col-lg">
+            <div class="card card-modern card-stat stat-mod p-3">
+                <div class="text-muted small fw-semibold text-uppercase">Moderate Risk</div>
+                <div class="fs-3 fw-bold text-warning mt-1">{{ stats.moderate }}</div>
+            </div>
+        </div>
+        <div class="col-md-4 col-lg">
+            <div class="card card-modern card-stat stat-high p-3">
+                <div class="text-muted small fw-semibold text-uppercase">High Risk</div>
+                <div class="fs-3 fw-bold text-orange mt-1" style="color: #ea580c;">{{ stats.high }}</div>
+            </div>
+        </div>
+        <div class="col-md-4 col-lg">
+            <div class="card card-modern card-stat stat-crit p-3">
+                <div class="text-muted small fw-semibold text-uppercase">Critical Risk</div>
+                <div class="fs-3 fw-bold text-danger mt-1">{{ stats.critical }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Projects Grid -->
+    <h4 class="fw-bold mb-3"><i class="fas fa-folder-open text-primary me-2"></i> My Projects</h4>
+
+    {% if project_cards %}
+        <div class="row g-4">
+            {% for item in project_cards %}
+                {% set p = item.project %}
+                {% set prog = item.latest_progress %}
+                {% set pred = item.latest_prediction %}
+                
+                <div class="col-lg-6">
+                    <div class="card card-modern h-100 p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <span class="badge bg-light text-dark border mb-1">{{ p.domain }}</span>
+                                <h5 class="fw-bold mb-1">
+                                    <a href="{{ url_for('student.project_detail', project_id=p.id) }}" class="text-decoration-none text-dark">
+                                        {{ p.project_name }}
+                                    </a>
+                                </h5>
+                                <div class="text-muted small">
+                                    <i class="far fa-calendar-alt me-1"></i> Deadline: <span class="fw-semibold text-dark">{{ p.deadline.strftime('%b %d, %Y') }}</span>
+                                    • Team: {{ p.team_size }}
+                                </div>
+                            </div>
+                            
+                            <!-- Risk Badge -->
+                            <div>
+                                {% if item.risk_level == "LOW" %}
+                                    <span class="badge badge-risk-low px-3 py-2">LOW RISK</span>
+                                {% elif item.risk_level == "MODERATE" %}
+                                    <span class="badge badge-risk-moderate px-3 py-2">MODERATE RISK</span>
+                                {% elif item.risk_level == "HIGH" %}
+                                    <span class="badge badge-risk-high px-3 py-2">HIGH RISK</span>
+                                {% elif item.risk_level == "CRITICAL" %}
+                                    <span class="badge badge-risk-critical px-3 py-2">CRITICAL RISK</span>
+                                {% else %}
+                                    <span class="badge bg-secondary px-3 py-2">UNASSESSED</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Progress Bar -->
+                        <div class="my-3">
+                            <div class="d-flex justify-content-between small fw-semibold mb-1">
+                                <span>Milestone Progress</span>
+                                <span>{{ prog.progress_percentage if prog else 0 }}%</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-primary" role="progressbar" style="width: {{ prog.progress_percentage if prog else 0 }}%;"></div>
+                            </div>
+                        </div>
+
+                        <!-- Risk Breakdown & Velocity -->
+                        <div class="p-3 bg-light rounded-3 mb-3">
+                            <div class="row text-center g-2">
+                                <div class="col-6 border-end">
+                                    <div class="small text-muted">Success Probability</div>
+                                    <div class="fs-5 fw-bold text-success">{{ item.success_probability }}%</div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="small text-muted">Failure Risk</div>
+                                    <div class="fs-5 fw-bold text-danger">{{ item.failure_probability }}%</div>
+                                </div>
+                            </div>
+
+                            {% if item.risk_delta is not none %}
+                                <hr class="my-2 border-secondary border-opacity-25">
+                                <div class="text-center small">
+                                    {% if item.risk_delta < 0 %}
+                                        <span class="text-success fw-semibold"><i class="fas fa-arrow-down me-1"></i> Risk decreased {{ item.risk_delta|abs }}% since last milestone</span>
+                                    {% elif item.risk_delta > 0 %}
+                                        <span class="text-danger fw-semibold"><i class="fas fa-arrow-up me-1"></i> Risk increased +{{ item.risk_delta }}% since last milestone</span>
+                                    {% else %}
+                                        <span class="text-muted"><i class="fas fa-minus me-1"></i> Risk unchanged since last milestone</span>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Card Action Buttons -->
+                        <div class="d-flex flex-wrap gap-2 mt-auto">
+                            <a href="{{ url_for('student.project_detail', project_id=p.id) }}" class="btn btn-outline-dark btn-sm flex-fill">
+                                <i class="fas fa-eye me-1"></i> View Workspace
+                            </a>
+                            <a href="{{ url_for('student.project_detail', project_id=p.id, _anchor='tasks-tab') }}" class="btn btn-primary btn-sm flex-fill">
+                                <i class="fas fa-tasks me-1"></i> Manage Tasks
+                            </a>
+                            <a href="{{ url_for('student.what_if_simulator', project_id=p.id) }}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-sliders-h me-1"></i> What-If
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="card card-modern p-5 text-center my-4">
+            <div class="text-muted fs-1 mb-3"><i class="fas fa-folder-plus"></i></div>
+            <h4 class="fw-bold">No Projects Registered Yet</h4>
+            <p class="text-muted small max-w-md mx-auto mb-4">
+                Start tracking your academic project risk now by adding your capstone or mini-project.
+            </p>
+            <div>
+                <a href="{{ url_for('student.create_project') }}" class="btn btn-primary px-4 py-2">
+                    <i class="fas fa-plus-circle me-1"></i> Create Your First Project
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

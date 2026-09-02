@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Analyze & Start Project with AI — ProjectGuard{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="text-center mb-4">
+                <span class="brand-shield mb-2" style="font-size: 1.8rem;"><i class="fas fa-brain"></i></span>
+                <h2 class="fw-bold mt-2">Describe Your Academic Project</h2>
+                <p class="text-muted small max-w-lg mx-auto">
+                    You don't need to write a complex project plan manually. Just enter your project title and what you want to build. <strong>ProjectGuard's AI Mentor</strong> will analyze requirements, identify components, and generate your development tasks.
+                </p>
+            </div>
+
+            <div class="card card-modern p-4 p-md-5 border-0 shadow-sm">
+                <form method="POST" id="aiProjectForm">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+                    <div class="mb-4">
+                        <label for="project_name" class="form-label fw-semibold">
+                            <i class="fas fa-heading text-primary me-1"></i> Project Title <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" class="form-control form-control-lg fs-6" id="project_name" name="project_name" placeholder="e.g. AI-Based Attendance System with Voice Commands" required autofocus>
+                        <div class="form-text small">Give your capstone or academic project a concise, descriptive title.</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="description" class="form-label fw-semibold">
+                            <i class="fas fa-align-left text-primary me-1"></i> Project Description & Goals <span class="text-danger">*</span>
+                        </label>
+                        <textarea class="form-control" id="description" name="description" rows="6" placeholder="Describe the application you want to build, user roles, main features, and target technologies...&#10;&#10;Example:&#10;I want to build a web application where faculty can mark student attendance using voice commands. Students should be able to log in, view their attendance percentage, and download monthly summary reports." required></textarea>
+                        <div class="form-text small">The AI analyzes your description to identify architecture layers, database needs, ML components, testing requirements, and viva defense items.</div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label for="deadline" class="form-label small fw-semibold">Target Evaluation Deadline (Optional)</label>
+                            <input type="date" class="form-control" id="deadline" name="deadline">
+                            <div class="form-text small">Default: 90 days from today.</div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 pt-3 border-top">
+                        <button type="submit" class="btn btn-primary btn-lg py-3 fw-bold shadow-sm" id="btnAnalyze">
+                            <i class="fas fa-magic me-2"></i> Analyze My Project & Generate Tasks
+                        </button>
+                        <a href="{{ url_for('student.dashboard') }}" class="btn btn-outline-secondary py-2">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+
+                <!-- Loading State (hidden by default) -->
+                <div id="loadingOverlay" class="text-center py-4 d-none">
+                    <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;" role="status"></div>
+                    <h5 class="fw-bold text-dark">AI Mentor is analyzing your project requirements...</h5>
+                    <p class="text-muted small">Generating database schemas, backend logic, testing requirements, and milestone tasks.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById("aiProjectForm").addEventListener("submit", function() {
+        document.getElementById("btnAnalyze").disabled = true;
+        document.getElementById("btnAnalyze").innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> AI Analyzing Project...';
+    });
+</script>
+{% endblock %}

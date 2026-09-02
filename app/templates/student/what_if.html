@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}What-If Scenario Simulator — {{ project.project_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+    <!-- Breadcrumbs & Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1 small">
+                    <li class="breadcrumb-item"><a href="{{ url_for('student.dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('student.project_detail', project_id=project.id) }}">{{ project.project_name }}</a></li>
+                    <li class="breadcrumb-item active">What-If Analysis</li>
+                </ol>
+            </nav>
+            <h2 class="fw-bold mb-0"><i class="fas fa-sliders-h text-primary me-2"></i> What-If Scenario Simulator</h2>
+            <p class="text-muted small mb-0">
+                Simulate hypothetical adjustments (e.g. boosting testing or clearing delayed tasks) using the live ML model without altering your stored project data.
+            </p>
+        </div>
+        <a href="{{ url_for('student.project_detail', project_id=project.id) }}" class="btn btn-outline-secondary btn-sm">
+            <i class="fas fa-arrow-left me-1"></i> Back to Project
+        </a>
+    </div>
+
+    <!-- Comparison Summary Card -->
+    <div class="card card-modern p-4 mb-4 border-0 shadow-sm">
+        <div class="row align-items-center g-4">
+            <!-- Current Baseline -->
+            <div class="col-md-5 text-center border-md-end">
+                <span class="badge bg-secondary bg-opacity-10 text-secondary px-3 py-1 rounded-pill mb-2">CURRENT BASELINE</span>
+                <div class="d-flex justify-content-center align-items-center gap-3 my-2">
+                    <div>
+                        <div class="text-muted small">Failure Risk</div>
+                        <div class="display-6 fw-bold text-danger">{{ prediction.failure_probability if prediction else 0 }}%</div>
+                    </div>
+                    <div class="border-end py-3"></div>
+                    <div>
+                        <div class="text-muted small">Success Prob</div>
+                        <div class="display-6 fw-bold text-success">{{ prediction.success_probability if prediction else 0 }}%</div>
+                    </div>
+                </div>
+                <div>
+                    <span class="badge {{ prediction.risk_level }} badge-risk-{{ prediction.risk_level.lower() if prediction else 'low' }} px-3 py-1">
+                        {{ prediction.risk_level if prediction else 'NOT ASSESSED' }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Simulated Scenario -->
+            <div class="col-md-7 text-center">
+                <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-1 rounded-pill mb-2">SIMULATED SCENARIO</span>
+                <div class="d-flex justify-content-center align-items-center gap-3 my-2">
+                    <div>
+                        <div class="text-muted small">Simulated Failure Risk</div>
+                        <div class="display-6 fw-bold text-danger" id="sim-fail-prob">--%</div>
+                    </div>
+                    <div class="border-end py-3"></div>
+                    <div>
+                        <div class="text-muted small">Simulated Success</div>
+                        <div class="display-6 fw-bold text-success" id="sim-success-prob">--%</div>
+                    </div>
+                </div>
+                <div>
+                    <span id="sim-risk-badge" class="badge badge-risk-low px-3 py-1 fs-6">CALCULATING...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dynamic Risk Delta Banner -->
+    <div id="risk-delta-container" class="alert alert-secondary d-flex align-items-center mb-4">
+        <i class="fas fa-chart-line fs-4 me-3"></i>
+        <div id="risk-delta-text">Adjust the sliders below to view real-time ML risk simulation.</div>
+    </div>
+
+    <!-- Simulation Controls Grid -->
+    <div class="row g-4 mb-4">
+        <!-- Sliders Form Column -->
+        <div class="col-lg-6">
+            <div class="card card-modern p-4">
+                <h5 class="fw-bold border-bottom pb-2 mb-4 text-primary">
+                    <i class="fas fa-edit me-1"></i> Interactive Scenario Parameters
+                </h5>
+
+                <form id="what-if-form" data-project-id="{{ project.id }}">
+                    <!-- Hidden baseline defaults -->
+                    <input type="hidden" id="slider-total-tasks" value="{{ progress.total_tasks if progress else 15 }}">
+                    <input type="hidden" id="select-difficulty" value="{{ project.technology_difficulty }}">
+                    <input type="hidden" id="slider-presentation" value="{{ progress.presentation_percentage if progress else 0 }}">
+
+                    <!-- Completed Tasks Slider -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="form-label small fw-semibold mb-0">Completed Tasks (out of {{ progress.total_tasks if progress else 15 }})</label>
+                            <span class="badge bg-primary" id="badge-completed-tasks">{{ progress.completed_tasks if progress else 4 }}</span>
+                        </div>
+                        <input type="range" class="form-range slider-styled" id="slider-completed-tasks" min="0" max="{{ progress.total_tasks if progress else 15 }}" step="1" value="{{ progress.completed_tasks if progress else 4 }}">
+                        <div class="d-flex justify-content-between small text-muted">
+                            <span>0 tasks</span>
+                            <span>Calculated Progress: <strong id="badge-calc-progress" class="text-primary">{{ progress.progress_percentage if progress else 20 }}%</strong></span>
+                            <span>{{ progress.total_tasks if progress else 15 }} tasks</span>
+                        </div>
+                    </div>
+
+                    <!-- Delayed Tasks Slider -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="form-label small fw-semibold mb-0">Delayed / Blocked Tasks</label>
+                            <span class="badge bg-danger" id="badge-delayed-tasks">{{ progress.delayed_tasks if progress else 0 }}</span>
+                        </div>
+                        <input type="range" class="form-range slider-styled" id="slider-delayed-tasks" min="0" max="15" step="1" value="{{ progress.delayed_tasks if progress else 0 }}">
+                        <div class="form-text small">Simulate resolving blockers vs accumulating delayed milestones.</div>
+                    </div>
+
+                    <!-- Testing Percentage Slider -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="form-label small fw-semibold mb-0">Testing Coverage Percentage</label>
+                            <span class="badge bg-info text-dark" id="badge-testing">{{ progress.testing_percentage if progress else 15 }}%</span>
+                        </div>
+                        <input type="range" class="form-range slider-styled" id="slider-testing" min="0" max="100" step="5" value="{{ progress.testing_percentage if progress else 15 }}">
+                    </div>
+
+                    <!-- Documentation Percentage Slider -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="form-label small fw-semibold mb-0">Documentation Completed</label>
+                            <span class="badge bg-secondary" id="badge-doc">{{ progress.documentation_percentage if progress else 20 }}%</span>
+                        </div>
+                        <input type="range" class="form-range slider-styled" id="slider-doc" min="0" max="100" step="5" value="{{ progress.documentation_percentage if progress else 20 }}">
+                    </div>
+
+                    <!-- Bugs Slider -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="form-label small fw-semibold mb-0">Known Software Bugs</label>
+                            <span class="badge bg-warning text-dark" id="badge-bugs">{{ progress.bugs if progress else 2 }}</span>
+                        </div>
+                        <input type="range" class="form-range slider-styled" id="slider-bugs" min="0" max="25" step="1" value="{{ progress.bugs if progress else 2 }}">
+                    </div>
+
+                    <!-- Days Remaining Slider -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="form-label small fw-semibold mb-0">Timeline Buffer / Days Remaining</label>
+                            <span class="badge bg-dark" id="badge-days">{{ derived.days_remaining if derived else 30 }} days</span>
+                        </div>
+                        <input type="range" class="form-range slider-styled" id="slider-days" min="1" max="120" step="1" value="{{ derived.days_remaining if derived else 30 }}">
+                    </div>
+
+                    <!-- Team Collaboration Slider -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="form-label small fw-semibold mb-0">Team Collaboration Rating (1.0 to 5.0)</label>
+                            <span class="badge bg-success" id="badge-collab">{{ progress.collaboration_rating if progress else 4.0 }}/5.0</span>
+                        </div>
+                        <input type="range" class="form-range slider-styled" id="slider-collab" min="1.0" max="5.0" step="0.1" value="{{ progress.collaboration_rating if progress else 4.0 }}">
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Simulated AI Insights Column -->
+        <div class="col-lg-6">
+            <!-- Simulated Risk Factors -->
+            <div class="card card-modern p-4 mb-4">
+                <h5 class="fw-bold mb-3"><i class="fas fa-search-plus text-primary me-2"></i> Simulated Risk Factors</h5>
+                <div id="sim-factors-list">
+                    <p class="text-muted small">Adjust parameters on the left to observe risk drivers.</p>
+                </div>
+            </div>
+
+            <!-- Simulated Action Recommendations -->
+            <div class="card card-modern p-4">
+                <h5 class="fw-bold mb-3"><i class="fas fa-lightbulb text-warning me-2"></i> Simulated Action Plan</h5>
+                <ul id="sim-recommendations-list" class="list-group list-group-flush">
+                    <li class="list-group-item px-0 text-muted small">Loading simulated action plan...</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- What-If Live Simulator JS -->
+<script src="{{ url_for('static', filename='js/what_if.js') }}"></script>
+{% endblock %}

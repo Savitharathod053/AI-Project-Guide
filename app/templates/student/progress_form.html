@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}Log Progress Milestone — {{ project.project_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="d-flex align-items-center justify-content-between mb-4">
+                <div>
+                    <h3 class="fw-bold mb-1">Update Project Progress</h3>
+                    <p class="text-muted small mb-0">Project: <span class="fw-semibold text-dark">{{ project.project_name }}</span></p>
+                </div>
+                <a href="{{ url_for('student.project_detail', project_id=project.id) }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i> Back to Project
+                </a>
+            </div>
+
+            <div class="card card-modern p-4 p-md-5">
+                <form method="POST" id="progressForm">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+                    <!-- Section: Task Progress -->
+                    <h5 class="fw-bold border-bottom pb-2 mb-3 text-primary">
+                        <i class="fas fa-tasks me-1"></i> 1. Task Breakdown & Milestones
+                    </h5>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label for="total_tasks" class="form-label small fw-semibold">Total Planned Tasks</label>
+                            <input type="number" class="form-control" id="total_tasks" name="total_tasks" min="1" max="100" value="{{ progress.total_tasks if progress else 15 }}" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="completed_tasks" class="form-label small fw-semibold">Completed Tasks</label>
+                            <input type="number" class="form-control" id="completed_tasks" name="completed_tasks" min="0" max="100" value="{{ progress.completed_tasks if progress else 3 }}" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="delayed_tasks" class="form-label small fw-semibold">Delayed / Blocked Tasks</label>
+                            <input type="number" class="form-control" id="delayed_tasks" name="delayed_tasks" min="0" max="50" value="{{ progress.delayed_tasks if progress else 0 }}" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label for="progress_percentage" class="form-label small fw-semibold mb-0">Overall Progress Percentage</label>
+                            <span class="badge bg-primary px-2" id="prog-pct-badge">{{ progress.progress_percentage if progress else 20 }}%</span>
+                        </div>
+                        <input type="range" class="form-range slider-styled" id="progress_percentage" name="progress_percentage" min="0" max="100" step="1" value="{{ progress.progress_percentage if progress else 20 }}">
+                        <div class="form-text small">Tip: Changing completed tasks will auto-suggest this value.</div>
+                    </div>
+
+                    <!-- Section: Quality, Testing & Bugs -->
+                    <h5 class="fw-bold border-bottom pb-2 mb-3 text-primary">
+                        <i class="fas fa-vial me-1"></i> 2. Testing, Documentation & Bugs
+                    </h5>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <div class="d-flex justify-content-between mb-1">
+                                <label for="testing_percentage" class="form-label small fw-semibold mb-0">Testing Coverage Percentage</label>
+                                <span class="badge bg-info text-dark" id="testing-badge">{{ progress.testing_percentage if progress else 10 }}%</span>
+                            </div>
+                            <input type="range" class="form-range slider-styled" id="testing_percentage" name="testing_percentage" min="0" max="100" step="1" value="{{ progress.testing_percentage if progress else 10 }}">
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex justify-content-between mb-1">
+                                <label for="documentation_percentage" class="form-label small fw-semibold mb-0">Documentation Completed</label>
+                                <span class="badge bg-secondary" id="doc-badge">{{ progress.documentation_percentage if progress else 15 }}%</span>
+                            </div>
+                            <input type="range" class="form-range slider-styled" id="documentation_percentage" name="documentation_percentage" min="0" max="100" step="1" value="{{ progress.documentation_percentage if progress else 15 }}">
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <label for="bugs" class="form-label small fw-semibold">Known / Unresolved Bugs</label>
+                            <input type="number" class="form-control" id="bugs" name="bugs" min="0" max="50" value="{{ progress.bugs if progress else 1 }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="presentation_percentage" class="form-label small fw-semibold">Presentation Prep %</label>
+                            <input type="number" class="form-control" id="presentation_percentage" name="presentation_percentage" min="0" max="100" value="{{ progress.presentation_percentage if progress else 0 }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="collaboration_rating" class="form-label small fw-semibold">Team Collaboration (1-5)</label>
+                            <input type="number" class="form-control" id="collaboration_rating" name="collaboration_rating" min="1" max="5" step="0.1" value="{{ progress.collaboration_rating if progress else 4.2 }}">
+                        </div>
+                    </div>
+
+                    <!-- Section: Work Notes -->
+                    <h5 class="fw-bold border-bottom pb-2 mb-3 text-primary">
+                        <i class="fas fa-sticky-note me-1"></i> 3. Milestone Notes & Summary
+                    </h5>
+
+                    <div class="mb-4">
+                        <label for="notes" class="form-label small fw-semibold">Work Completed During This Milestone</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Describe the modules developed, unit tests added, or blockers faced...">{{ progress.notes if progress else '' }}</textarea>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                        <a href="{{ url_for('student.project_detail', project_id=project.id) }}" class="btn btn-light px-4">Cancel</a>
+                        <button type="submit" class="btn btn-primary px-4 fw-semibold">
+                            <i class="fas fa-robot me-1"></i> Submit Progress & Compute AI Risk
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const totalTasksInput = document.getElementById("total_tasks");
+        const completedTasksInput = document.getElementById("completed_tasks");
+        const progRange = document.getElementById("progress_percentage");
+        const progBadge = document.getElementById("prog-pct-badge");
+        const testRange = document.getElementById("testing_percentage");
+        const testBadge = document.getElementById("testing-badge");
+        const docRange = document.getElementById("documentation_percentage");
+        const docBadge = document.getElementById("doc-badge");
+
+        // Sync slider labels
+        progRange.addEventListener("input", (e) => progBadge.innerText = e.target.value + "%");
+        testRange.addEventListener("input", (e) => testBadge.innerText = e.target.value + "%");
+        docRange.addEventListener("input", (e) => docBadge.innerText = e.target.value + "%");
+
+        // Auto-calculate progress percentage when task numbers change
+        function autoCalcProgress() {
+            const total = parseInt(totalTasksInput.value) || 1;
+            const completed = parseInt(completedTasksInput.value) || 0;
+            const pct = Math.min(100, Math.round((completed / Math.max(1, total)) * 100));
+            progRange.value = pct;
+            progBadge.innerText = pct + "%";
+        }
+
+        completedTasksInput.addEventListener("change", autoCalcProgress);
+        totalTasksInput.addEventListener("change", autoCalcProgress);
+    });
+</script>
+{% endblock %}

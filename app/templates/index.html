@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+
+{% block title %}ProjectGuard — Know Your Project Risk Before It's Too Late{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-gradient py-5 mb-5">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-7">
+                <div class="hero-badge mb-3">
+                    <i class="fas fa-robot text-primary"></i> Powered by Scikit-Learn & Machine Learning
+                </div>
+                <h1 class="display-4 fw-bold text-white mb-3">
+                    Know Your Project Risk <span class="text-primary">Before It's Too Late.</span>
+                </h1>
+                <p class="lead text-light text-opacity-75 mb-4">
+                    ProjectGuard continuously analyzes your academic project progress, task delays, testing coverage, and timeline pressure using trained Machine Learning models to detect risks early and provide clear, actionable steps to succeed.
+                </p>
+                <div class="d-flex flex-wrap gap-3 mb-4">
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg px-4 py-2 shadow">
+                        <i class="fas fa-rocket me-2"></i> Get Started Free
+                    </a>
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline-light btn-lg px-4 py-2">
+                        <i class="fas fa-sign-in-alt me-2"></i> Log In
+                    </a>
+                </div>
+                <div class="d-flex align-items-center gap-4 text-light text-opacity-75 small">
+                    <div><i class="fas fa-check-circle text-success me-1"></i> Continuous Early Warning</div>
+                    <div><i class="fas fa-check-circle text-success me-1"></i> Explainable AI (SHAP)</div>
+                    <div><i class="fas fa-check-circle text-success me-1"></i> Interactive What-If Simulator</div>
+                </div>
+            </div>
+            
+            <div class="col-lg-5">
+                <!-- Interactive Preview Card -->
+                <div class="card card-modern border-0 shadow-lg p-3 bg-white text-dark">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="badge bg-light text-secondary border">AI Analysis Preview</span>
+                            <span class="badge badge-risk-moderate">MODERATE RISK</span>
+                        </div>
+                        <h5 class="fw-bold mb-1">Smart Attendance System</h5>
+                        <p class="text-muted small mb-3">Domain: Machine Learning & IoT</p>
+                        
+                        <div class="p-3 bg-light rounded-3 mb-3">
+                            <div class="d-flex justify-content-between mb-1 small fw-semibold">
+                                <span class="text-success"><i class="fas fa-check me-1"></i> Success Chance: 72%</span>
+                                <span class="text-danger"><i class="fas fa-exclamation-triangle me-1"></i> Failure Risk: 28%</span>
+                            </div>
+                            <div class="risk-meter-container">
+                                <div class="risk-meter-success" style="width: 72%;"></div>
+                                <div class="risk-meter-failure" style="width: 28%;"></div>
+                            </div>
+                        </div>
+
+                        <h6 class="fw-bold small text-uppercase text-muted mb-2">Top Risk Factors (SHAP)</h6>
+                        <div class="risk-factor-item py-1 px-2 small mb-1">
+                            <i class="fas fa-bug text-danger me-1"></i> Testing coverage is lagging behind progress
+                        </div>
+                        <div class="risk-factor-item py-1 px-2 small mb-3">
+                            <i class="fas fa-clock text-danger me-1"></i> 3 critical tasks currently delayed
+                        </div>
+
+                        <h6 class="fw-bold small text-uppercase text-muted mb-2">AI Recommended Next Steps</h6>
+                        <div class="d-flex align-items-center gap-2 text-success small mb-1">
+                            <i class="fas fa-arrow-circle-right"></i> Increase unit and integration testing to 50%+
+                        </div>
+                        <div class="d-flex align-items-center gap-2 text-success small">
+                            <i class="fas fa-arrow-circle-right"></i> Prioritize unblocking delayed database modules
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <!-- How It Works Section -->
+    <div id="how-it-works" class="py-5">
+        <div class="text-center max-w-3xl mx-auto mb-5">
+            <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill fw-semibold">Step-by-Step Workflow</span>
+            <h2 class="fw-bold mt-2">How ProjectGuard Keeps Your Project on Track</h2>
+            <p class="text-muted">An end-to-end guidance pipeline built for students and faculty advisors.</p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-3">
+                <div class="card card-modern h-100 p-3 text-center">
+                    <div class="brand-shield mx-auto mb-3" style="width: 50px; height: 50px; font-size: 1.3rem;">1</div>
+                    <h5 class="fw-bold">Create Project</h5>
+                    <p class="text-muted small">Enter project name, domain, difficulty, tech stack, team size, and milestone timeline.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card card-modern h-100 p-3 text-center">
+                    <div class="brand-shield mx-auto mb-3" style="width: 50px; height: 50px; font-size: 1.3rem;">2</div>
+                    <h5 class="fw-bold">Update Progress</h5>
+                    <p class="text-muted small">Periodically log completed tasks, delayed items, testing percentage, bugs, and documentation status.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card card-modern h-100 p-3 text-center">
+                    <div class="brand-shield mx-auto mb-3" style="width: 50px; height: 50px; font-size: 1.3rem;">3</div>
+                    <h5 class="fw-bold">ML Risk Evaluation</h5>
+                    <p class="text-muted small">Trained machine learning models assess success/failure risk and compute contributing drivers using SHAP.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card card-modern h-100 p-3 text-center">
+                    <div class="brand-shield mx-auto mb-3" style="width: 50px; height: 50px; font-size: 1.3rem;">4</div>
+                    <h5 class="fw-bold">Simulate & Improve</h5>
+                    <p class="text-muted small">Execute actionable advice, simulate outcomes in the What-If tool, and track your risk curve decline.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <hr class="my-5">
+
+    <!-- Key Features Section -->
+    <div id="features" class="py-4">
+        <div class="text-center max-w-3xl mx-auto mb-5">
+            <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill fw-semibold">Platform Capabilities</span>
+            <h2 class="fw-bold mt-2">Comprehensive Project Safety Features</h2>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-4 col-md-6">
+                <div class="card card-modern h-100 p-4">
+                    <div class="text-primary fs-3 mb-3"><i class="fas fa-chart-line"></i></div>
+                    <h5 class="fw-bold">Continuous Risk Tracking</h5>
+                    <p class="text-muted small">
+                        Visual risk history graphs show whether your project risk is increasing or decreasing over weekly milestones.
+                    </p>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="card card-modern h-100 p-4">
+                    <div class="text-primary fs-3 mb-3"><i class="fas fa-sliders-h"></i></div>
+                    <h5 class="fw-bold">Real-time What-If Simulator</h5>
+                    <p class="text-muted small">
+                        Test hypothetical scenarios ("What if I complete 4 more tasks and increase testing to 60%?") before committing code.
+                    </p>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="card card-modern h-100 p-4">
+                    <div class="text-primary fs-3 mb-3"><i class="fas fa-brain"></i></div>
+                    <h5 class="fw-bold">Explainable AI Insights</h5>
+                    <p class="text-muted small">
+                        Never a black-box. Transparent feature attribution explains exactly which factors (delays, testing, bugs) drive risk.
+                    </p>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="card card-modern h-100 p-4">
+                    <div class="text-primary fs-3 mb-3"><i class="fas fa-clipboard-check"></i></div>
+                    <h5 class="fw-bold">Actionable Recommendations</h5>
+                    <p class="text-muted small">
+                        Supportive, constructive recommendations that prioritize bug fixing, scope triage, and testing best practices.
+                    </p>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="card card-modern h-100 p-4">
+                    <div class="text-primary fs-3 mb-3"><i class="fas fa-bell"></i></div>
+                    <h5 class="fw-bold">Early Warning Alerts</h5>
+                    <p class="text-muted small">
+                        Instant notifications when project risk jumps unexpectedly by &ge;15%, giving students and advisors time to adjust.
+                    </p>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="card card-modern h-100 p-4">
+                    <div class="text-primary fs-3 mb-3"><i class="fas fa-chalkboard-teacher"></i></div>
+                    <h5 class="fw-bold">Faculty Monitoring Dashboard</h5>
+                    <p class="text-muted small">
+                        Allows professors and mentors to filter cohorts by risk, review milestones, and provide targeted feedback.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <hr class="my-5">
+
+    <!-- FAQ Section -->
+    <div id="faq" class="py-4 mb-5">
+        <div class="text-center max-w-3xl mx-auto mb-5">
+            <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill fw-semibold">Common Inquiries</span>
+            <h2 class="fw-bold mt-2">Frequently Asked Questions</h2>
+        </div>
+
+        <div class="accordion card-modern border-0" id="faqAccordion">
+            <div class="accordion-item border-bottom">
+                <h2 class="accordion-header" id="faq1">
+                    <button class="accordion-button fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#collapse1">
+                        Does ProjectGuard tell me my project will fail?
+                    </button>
+                </h2>
+                <div id="collapse1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body text-muted">
+                        No. The goal of ProjectGuard is never to discourage students. Instead, it provides statistical risk estimates and actionable advice so that you know which areas (like testing or delayed tasks) need attention to ensure project success.
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-item border-bottom">
+                <h2 class="accordion-header" id="faq2">
+                    <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#collapse2">
+                        How does the What-If Simulator work?
+                    </button>
+                </h2>
+                <div id="collapse2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body text-muted">
+                        The What-If Simulator sends hypothetical values into the actual trained Machine Learning model in real-time. It calculates the exact change in failure probability without modifying your stored project database records.
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-item border-0">
+                <h2 class="accordion-header" id="faq3">
+                    <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#collapse3">
+                        How can faculty advisors use ProjectGuard?
+                    </button>
+                </h2>
+                <div id="collapse3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body text-muted">
+                        Faculty members can monitor multiple student capstones, sort and filter projects by risk levels (Critical, High, Moderate, Low), inspect individual progress graphs, and post evaluation feedback and milestone scores directly.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

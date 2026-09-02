@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% block title %}Faculty Project Monitoring Dashboard — ProjectGuard{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">Faculty Project Monitoring Dashboard</h2>
+            <p class="text-muted small mb-0">Monitor student project risk distributions, review progress milestones, and submit faculty evaluations.</p>
+        </div>
+        <div class="badge bg-light text-dark border p-2">
+            <i class="fas fa-university me-1"></i> Department: <span class="fw-semibold">{{ current_user.department }}</span>
+        </div>
+    </div>
+
+    <!-- Cohort Risk Statistics Summary -->
+    <div class="row g-3 mb-4">
+        <div class="col-md col-6">
+            <div class="card card-modern card-stat p-3">
+                <div class="text-muted small fw-semibold text-uppercase">Total Monitored</div>
+                <div class="fs-3 fw-bold text-dark mt-1">{{ stats.total }}</div>
+            </div>
+        </div>
+        <div class="col-md col-6">
+            <div class="card card-modern card-stat stat-low p-3">
+                <div class="text-muted small fw-semibold text-uppercase">Low Risk</div>
+                <div class="fs-3 fw-bold text-success mt-1">{{ stats.low }}</div>
+            </div>
+        </div>
+        <div class="col-md col-6">
+            <div class="card card-modern card-stat stat-mod p-3">
+                <div class="text-muted small fw-semibold text-uppercase">Moderate Risk</div>
+                <div class="fs-3 fw-bold text-warning mt-1">{{ stats.moderate }}</div>
+            </div>
+        </div>
+        <div class="col-md col-6">
+            <div class="card card-modern card-stat stat-high p-3">
+                <div class="text-muted small fw-semibold text-uppercase">High Risk</div>
+                <div class="fs-3 fw-bold" style="color: #ea580c;">{{ stats.high }}</div>
+            </div>
+        </div>
+        <div class="col-md col-6">
+            <div class="card card-modern card-stat stat-crit p-3">
+                <div class="text-muted small fw-semibold text-uppercase">Critical Risk</div>
+                <div class="fs-3 fw-bold text-danger mt-1">{{ stats.critical }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Early Warning Alerts Across Cohort -->
+    {% if alerts %}
+        <div class="card card-modern border-warning border-2 p-3 mb-4 bg-warning bg-opacity-10">
+            <h6 class="fw-bold text-dark mb-2"><i class="fas fa-bell text-warning me-2"></i> Recent Cohort Early Warning Alerts</h6>
+            <div class="row g-2">
+                {% for alert in alerts[:3] %}
+                    <div class="col-md-4">
+                        <div class="card p-2 bg-white border h-100 small">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="fw-bold text-dark">{{ alert.project.project_name }}</span>
+                                <span class="badge bg-danger">+{{ alert.risk_jump }}% Risk</span>
+                            </div>
+                            <p class="text-muted mb-2" style="font-size: 0.8rem;">{{ alert.message }}</p>
+                            <a href="{{ url_for('faculty.project_view', project_id=alert.project.id) }}" class="btn btn-outline-danger btn-sm py-0 mt-auto">
+                                Review Project
+                            </a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Filter & Search Controls -->
+    <div class="card card-modern p-3 mb-4">
+        <form method="GET" action="{{ url_for('faculty.dashboard') }}" class="row g-2 align-items-center">
+            <!-- Search Query -->
+            <div class="col-md-3">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-light"><i class="fas fa-search text-muted"></i></span>
+                    <input type="text" class="form-control" name="q" value="{{ search_query }}" placeholder="Search project or tech...">
+                </div>
+            </div>
+
+            <!-- Risk Filter -->
+            <div class="col-md-2">
+                <select name="risk" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="ALL" {% if risk_filter == 'ALL' %}selected{% endif %}>All Risk Levels</option>
+                    <option value="LOW" {% if risk_filter == 'LOW' %}selected{% endif %}>Low Risk</option>
+                    <option value="MODERATE" {% if risk_filter == 'MODERATE' %}selected{% endif %}>Moderate Risk</option>
+                    <option value="HIGH" {% if risk_filter == 'HIGH' %}selected{% endif %}>High Risk</option>
+                    <option value="CRITICAL" {% if risk_filter == 'CRITICAL' %}selected{% endif %}>Critical Risk</option>
+                </select>
+            </div>
+
+            <!-- Domain Filter -->
+            <div class="col-md-3">
+                <select name="domain" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="ALL" {% if domain_filter == 'ALL' %}selected{% endif %}>All Project Domains</option>
+                    {% for d in domains %}
+                        <option value="{{ d }}" {% if domain_filter == d %}selected{% endif %}>{{ d }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Sort By -->
+            <div class="col-md-2">
+                <select name="sort" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="risk_desc" {% if sort_by == 'risk_desc' %}selected{% endif %}>Sort: Highest Risk</option>
+                    <option value="risk_asc" {% if sort_by == 'risk_asc' %}selected{% endif %}>Sort: Lowest Risk</option>
+                    <option value="progress_asc" {% if sort_by == 'progress_asc' %}selected{% endif %}>Sort: Lowest Progress</option>
+                    <option value="progress_desc" {% if sort_by == 'progress_desc' %}selected{% endif %}>Sort: Highest Progress</option>
+                    <option value="deadline_asc" {% if sort_by == 'deadline_asc' %}selected{% endif %}>Sort: Nearest Deadline</option>
+                </select>
+            </div>
+
+            <div class="col-md-2 text-end">
+                <button type="submit" class="btn btn-primary btn-sm w-100">
+                    <i class="fas fa-filter me-1"></i> Apply Filters
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Monitored Projects Table -->
+    <div class="card card-modern border-0 shadow-sm overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr class="small text-uppercase text-muted">
+                        <th>Project & Student</th>
+                        <th>Domain</th>
+                        <th>Progress</th>
+                        <th>Failure Risk</th>
+                        <th>Success %</th>
+                        <th>Risk Level</th>
+                        <th>Deadline</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if project_items %}
+                        {% for item in project_items %}
+                            {% set p = item.project %}
+                            {% set prog = item.progress %}
+                            {% set pred = item.prediction %}
+                            <tr>
+                                <td>
+                                    <div class="fw-bold text-dark">{{ p.project_name }}</div>
+                                    <div class="small text-muted">
+                                        <i class="fas fa-user-graduate me-1"></i> {{ item.student_name }}
+                                        {% if item.department %} • {{ item.department }}{% endif %}
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">{{ p.domain }}</span>
+                                    <div class="small text-muted mt-1">Diff: {{ p.technology_difficulty }}</div>
+                                </td>
+                                <td style="min-width: 130px;">
+                                    <div class="d-flex justify-content-between small fw-semibold mb-1">
+                                        <span>{{ item.progress_percentage }}%</span>
+                                    </div>
+                                    <div class="progress" style="height: 6px;">
+                                        <div class="progress-bar bg-primary" style="width: {{ item.progress_percentage }}%;"></div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="fw-bold text-danger">{{ item.failure_probability }}%</span>
+                                </td>
+                                <td>
+                                    <span class="fw-bold text-success">{{ item.success_probability }}%</span>
+                                </td>
+                                <td>
+                                    {% if item.risk_level == "LOW" %}
+                                        <span class="badge badge-risk-low px-2 py-1">LOW</span>
+                                    {% elif item.risk_level == "MODERATE" %}
+                                        <span class="badge badge-risk-moderate px-2 py-1">MODERATE</span>
+                                    {% elif item.risk_level == "HIGH" %}
+                                        <span class="badge badge-risk-high px-2 py-1">HIGH</span>
+                                    {% elif item.risk_level == "CRITICAL" %}
+                                        <span class="badge badge-risk-critical px-2 py-1">CRITICAL</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary px-2 py-1">UNASSESSED</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="small text-dark fw-semibold">{{ p.deadline.strftime('%b %d, %Y') }}</div>
+                                </td>
+                                <td class="text-end">
+                                    <a href="{{ url_for('faculty.project_view', project_id=p.id) }}" class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-search me-1"></i> Inspect & Review
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center py-4 text-muted">
+                                No student projects match the specified filter criteria.
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

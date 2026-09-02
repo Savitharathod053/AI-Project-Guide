@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}Faculty Inspection — {{ project.project_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-3">
+    <!-- Top Breadcrumb & Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1 small">
+                    <li class="breadcrumb-item"><a href="{{ url_for('faculty.dashboard') }}">Faculty Monitor</a></li>
+                    <li class="breadcrumb-item active">{{ project.project_name }}</li>
+                </ol>
+            </nav>
+            <h2 class="fw-bold mb-0">{{ project.project_name }}</h2>
+            <div class="text-muted small mt-1">
+                Student Lead: <span class="fw-bold text-dark">{{ project.owner.name }}</span> ({{ project.owner.email }})
+                • Team Size: <span class="fw-semibold text-dark">{{ project.team_size }}</span>
+                • Deadline: <span class="fw-semibold text-dark">{{ project.deadline.strftime('%b %d, %Y') }}</span>
+                <span class="badge bg-primary bg-opacity-10 text-primary ms-1">{{ derived.days_remaining if derived else 0 }} days remaining</span>
+            </div>
+        </div>
+
+        <a href="{{ url_for('faculty.dashboard') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="fas fa-arrow-left me-1"></i> Back to Monitor
+        </a>
+    </div>
+
+    <!-- AI Risk Status Card -->
+    {% if prediction %}
+        <div class="card card-modern p-4 mb-4">
+            <div class="row align-items-center g-4">
+                <div class="col-md-4 text-center border-md-end">
+                    <div class="small text-uppercase text-muted fw-semibold mb-1">AI Evaluated Risk Level</div>
+                    <div>
+                        {% if prediction.risk_level == "LOW" %}
+                            <span class="badge badge-risk-low fs-5 px-4 py-2">LOW RISK</span>
+                        {% elif prediction.risk_level == "MODERATE" %}
+                            <span class="badge badge-risk-moderate fs-5 px-4 py-2">MODERATE RISK</span>
+                        {% elif prediction.risk_level == "HIGH" %}
+                            <span class="badge badge-risk-high fs-5 px-4 py-2">HIGH RISK</span>
+                        {% elif prediction.risk_level == "CRITICAL" %}
+                            <span class="badge badge-risk-critical fs-5 px-4 py-2">CRITICAL RISK</span>
+                        {% endif %}
+                    </div>
+                    <div class="small text-muted mt-2">
+                        Inference Model: <code>{{ prediction.model_version }}</code>
+                    </div>
+                </div>
+
+                <div class="col-md-8">
+                    <div class="row text-center mb-3">
+                        <div class="col-6">
+                            <div class="small text-muted fw-semibold">Success Probability</div>
+                            <div class="display-6 fw-bold text-success">{{ prediction.success_probability }}%</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="small text-muted fw-semibold">Failure Risk</div>
+                            <div class="display-6 fw-bold text-danger">{{ prediction.failure_probability }}%</div>
+                        </div>
+                    </div>
+
+                    <div class="risk-meter-container mb-2" style="height: 12px;">
+                        <div class="risk-meter-success" style="width: {{ prediction.success_probability }}%;"></div>
+                        <div class="risk-meter-failure" style="width: {{ prediction.failure_probability }}%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="row g-4 mb-4">
+        <!-- Left: Risk Factors & History -->
+        <div class="col-lg-6">
+            <!-- SHAP Risk Factors Identified -->
+            <div class="card card-modern p-4 mb-4">
+                <h5 class="fw-bold mb-3"><i class="fas fa-microscope text-primary me-2"></i> Identified Project Risk Drivers</h5>
+                {% if risk_factors %}
+                    <div class="d-flex flex-column gap-2">
+                        {% for f in risk_factors %}
+                            <div class="{% if 'Positive' in f.direction %}positive-factor-item{% else %}risk-factor-item{% endif %}">
+                                <i class="fas {% if 'Positive' in f.direction %}fa-check-circle text-success{% else %}fa-exclamation-circle text-danger{% endif %} me-2"></i>
+                                <span class="fw-semibold text-dark small">{{ f.feature_label }}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted small">No critical risk drivers detected for this milestone.</p>
+                {% endif %}
+            </div>
+
+            <!-- Risk Progression Line Chart -->
+            <div class="card card-modern p-4">
+                <h5 class="fw-bold mb-3"><i class="fas fa-chart-line text-primary me-2"></i> Risk History Timeline</h5>
+                <div style="height: 240px;">
+                    <canvas id="facultyRiskHistoryChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Milestone Stats & Faculty Feedback Form -->
+        <div class="col-lg-6">
+            <!-- Progress Snapshot -->
+            <div class="card card-modern p-4 mb-4">
+                <h5 class="fw-bold mb-3"><i class="fas fa-tasks text-primary me-2"></i> Current Milestone Progress</h5>
+                {% if progress %}
+                    <div class="row g-3 text-center mb-3">
+                        <div class="col-3">
+                            <div class="p-2 bg-light rounded-3">
+                                <div class="text-muted small">Tasks Done</div>
+                                <div class="fw-bold text-success">{{ progress.completed_tasks }}/{{ progress.total_tasks }}</div>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="p-2 bg-light rounded-3">
+                                <div class="text-muted small">Delayed</div>
+                                <div class="fw-bold text-danger">{{ progress.delayed_tasks }}</div>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="p-2 bg-light rounded-3">
+                                <div class="text-muted small">Testing</div>
+                                <div class="fw-bold text-info">{{ progress.testing_percentage }}%</div>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="p-2 bg-light rounded-3">
+                                <div class="text-muted small">Bugs</div>
+                                <div class="fw-bold text-warning">{{ progress.bugs }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    {% if progress.notes %}
+                        <div class="p-3 bg-light rounded-3 small">
+                            <strong>Student Notes:</strong> {{ progress.notes }}
+                        </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+
+            <!-- Faculty Evaluation Submission Form -->
+            <div class="card card-modern p-4">
+                <h5 class="fw-bold mb-3 text-primary"><i class="fas fa-pen-nib me-2"></i> Submit Faculty Evaluation & Feedback</h5>
+                <form method="POST" action="{{ url_for('faculty.submit_feedback', project_id=project.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+                    <div class="mb-3">
+                        <label for="score" class="form-label small fw-semibold">Evaluation Score (0 to 100)</label>
+                        <input type="number" class="form-control" id="score" name="score" min="0" max="100" step="0.5" placeholder="e.g. 85.0">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="feedback" class="form-label small fw-semibold">Advisor Feedback & Action Directives <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="feedback" name="feedback" rows="3" placeholder="Provide guidance on testing requirements, scope adjustments, or timeline milestones..." required></textarea>
+                    </div>
+
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="milestone_approved" name="milestone_approved" checked>
+                        <label class="form-check-label small" for="milestone_approved">Approve Current Milestone Progress</label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-sm px-4 fw-semibold">
+                        <i class="fas fa-paper-plane me-1"></i> Post Feedback to Student
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback History -->
+    <div class="card card-modern p-4">
+        <h5 class="fw-bold mb-3"><i class="fas fa-history text-secondary me-2"></i> Past Faculty Feedback History</h5>
+        {% if feedback_list %}
+            <div class="d-flex flex-column gap-3">
+                {% for fb in feedback_list %}
+                    <div class="border-start border-3 border-primary ps-3 py-1">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="fw-bold text-dark">{{ fb.faculty.name if fb.faculty else 'Faculty Advisor' }}</span>
+                            <div class="small text-muted">
+                                {% if fb.score is not none %}
+                                    <span class="badge bg-success me-2">Score: {{ fb.score }}/100</span>
+                                {% endif %}
+                                {{ fb.created_at.strftime('%b %d, %Y at %H:%M') }}
+                            </div>
+                        </div>
+                        <p class="mb-0 text-secondary small">{{ fb.feedback }}</p>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-muted small mb-0">No past faculty evaluations recorded yet for this project.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const historyData = {{ history_json|safe }};
+        initRiskHistoryChart("facultyRiskHistoryChart", historyData);
+    });
+</script>
+{% endblock %}

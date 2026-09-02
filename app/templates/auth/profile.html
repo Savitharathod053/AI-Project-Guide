@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}User Profile — ProjectGuard{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="d-flex align-items-center justify-content-between mb-4">
+                <div>
+                    <h3 class="fw-bold mb-1">User Settings & Profile</h3>
+                    <p class="text-muted small mb-0">Manage your credentials and academic affiliation</p>
+                </div>
+                <span class="badge {% if current_user.is_faculty %}bg-warning text-dark{% else %}bg-primary{% endif %} px-3 py-2 text-uppercase">
+                    {{ current_user.role }} Account
+                </span>
+            </div>
+
+            <!-- Profile Info Form -->
+            <div class="card card-modern p-4 mb-4">
+                <h5 class="fw-bold mb-3"><i class="fas fa-user-edit text-primary me-2"></i> Account Details</h5>
+                <form method="POST" action="{{ url_for('auth.profile') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <input type="hidden" name="action" value="update_profile">
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Email Address</label>
+                        <input type="email" class="form-control bg-light" value="{{ current_user.email }}" readonly disabled>
+                        <div class="form-text">Email address cannot be modified once registered.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="name" class="form-label small fw-semibold">Full Name</label>
+                        <input type="text" class="form-control" id="name" name="name" value="{{ current_user.name }}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="department" class="form-label small fw-semibold">Department / Faculty</label>
+                        <input type="text" class="form-control" id="department" name="department" value="{{ current_user.department }}" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-sm px-3">
+                        <i class="fas fa-save me-1"></i> Update Profile
+                    </button>
+                </form>
+            </div>
+
+            <!-- Change Password Form -->
+            <div class="card card-modern p-4">
+                <h5 class="fw-bold mb-3"><i class="fas fa-key text-warning me-2"></i> Change Password</h5>
+                <form method="POST" action="{{ url_for('auth.profile') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <input type="hidden" name="action" value="change_password">
+
+                    <div class="mb-3">
+                        <label for="current_password" class="form-label small fw-semibold">Current Password</label>
+                        <input type="password" class="form-control" id="current_password" name="current_password" required>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="new_password" class="form-label small fw-semibold">New Password</label>
+                            <input type="password" class="form-control" id="new_password" name="new_password" minlength="6" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="confirm_new_password" class="form-label small fw-semibold">Confirm New Password</label>
+                            <input type="password" class="form-control" id="confirm_new_password" name="confirm_new_password" minlength="6" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-outline-dark btn-sm px-3">
+                        <i class="fas fa-lock me-1"></i> Change Password
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

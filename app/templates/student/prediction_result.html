@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}AI Project Risk Analysis — {{ project.project_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-1 rounded-pill mb-1">AI Risk Assessment Result</span>
+                    <h2 class="fw-bold mb-0">Project Risk Analysis</h2>
+                    <p class="text-muted small mb-0">Project: <span class="fw-bold text-dark">{{ project.project_name }}</span> (Domain: {{ project.domain }})</p>
+                </div>
+                <a href="{{ url_for('student.project_detail', project_id=project.id) }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i> Project Overview
+                </a>
+            </div>
+
+            <!-- Risk Probability Header Card -->
+            <div class="card card-modern p-4 p-md-5 mb-4 border-0 shadow">
+                <div class="row align-items-center g-4">
+                    <div class="col-md-5 text-center border-md-end">
+                        <div class="text-muted text-uppercase small fw-semibold mb-2">Estimated Risk Category</div>
+                        <div>
+                            {% if prediction.risk_level == "LOW" %}
+                                <span class="badge badge-risk-low display-6 fs-3 px-4 py-2">LOW RISK</span>
+                            {% elif prediction.risk_level == "MODERATE" %}
+                                <span class="badge badge-risk-moderate display-6 fs-3 px-4 py-2">MODERATE RISK</span>
+                            {% elif prediction.risk_level == "HIGH" %}
+                                <span class="badge badge-risk-high display-6 fs-3 px-4 py-2">HIGH RISK</span>
+                            {% elif prediction.risk_level == "CRITICAL" %}
+                                <span class="badge badge-risk-critical display-6 fs-3 px-4 py-2">CRITICAL RISK</span>
+                            {% endif %}
+                        </div>
+                        <div class="text-muted small mt-3">
+                            Analyzed via <code>{{ prediction.model_version }}</code>
+                        </div>
+                    </div>
+
+                    <div class="col-md-7">
+                        <div class="row text-center mb-3">
+                            <div class="col-6">
+                                <div class="text-muted small fw-semibold">Success Probability</div>
+                                <div class="display-5 fw-bold text-success">{{ prediction.success_probability }}%</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="text-muted small fw-semibold">Failure Risk</div>
+                                <div class="display-5 fw-bold text-danger">{{ prediction.failure_probability }}%</div>
+                            </div>
+                        </div>
+
+                        <div class="risk-meter-container mb-3" style="height: 16px;">
+                            <div class="risk-meter-success" style="width: {{ prediction.success_probability }}%;"></div>
+                            <div class="risk-meter-failure" style="width: {{ prediction.failure_probability }}%;"></div>
+                        </div>
+
+                        <div class="d-flex justify-content-between small text-muted">
+                            <span><i class="fas fa-calendar-check me-1"></i> {{ derived.days_remaining }} days until deadline</span>
+                            <span><i class="fas fa-tasks me-1"></i> {{ progress.progress_percentage }}% progress logged</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contributing Risk Factors (Explainable AI / SHAP) -->
+            <div class="card card-modern p-4 mb-4">
+                <h5 class="fw-bold mb-3"><i class="fas fa-brain text-primary me-2"></i> Main Risk Contributors (Explainable AI)</h5>
+                <p class="text-muted small mb-3">
+                    The machine learning model identified the following primary factors influencing your current risk score:
+                </p>
+
+                {% if risk_factors %}
+                    <div class="d-flex flex-column gap-2 mb-3">
+                        {% for factor in risk_factors %}
+                            <div class="{% if 'Positive' in factor.direction %}positive-factor-item{% else %}risk-factor-item{% endif %} d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="fas {% if 'Positive' in factor.direction %}fa-check-circle text-success{% else %}fa-exclamation-circle text-danger{% endif %} me-2"></i>
+                                    <span class="fw-semibold text-dark">{{ factor.feature_label }}</span>
+                                </div>
+                                <span class="badge {% if 'Positive' in factor.direction %}bg-success{% else %}bg-danger{% endif %} bg-opacity-10 {% if 'Positive' in factor.direction %}text-success{% else %}text-danger{% endif %} small">
+                                    {{ factor.direction }}
+                                </span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <!-- SHAP Feature Attribution Breakdown -->
+                {% if shap_list %}
+                    <div class="p-3 bg-light rounded-3 mt-2">
+                        <h6 class="fw-bold small text-uppercase text-muted mb-2">Detailed Feature Impact Attribution</h6>
+                        <div class="row g-2">
+                            {% for item in shap_list[:6] %}
+                                <div class="col-md-6">
+                                    <div class="d-flex justify-content-between small py-1 border-bottom">
+                                        <span class="text-secondary">{{ item.label }}</span>
+                                        <span class="fw-semibold {% if item.impact > 0 %}text-danger{% else %}text-success{% endif %}">
+                                            {% if item.impact > 0 %}+{% endif %}{{ item.impact }}
+                                        </span>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Recommended Actions -->
+            <div class="card card-modern p-4 mb-4">
+                <h5 class="fw-bold mb-3"><i class="fas fa-clipboard-list text-success me-2"></i> Recommended Action Plan</h5>
+                <p class="text-muted small mb-3">
+                    Executing these steps will directly mitigate the factors driving your project risk:
+                </p>
+
+                <div class="d-flex flex-column gap-3">
+                    {% for rec in recommendations %}
+                        <div class="card border p-3 rec-card-{{ rec.priority.lower() }} bg-light bg-opacity-50">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="fw-bold text-dark"><i class="fas fa-check-square text-success me-2"></i>{{ rec.risk_factor }}</span>
+                                <span class="badge {% if rec.priority == 'Urgent' %}bg-danger{% elif rec.priority == 'High' %}bg-warning text-dark{% elif rec.priority == 'Medium' %}bg-primary{% else %}bg-success{% endif %} py-1">
+                                    {{ rec.priority }} Priority
+                                </span>
+                            </div>
+                            <p class="mb-0 text-secondary small ms-4">{{ rec.recommendation }}</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Notice & Disclaimer Banner -->
+            <div class="alert alert-info border-0 p-4 rounded-3 mb-4 shadow-sm">
+                <h6 class="fw-bold mb-1"><i class="fas fa-shield-alt me-1"></i> Important Evaluation Notice</h6>
+                <p class="mb-0 small text-secondary">
+                    This prediction is an <strong>estimated project risk</strong> generated using historical academic distributions and machine learning inference. It is not a guarantee of your final project grade. Use these insights collaboratively with your faculty advisor to achieve project excellence.
+                </p>
+            </div>
+
+            <!-- Action Toolbar -->
+            <div class="d-flex flex-wrap justify-content-between gap-3">
+                <a href="{{ url_for('student.project_detail', project_id=project.id) }}" class="btn btn-outline-dark px-4">
+                    <i class="fas fa-folder me-1"></i> Return to Project Overview
+                </a>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('student.what_if_simulator', project_id=project.id) }}" class="btn btn-outline-primary px-4">
+                        <i class="fas fa-sliders-h me-1"></i> Launch What-If Simulator
+                    </a>
+                    <a href="{{ url_for('student.update_progress', project_id=project.id) }}" class="btn btn-primary px-4">
+                        <i class="fas fa-sync-alt me-1"></i> Update Next Milestone
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

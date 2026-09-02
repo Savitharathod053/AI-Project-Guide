@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Methodology & AI Architecture — ProjectGuard{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="card card-modern p-4 p-md-5 mb-4">
+        <h2 class="fw-bold mb-3"><i class="fas fa-microchip text-primary me-2"></i> ProjectGuard AI Architecture & Methodology</h2>
+        <p class="lead text-muted">
+            ProjectGuard is designed as an educational risk-mitigation tool. Below is an overview of the data engineering, machine learning pipelines, explainability mechanics, and ethical guidelines governing the platform.
+        </p>
+
+        <hr class="my-4">
+
+        <h4 class="fw-bold mb-3">1. Machine Learning Pipeline</h4>
+        <p class="text-secondary">
+            The prediction engine utilizes scikit-learn and gradient boosted decision trees. During model selection, multiple classifiers (Logistic Regression, Random Forest, XGBoost) are trained on standardized multi-dimensional feature sets. Models are evaluated using:
+        </p>
+        <ul>
+            <li><strong>ROC-AUC Score:</strong> Measuring overall discrimination capability across all classification thresholds.</li>
+            <li><strong>High-Risk Recall:</strong> Ensuring that struggling projects (Class 0) are identified with minimum false negatives.</li>
+            <li><strong>F1-Score & Accuracy:</strong> Balancing precision and recall across successful and at-risk cohorts.</li>
+        </ul>
+
+        <h4 class="fw-bold mt-4 mb-3">2. Automatic Derived Feature Engineering</h4>
+        <p class="text-secondary">
+            Students do not need to manually compute derived metrics. The system calculates:
+        </p>
+        <div class="table-responsive">
+            <table class="table table-bordered table-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th>Metric</th>
+                        <th>Formula</th>
+                        <th>Significance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>completion_ratio</code></td>
+                        <td>completed_tasks / total_tasks</td>
+                        <td>Normalized task completion velocity</td>
+                    </tr>
+                    <tr>
+                        <td><code>delay_ratio</code></td>
+                        <td>delayed_tasks / total_tasks</td>
+                        <td>Proportion of delayed milestone items</td>
+                    </tr>
+                    <tr>
+                        <td><code>schedule_pressure</code></td>
+                        <td>remaining_tasks / max(1, days_remaining)</td>
+                        <td>Work density needed per remaining calendar day</td>
+                    </tr>
+                    <tr>
+                        <td><code>test_coverage_gap</code></td>
+                        <td>max(0, progress% - testing%)</td>
+                        <td>Lag in test suite implementation</td>
+                    </tr>
+                    <tr>
+                        <td><code>bug_density</code></td>
+                        <td>bugs / max(1, completed_tasks)</td>
+                        <td>Defect concentration in completed code</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h4 class="fw-bold mt-4 mb-3">3. Explainable AI (SHAP / Feature Attribution)</h4>
+        <p class="text-secondary">
+            Rather than functioning as a black box, each risk evaluation computes specific feature attributions showing whether variables (e.g. testing coverage, delayed tasks, or schedule pressure) contributed towards increasing or decreasing project risk.
+        </p>
+
+        <h4 class="fw-bold mt-4 mb-3">4. Ethical AI & Student Guidance Principles</h4>
+        <div class="alert alert-info">
+            <h6 class="fw-bold mb-1"><i class="fas fa-info-circle me-1"></i> Core Guiding Principle</h6>
+            <p class="mb-0 small">
+                ProjectGuard never asserts that an academic project is doomed to fail. The platform communicates risk probabilistically, pairing every risk insight with concrete, actionable engineering steps to help students course-correct and achieve project completion.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

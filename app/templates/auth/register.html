@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Create an Account — ProjectGuard{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-7 col-lg-6">
+            <div class="card card-modern p-4 p-md-5">
+                <div class="text-center mb-4">
+                    <span class="brand-shield mb-2" style="font-size: 1.5rem;"><i class="fas fa-user-plus"></i></span>
+                    <h3 class="fw-bold mt-2">Join ProjectGuard</h3>
+                    <p class="text-muted small">Register as a student or faculty advisor</p>
+                </div>
+
+                <form method="POST" action="{{ url_for('auth.register') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+                    <div class="mb-3">
+                        <label for="name" class="form-label small fw-semibold">Full Name</label>
+                        <input type="text" class="form-control" id="name" name="name" placeholder="e.g. Alex Johnson" required autofocus>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="email" class="form-label small fw-semibold">Academic Email Address</label>
+                        <input type="email" class="form-control" id="email" name="email" placeholder="alex@college.edu" required>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="role" class="form-label small fw-semibold">I am a</label>
+                            <select class="form-select" id="role" name="role" required>
+                                <option value="student" selected>Student</option>
+                                <option value="faculty">Faculty / Advisor</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="department" class="form-label small fw-semibold">Department</label>
+                            <input type="text" class="form-control" id="department" name="department" value="Computer Science & Engineering" required>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="password" class="form-label small fw-semibold">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" placeholder="At least 6 characters" minlength="6" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="confirm_password" class="form-label small fw-semibold">Confirm Password</label>
+                            <input type="password" class="form-control" id="confirm_password" name="confirm_password" placeholder="Re-enter password" minlength="6" required>
+                        </div>
+                    </div>
+
+                    <div class="d-grid mb-3 mt-4">
+                        <button type="submit" class="btn btn-primary py-2 fw-semibold">
+                            <i class="fas fa-check-circle me-1"></i> Complete Registration
+                        </button>
+                    </div>
+
+                    <div class="text-center small text-muted">
+                        Already have an account? <a href="{{ url_for('auth.login') }}" class="text-primary fw-semibold">Sign in here</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

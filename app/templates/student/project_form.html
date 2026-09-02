@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}{{ action }} Project — ProjectGuard{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="d-flex align-items-center justify-content-between mb-4">
+                <div>
+                    <h3 class="fw-bold mb-1">{{ action }} Academic Project</h3>
+                    <p class="text-muted small mb-0">Provide technical and timeline specifications to establish baseline risk metrics</p>
+                </div>
+                <a href="{{ url_for('student.dashboard') }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+                </a>
+            </div>
+
+            <div class="card card-modern p-4 p-md-5">
+                <form method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+                    <!-- Section: Basic Information -->
+                    <h5 class="fw-bold border-bottom pb-2 mb-3 text-primary">
+                        <i class="fas fa-info-circle me-1"></i> 1. Basic Project Details
+                    </h5>
+
+                    <div class="mb-3">
+                        <label for="project_name" class="form-label small fw-semibold">Project Title <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="project_name" name="project_name" value="{{ project.project_name if project else '' }}" placeholder="e.g. AI-Powered Autonomous Drone Navigation" required>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="domain" class="form-label small fw-semibold">Project Domain <span class="text-danger">*</span></label>
+                            <select class="form-select" id="domain" name="domain" required>
+                                {% set domains = ["Web Development", "Mobile Applications", "Machine Learning & AI", "Internet of Things (IoT)", "Cloud Computing", "Cybersecurity", "Blockchain", "Data Science & Analytics"] %}
+                                {% for d in domains %}
+                                    <option value="{{ d }}" {% if project and project.domain == d %}selected{% endif %}>{{ d }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="project_type" class="form-label small fw-semibold">Project Category <span class="text-danger">*</span></label>
+                            <select class="form-select" id="project_type" name="project_type" required>
+                                {% set types = ["Capstone Project", "Major Project", "Mini-Project", "Honors Research", "Independent Study"] %}
+                                {% for t in types %}
+                                    <option value="{{ t }}" {% if project and project.project_type == t %}selected{% endif %}>{{ t }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label small fw-semibold">Project Scope & Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="3" placeholder="Briefly outline the objective, architecture, and expected deliverables...">{{ project.description if project else '' }}</textarea>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <label for="team_size" class="form-label small fw-semibold">Team Size <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="team_size" name="team_size" min="1" max="10" value="{{ project.team_size if project else 1 }}" required>
+                        </div>
+                        <div class="col-md-8">
+                            <label for="team_members" class="form-label small fw-semibold">Team Member Names / Roll Numbers</label>
+                            <input type="text" class="form-control" id="team_members" name="team_members" value="{{ project.team_members if project else '' }}" placeholder="Alex J., Priya S., David K.">
+                        </div>
+                    </div>
+
+                    <!-- Section: Technical Stack & Dates -->
+                    <h5 class="fw-bold border-bottom pb-2 mb-3 text-primary">
+                        <i class="fas fa-code-branch me-1"></i> 2. Technical Stack & Timeline
+                    </h5>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="technologies" class="form-label small fw-semibold">Primary Technologies Used</label>
+                            <input type="text" class="form-control" id="technologies" name="technologies" value="{{ project.technologies if project else 'Python, Flask, PyTorch, React' }}" placeholder="e.g. Python, Flask, React, PostgreSQL">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="technologies_count" class="form-label small fw-semibold">Tech Count</label>
+                            <input type="number" class="form-control" id="technologies_count" name="technologies_count" min="1" max="15" value="{{ project.technologies_count if project else 3 }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="technology_difficulty" class="form-label small fw-semibold">Difficulty <span class="text-danger">*</span></label>
+                            <select class="form-select" id="technology_difficulty" name="technology_difficulty" required>
+                                <option value="Easy" {% if project and project.technology_difficulty == 'Easy' %}selected{% endif %}>Easy</option>
+                                <option value="Medium" {% if not project or project.technology_difficulty == 'Medium' %}selected{% endif %}>Medium</option>
+                                <option value="Hard" {% if project and project.technology_difficulty == 'Hard' %}selected{% endif %}>Hard</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label for="start_date" class="form-label small fw-semibold">Start Date <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="start_date" name="start_date" value="{{ project.start_date.strftime('%Y-%m-%d') if project else '' }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="deadline" class="form-label small fw-semibold">Evaluation Deadline <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="deadline" name="deadline" value="{{ project.deadline.strftime('%Y-%m-%d') if project else '' }}" required>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                        <a href="{{ url_for('student.dashboard') }}" class="btn btn-light px-4">Cancel</a>
+                        <button type="submit" class="btn btn-primary px-4 fw-semibold">
+                            <i class="fas fa-save me-1"></i> Save & Establish Baseline
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
