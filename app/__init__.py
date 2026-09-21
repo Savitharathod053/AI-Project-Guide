@@ -31,6 +31,9 @@ def create_app(config_name: str = None) -> Flask:
     login_manager.init_app(app)
     csrf.init_app(app)
 
+    from app.models import upgrade_database_schema
+    upgrade_database_schema(app)
+
     login_manager.login_view = "auth.login"
     login_manager.login_message = "Please sign in to access this page."
     login_manager.login_message_category = "info"

@@ -7,10 +7,16 @@ JSON API for programmatic integration, mobile client access, and dynamic AJAX wi
 from datetime import datetime, date
 from flask import Blueprint, jsonify, request, abort
 from flask_login import login_required, current_user
-from app.models import db, Project, ProjectProgress, Prediction, Recommendation, FacultyFeedback, EarlyWarningAlert
+from app.models import (
+    db, Project, Task, ProjectProgress, Prediction, Recommendation,
+    FacultyFeedback, EarlyWarningAlert, ProjectResource, AIRecommendation,
+    HardwareAnalysis
+)
 from app.services.feature_engineering import prepare_feature_row, prepare_raw_dict_feature_row, compute_derived_features
 from app.services.ml_service import get_ml_service
 from app.services.recommendation_engine import generate_recommendations
+from app.services.resource_finder_service import get_resource_finder_service
+from app.services.hardware_feasibility_service import get_hardware_feasibility_service
 
 api_bp = Blueprint("api", __name__)
 
@@ -181,3 +187,268 @@ def api_model_info():
         "is_ready": ml_service.is_ready,
         "metadata": ml_service.metadata or {}
     })
+
+
+# ==============================================================================
+# SMART RESOURCE FINDER & AI TOOL ADVISOR API ENDPOINTS
+# ==============================================================================
+
+@api_bp.route("/projects/<int:project_id>/resources/analyze", methods=["POST"])
+@login_required
+def api_analyze_project_resources(project_id: int):
+    """
+    Triggers Gemini project analysis to determine required APIs, Datasets, and AI Tools,
+    resolves official verified links, and stores them in the database.
+    """
+    project = Project.query.get_or_404(project_id)
+    if current_user.is_student and project.owner_id != current_user.id:
+        return jsonify({"status": "error", "message": "Unauthorized"}), 403
+
+    service = get_resource_finder_service()
+    tasks = project.tasks.all()
+    result = service.analyze_and_store_project_resources(project, tasks)
+
+    resources = [r.to_dict() for r in project.resources.all()]
+    ai_recs = [t.to_dict() for t in project.ai_recommendations.all()]
+
+    return jsonify({
+        "status": "success",
+        "message": f"Successfully analyzed project and identified {len(resources)} verified resources.",
+        "project_id": project.id,
+        "resources_count": len(resources),
+        "resources": resources,
+        "ai_recommendations": ai_recs
+    })
+
+
+@api_bp.route("/projects/<int:project_id>/resources", methods=["GET"])
+@login_required
+def api_get_project_resources(project_id: int):
+    """
+    Returns all verified resources for a project, optionally filtered by type (api, dataset, ai_tool)
+    or task_id.
+    """
+    project = Project.query.get_or_404(project_id)
+    if current_user.is_student and project.owner_id != current_user.id:
+        return jsonify({"status": "error", "message": "Unauthorized"}), 403
+
+    res_type = request.args.get("type")
+    task_id = request.args.get("task_id", type=int)
+
+    query = ProjectResource.query.filter_by(project_id=project.id)
+    if res_type:
+        query = query.filter_by(resource_type=res_type.lower())
+    if task_id is not None:
+        query = query.filter_by(task_id=task_id)
+
+    resources = query.order_by(ProjectResource.created_at.asc()).all()
+    ai_recs = project.ai_recommendations.order_by(AIRecommendation.created_at.asc()).all()
+
+    return jsonify({
+        "status": "success",
+        "project_id": project.id,
+        "count": len(resources),
+        "resources": [r.to_dict() for r in resources],
+        "ai_recommendations": [a.to_dict() for a in ai_recs]
+    })
+
+
+@api_bp.route("/projects/<int:project_id>/resources/refresh", methods=["POST"])
+@login_required
+def api_refresh_project_resources(project_id: int):
+    """
+    Refreshes and regenerates resource recommendations based on latest project status and tasks.
+    """
+    project = Project.query.get_or_404(project_id)
+    if current_user.is_student and project.owner_id != current_user.id:
+        return jsonify({"status": "error", "message": "Unauthorized"}), 403
+
+    service = get_resource_finder_service()
+    tasks = project.tasks.all()
+    result = service.analyze_and_store_project_resources(project, tasks)
+
+    resources = [r.to_dict() for r in project.resources.all()]
+    return jsonify({
+        "status": "success",
+        "message": "Project resources refreshed successfully.",
+        "project_id": project.id,
+        "resources": resources
+    })
+
+
+@api_bp.route("/projects/<int:project_id>/tasks/<int:task_id>/resources", methods=["GET"])
+@login_required
+def api_get_task_resources(project_id: int, task_id: int):
+    """
+    Returns verified APIs, Datasets, or AI Tools directly linked to an individual task.
+    """
+    project = Project.query.get_or_404(project_id)
+    if current_user.is_student and project.owner_id != current_user.id:
+        return jsonify({"status": "error", "message": "Unauthorized"}), 403
+
+    task = Task.query.filter_by(id=task_id, project_id=project.id).first_or_404()
+    resources = task.resources.all()
+    ai_recs = task.ai_recommendations.all()
+
+    return jsonify({
+        "status": "success",
+        "project_id": project.id,
+        "task_id": task.id,
+        "task_title": task.title,
+        "resources": [r.to_dict() for r in resources],
+        "ai_recommendations": [a.to_dict() for a in ai_recs]
+    })
+
+
+@api_bp.route("/projects/<int:project_id>/ai-tools/recommend", methods=["POST", "GET"])
+@login_required
+def api_recommend_ai_tools(project_id: int):
+    """
+    Generates contextual AI tool recommendations for software-related project stages.
+    """
+    project = Project.query.get_or_404(project_id)
+    if current_user.is_student and project.owner_id != current_user.id:
+        return jsonify({"status": "error", "message": "Unauthorized"}), 403
+
+    service = get_resource_finder_service()
+    tasks = project.tasks.all()
+    recommendations = service.generate_ai_tool_recommendations(project, tasks)
+
+    return jsonify({
+        "status": "success",
+        "project_id": project.id,
+        "tools": recommendations
+    })
+
+
+@api_bp.route("/projects/<int:project_id>/ai-tools/generate-prompt", methods=["POST"])
+@login_required
+def api_generate_ai_prompt(project_id: int):
+    """
+    Generates an engineered prompt specifically tailored to the student's project and task.
+    """
+    project = Project.query.get_or_404(project_id)
+    if current_user.is_student and project.owner_id != current_user.id:
+        return jsonify({"status": "error", "message": "Unauthorized"}), 403
+
+    data = request.get_json() or {}
+    tool_purpose = data.get("purpose", "Coding")
+    task_title = data.get("task_title", "Project Implementation")
+    custom_context = data.get("context", "")
+
+    tech = project.technologies or "Python, Flask, PostgreSQL"
+    prompt_text = (
+        f"I am building '{project.project_name}' in domain '{project.domain}' using {tech}. "
+        f"Goal / Task: {task_title}. "
+        f"{('Additional Context: ' + custom_context) if custom_context else ''} "
+        f"Please analyze the technical requirements first, then provide clean, modular, production-ready "
+        f"implementation steps with docstrings and error handling. Do not alter unrelated files."
+    )
+
+    return jsonify({
+        "status": "success",
+        "project_id": project.id,
+        "purpose": tool_purpose,
+        "task_title": task_title,
+        "prompt": prompt_text
+    })
+
+
+@api_bp.route("/projects/<int:project_id>/resources/<int:resource_id>/verify", methods=["POST"])
+@login_required
+def api_verify_resource(project_id: int, resource_id: int):
+    """
+    Validates and updates the verification status of a resource.
+    """
+    project = Project.query.get_or_404(project_id)
+    if current_user.is_student and project.owner_id != current_user.id:
+        return jsonify({"status": "error", "message": "Unauthorized"}), 403
+
+    resource = ProjectResource.query.filter_by(id=resource_id, project_id=project.id).first_or_404()
+    
+    # Check if official_url is valid
+    if resource.official_url and (resource.official_url.startswith("http://") or resource.official_url.startswith("https://")):
+        resource.verification_status = "Verified"
+    else:
+        resource.verification_status = "Community Source"
+
+    db.session.commit()
+
+    return jsonify({
+        "status": "success",
+        "resource": resource.to_dict()
+    })
+
+
+# ==============================================================================
+# BUILDCHECK AI — HARDWARE FEASIBILITY REST API ENDPOINTS
+# ==============================================================================
+
+@api_bp.route("/projects/<int:project_id>/buildcheck/data", methods=["GET"])
+@login_required
+def api_get_hardware_feasibility_data(project_id: int):
+    """Returns the full JSON data structure of the project's hardware feasibility analysis."""
+    project = Project.query.get_or_404(project_id)
+    if current_user.is_student and project.owner_id != current_user.id:
+        return jsonify({"status": "error", "message": "Unauthorized"}), 403
+
+    hw_service = get_hardware_feasibility_service()
+    analysis = HardwareAnalysis.query.filter_by(project_id=project.id).first()
+    if not analysis:
+        analysis = hw_service.analyze_hardware_project(project)
+
+    return jsonify({
+        "status": "success",
+        "project_id": project.id,
+        "project_name": project.project_name,
+        "data": analysis.to_dict()
+    })
+
+
+@api_bp.route("/projects/<int:project_id>/buildcheck/recalculate", methods=["POST"])
+@login_required
+def api_recalculate_hardware_feasibility(project_id: int):
+    """AJAX endpoint to recalculate hardware feasibility when student adjusts budget or components."""
+    project = Project.query.get_or_404(project_id)
+    if current_user.is_student and project.owner_id != current_user.id:
+        return jsonify({"status": "error", "message": "Unauthorized"}), 403
+
+    payload = request.get_json() or {}
+    student_budget = float(payload.get("student_budget", 2000.0))
+    preferred_controller = payload.get("preferred_controller", "ESP32")
+    preferred_marketplace = payload.get("preferred_marketplace", "Robu.in")
+    available_components = payload.get("available_components", [])
+
+    hw_service = get_hardware_feasibility_service()
+    analysis = hw_service.analyze_hardware_project(
+        project=project,
+        student_budget=student_budget,
+        available_components=available_components,
+        preferred_controller=preferred_controller,
+        preferred_marketplace=preferred_marketplace
+    )
+
+    return jsonify({
+        "status": "success",
+        "message": "Hardware feasibility recalculated successfully.",
+        "data": analysis.to_dict()
+    })
+
+
+@api_bp.route("/projects/<int:project_id>/buildcheck/options/<path:component_name>", methods=["GET"])
+@login_required
+def api_get_component_purchase_options(project_id: int, component_name: str):
+    """Returns verified 3-tier purchasing options with real links for any component."""
+    project = Project.query.get_or_404(project_id)
+    if current_user.is_student and project.owner_id != current_user.id:
+        return jsonify({"status": "error", "message": "Unauthorized"}), 403
+
+    hw_service = get_hardware_feasibility_service()
+    options_data = hw_service.get_online_purchase_options(component_name)
+
+    return jsonify({
+        "status": "success",
+        "component_name": component_name,
+        "data": options_data
+    })
+

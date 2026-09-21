@@ -3,7 +3,33 @@
 {% block title %}{{ project.project_name }} — AI Project Workspace{% endblock %}
 
 {% block content %}
-<div class="container py-3">
+<style>
+    #projectTab .nav-link {
+        color: #334155;
+        border-radius: 8px;
+        transition: all 0.15s ease-in-out;
+        border: 1px solid transparent;
+    }
+    #projectTab .nav-link:hover {
+        background-color: #f1f5f9;
+        color: #0f172a;
+    }
+    #projectTab .nav-link.active {
+        background-color: #0d6efd !important;
+        color: #ffffff !important;
+        box-shadow: 0 4px 10px rgba(13, 110, 253, 0.25);
+    }
+    #projectTab .nav-link.active i,
+    #projectTab .nav-link.active span {
+        color: #ffffff !important;
+    }
+    #projectTab .nav-link.active .badge {
+        background-color: rgba(255, 255, 255, 0.25) !important;
+        color: #ffffff !important;
+        border-color: transparent !important;
+    }
+</style>
+<div class="container-fluid px-lg-4 py-3">
     <!-- Breadcrumb & Top Bar -->
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
         <div>
@@ -25,6 +51,11 @@
         </div>
 
         <div class="d-flex flex-wrap gap-2">
+            {% if project.project_category in ['hardware', 'hybrid'] %}
+                <a href="{{ url_for('student.hardware_feasibility', project_id=project.id) }}" class="btn btn-outline-info btn-sm px-3 fw-semibold">
+                    <i class="fas fa-microchip me-1"></i> Hardware Feasibility
+                </a>
+            {% endif %}
             <form method="POST" action="{{ url_for('student.run_checkin', project_id=project.id) }}" class="d-inline">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <button type="submit" class="btn btn-primary btn-sm px-3 shadow-sm fw-semibold">
@@ -76,37 +107,127 @@
         </div>
     {% endif %}
 
-    <!-- Project Tabs Navigation -->
-    <ul class="nav nav-pills mb-4 border-bottom pb-2 gap-2" id="projectTab" role="tablist">
-        <li class="nav-item">
-            <button class="nav-link active fw-semibold" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button">
-                <i class="fas fa-tachometer-alt me-1"></i> Overview & Health
+    <!-- Timeline Pacing Alert Banner if Risk Detected -->
+    {% if pacing and pacing.is_risk_detected %}
+        <div class="alert alert-danger border-2 p-3 mb-4 rounded-3 shadow-sm d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="fs-2 text-danger"><i class="fas fa-exclamation-triangle"></i></div>
+                <div>
+                    <strong class="d-block text-danger fs-6">⚠️ Project Risk Detected: Schedule Pacing Alert</strong>
+                    <span class="text-dark small">{{ pacing.risk_message }}</span>
+                    <div class="d-flex flex-wrap gap-2 mt-1">
+                        <span class="badge bg-danger text-white"><i class="fas fa-check-circle me-1"></i>{{ pacing.progress_percentage }}% Tasks Completed</span>
+                        <span class="badge bg-dark text-white"><i class="fas fa-clock me-1"></i>{{ pacing.time_percentage }}% Timeline Elapsed</span>
+                        <span class="badge bg-warning text-dark"><i class="fas fa-hourglass-half me-1"></i>{{ pacing.days_remaining }} days remaining</span>
+                    </div>
+                </div>
+            </div>
+            <button type="button" class="btn btn-danger btn-sm fw-semibold" onclick="bootstrap.Tab.getOrCreateInstance(document.querySelector('#guidance-tab')).show()">
+                <i class="fas fa-bullseye me-1"></i> View Prioritized Action Plan
             </button>
-        </li>
-        <li class="nav-item">
-            <button class="nav-link fw-semibold" id="tasks-tab" data-bs-toggle="tab" data-bs-target="#tasks" type="button">
-                <i class="fas fa-tasks me-1"></i> Tasks ({{ tasks|length }})
-            </button>
-        </li>
-        <li class="nav-item">
-            <button class="nav-link fw-semibold" id="mentor-tab" data-bs-toggle="tab" data-bs-target="#mentor" type="button">
-                <i class="fas fa-robot me-1"></i> AI Mentor
-            </button>
-        </li>
-        <li class="nav-item">
-            <button class="nav-link fw-semibold" id="risk-tab" data-bs-toggle="tab" data-bs-target="#risk" type="button">
-                <i class="fas fa-shield-alt me-1"></i> Risk Analysis
-            </button>
-        </li>
-        <li class="nav-item">
-            <button class="nav-link fw-semibold" id="timeline-tab" data-bs-toggle="tab" data-bs-target="#timeline" type="button">
-                <i class="fas fa-history me-1"></i> Timeline
-            </button>
-        </li>
-    </ul>
+        </div>
+    {% endif %}
 
-    <!-- Tab Contents -->
-    <div class="tab-content" id="projectTabContent">
+    <!-- Main Content Layout with Left Vertical Sidebar Navigation -->
+    <div class="row g-4">
+        <!-- Left Vertical Navigation Sidebar -->
+        <div class="col-xl-3 col-lg-4 col-md-5">
+            <div class="card workspace-sidebar p-3 border-0 sticky-top">
+                <div class="d-flex align-items-center justify-content-between mb-3 px-2 border-bottom pb-2">
+                    <span class="small fw-bold text-uppercase text-muted" style="letter-spacing: 0.5px;">
+                        <i class="fas fa-compass text-primary me-1"></i> Navigation
+                    </span>
+                    <span class="badge bg-light text-secondary border small">Workspace</span>
+                </div>
+
+                <!-- Back to Dashboard Quick Action -->
+                <div class="mb-2 pb-2 border-bottom">
+                    <a href="{{ url_for('student.dashboard') }}" class="btn btn-outline-secondary btn-sm w-100 text-start py-2 px-3 fw-semibold">
+                        <i class="fas fa-home text-primary me-2"></i> Dashboard
+                    </a>
+                </div>
+
+                <ul class="nav nav-pills flex-column gap-1" id="projectTab" role="tablist">
+                    {% if project.project_category in ['hardware', 'hybrid'] %}
+                    <li class="nav-item">
+                        <a href="{{ url_for('student.hardware_feasibility', project_id=project.id) }}" class="nav-link text-start py-2 px-3 fw-semibold d-flex align-items-center justify-content-between w-100 text-info bg-light border border-info mb-1">
+                            <span><i class="fas fa-microchip text-info me-2 fa-fw"></i> BuildCheck AI</span>
+                            <span class="badge bg-info text-dark small">Hardware</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active text-start py-2 px-3 fw-semibold d-flex align-items-center justify-content-between w-100" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab">
+                            <span><i class="fas fa-folder text-primary me-2 fa-fw"></i> Overview & Roadmap</span>
+                            <span class="badge bg-light text-dark border small">{{ health_info.health_score }}%</span>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link text-start py-2 px-3 fw-semibold d-flex align-items-center justify-content-between w-100" id="tasks-tab" data-bs-toggle="tab" data-bs-target="#tasks" type="button" role="tab">
+                            <span><i class="fas fa-clipboard-list text-success me-2 fa-fw"></i> Tasks Board</span>
+                            <span class="badge bg-secondary small">{{ tasks|length }}</span>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link text-start py-2 px-3 fw-semibold d-flex align-items-center justify-content-between w-100" id="guidance-tab" data-bs-toggle="tab" data-bs-target="#guidance" type="button" role="tab">
+                            <span><i class="fas fa-robot text-danger me-2 fa-fw"></i> AI Project Analysis</span>
+                            <span class="badge bg-danger bg-opacity-10 text-danger small">Guidance</span>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link text-start py-2 px-3 fw-semibold d-flex align-items-center justify-content-between w-100" id="resources-tab" data-bs-toggle="tab" data-bs-target="#resources" type="button" role="tab">
+                            <span><i class="fas fa-link text-info me-2 fa-fw"></i> Smart Resources</span>
+                            <span class="badge bg-primary small">{{ resources|length }}</span>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link text-start py-2 px-3 fw-semibold d-flex align-items-center justify-content-between w-100" id="tools-tab" data-bs-toggle="tab" data-bs-target="#tools" type="button" role="tab">
+                            <span><i class="fas fa-brain text-warning me-2 fa-fw"></i> AI Tool Advisor</span>
+                            <span class="badge bg-light text-dark border small">{{ ai_recommendations|length }}</span>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link text-start py-2 px-3 fw-semibold d-flex align-items-center justify-content-between w-100" id="mentor-tab" data-bs-toggle="tab" data-bs-target="#mentor" type="button" role="tab">
+                            <span><i class="fas fa-comments text-purple me-2 fa-fw" style="color: #6f42c1;"></i> AI Mentor</span>
+                            <span class="badge bg-light text-dark border small">Chat</span>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link text-start py-2 px-3 fw-semibold d-flex align-items-center justify-content-between w-100" id="risk-tab" data-bs-toggle="tab" data-bs-target="#risk" type="button" role="tab">
+                            <span><i class="fas fa-chart-line text-danger me-2 fa-fw"></i> Health / Risk</span>
+                            <span class="badge {% if prediction and prediction.risk_level == 'LOW' %}bg-success{% elif prediction and prediction.risk_level == 'MODERATE' %}bg-warning text-dark{% else %}bg-danger{% endif %} small">
+                                {{ prediction.risk_level if prediction else 'LOW' }}
+                            </span>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link text-start py-2 px-3 fw-semibold d-flex align-items-center justify-content-between w-100" id="timeline-tab" data-bs-toggle="tab" data-bs-target="#timeline" type="button" role="tab">
+                            <span><i class="fas fa-clock text-secondary me-2 fa-fw"></i> Timeline</span>
+                            <span class="badge bg-light text-dark border small">{{ health_info.days_remaining }}d</span>
+                        </button>
+                    </li>
+                </ul>
+
+                <!-- Quick Progress Summary in Sidebar -->
+                <div class="mt-4 pt-3 border-top">
+                    <div class="d-flex justify-content-between small text-muted mb-1">
+                        <span>Milestone Progress</span>
+                        <span class="fw-bold text-success">{{ project.calculated_progress_pct }}%</span>
+                    </div>
+                    <div class="progress mb-2" style="height: 6px;">
+                        <div class="progress-bar bg-success" style="width: {{ project.calculated_progress_pct }}%;"></div>
+                    </div>
+                    <div class="d-flex justify-content-between small text-muted">
+                        <span>{{ project.completed_tasks_count }}/{{ tasks|length }} Tasks Done</span>
+                        <span>{{ health_info.days_remaining }} days left</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Main Tab Content Area -->
+        <div class="col-xl-9 col-lg-8 col-md-7">
+            <div class="tab-content" id="projectTabContent">
         
         <!-- TAB 1: OVERVIEW & HEALTH -->
         <div class="tab-pane fade show active" id="overview">
@@ -115,10 +236,26 @@
                 <div class="col-lg-6">
                     <div class="card card-modern p-4 h-100">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="fw-bold mb-0 text-primary">
-                                <i class="fas fa-heartbeat me-2"></i> Project Health Index
-                            </h5>
-                            <div class="badge bg-light text-dark border fs-6 px-3 py-1">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="circular-progress-wrap flex-shrink-0" style="width: 58px; height: 58px;">
+                                    <svg class="circular-progress-svg" style="width: 58px; height: 58px;" viewBox="0 0 72 72">
+                                        <circle class="progress-ring-bg" cx="36" cy="36" r="30" stroke-width="6" fill="transparent"/>
+                                        {% set h_stroke = 188.5 - (188.5 * health_info.health_score / 100) %}
+                                        <circle class="progress-ring-circle" cx="36" cy="36" r="30" stroke-width="6"
+                                                stroke="{% if health_info.health_score >= 70 %}#10b981{% elif health_info.health_score >= 50 %}#f59e0b{% else %}#ef4444{% endif %}" fill="transparent"
+                                                stroke-dasharray="188.5"
+                                                stroke-dashoffset="{{ h_stroke }}"/>
+                                    </svg>
+                                    <div class="circular-progress-val small fw-bold">{{ health_info.health_score }}%</div>
+                                </div>
+                                <div>
+                                    <h5 class="fw-bold mb-0 text-primary">
+                                        <i class="fas fa-heartbeat me-1"></i> Health Index
+                                    </h5>
+                                    <span class="small text-muted">Sprint Health & Pacing</span>
+                                </div>
+                            </div>
+                            <div class="badge {% if health_info.health_score >= 70 %}bg-success{% elif health_info.health_score >= 50 %}bg-warning text-dark{% else %}bg-danger{% endif %} fs-6 px-3 py-1 rounded-pill">
                                 {{ health_info.health_score }}/100
                             </div>
                         </div>
@@ -264,109 +401,185 @@
 
         <!-- TAB 2: TASKS BOARD -->
         <div class="tab-pane fade" id="tasks">
-            <!-- Task Scanner Toolbar -->
+            <!-- Toolbar & Filter Bar -->
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4 p-3 bg-white rounded-3 border">
-                <div class="d-flex gap-2 align-items-center">
+                <div class="d-flex gap-2 align-items-center flex-wrap">
                     <span class="fw-semibold text-dark small"><i class="fas fa-filter text-muted me-1"></i> Filter Tasks:</span>
-                    <button class="btn btn-outline-secondary btn-sm active" onclick="filterTasks('all')">All</button>
-                    <button class="btn btn-outline-secondary btn-sm" onclick="filterTasks('Not Started')">Not Started</button>
-                    <button class="btn btn-outline-secondary btn-sm" onclick="filterTasks('In Progress')">In Progress</button>
-                    <button class="btn btn-outline-secondary btn-sm" onclick="filterTasks('Completed')">Completed</button>
-                    <button class="btn btn-outline-secondary btn-sm" onclick="filterTasks('Blocked')">Blocked</button>
+                    <button class="btn btn-outline-secondary btn-sm active" onclick="filterTasks('all')">All ({{ tasks|length }})</button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="filterTasks('Not Started')">Not Started ({{ tasks|selectattr('status', 'equalto', 'Not Started')|list|length }})</button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="filterTasks('In Progress')">In Progress ({{ project.in_progress_tasks_count }})</button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="filterTasks('Completed')">Completed ({{ project.completed_tasks_count }})</button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="filterTasks('Blocked')">Blocked ({{ project.blocked_tasks_count }})</button>
                 </div>
 
                 <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#regenerateModal">
+                        <i class="fas fa-robot me-1"></i> Regenerate Tasks
+                    </button>
                     <form method="POST" action="{{ url_for('student.scan_missing_tasks', project_id=project.id) }}" class="d-inline">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                        <button type="submit" class="btn btn-outline-primary btn-sm">
+                        <button type="submit" class="btn btn-outline-secondary btn-sm">
                             <i class="fas fa-search-plus me-1"></i> Scan Missing Tasks
                         </button>
                     </form>
                 </div>
             </div>
 
-            <!-- Tasks List -->
+            <!-- Tasks List with Interactive Completion Tracking -->
             <div class="d-flex flex-column gap-3 mb-4">
                 {% for task in tasks %}
-                    <div class="card card-modern p-3 task-card" data-status="{{ task.status }}">
+                    <div class="card card-modern p-3 task-card {% if task.status == 'Completed' %}bg-light bg-opacity-50{% elif task.status == 'Blocked' %}border-danger border-opacity-50{% endif %}" data-status="{{ task.status }}">
                         <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
-                            <div>
-                                <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
-                                    <!-- Status Badge -->
-                                    {% if task.status == 'Completed' %}
-                                        <span class="badge bg-success"><i class="fas fa-check me-1"></i> Completed</span>
-                                    {% elif task.status == 'In Progress' %}
-                                        <span class="badge bg-primary"><i class="fas fa-spinner me-1"></i> In Progress</span>
-                                    {% elif task.status == 'Blocked' %}
-                                        <span class="badge bg-danger"><i class="fas fa-ban me-1"></i> Blocked</span>
-                                    {% elif task.status == 'Optional' %}
-                                        <span class="badge bg-secondary">Optional</span>
-                                    {% else %}
-                                        <span class="badge bg-light text-dark border">Not Started</span>
-                                    {% endif %}
+                            <div class="d-flex align-items-start gap-2">
+                                <!-- Interactive Checkbox Toggle -->
+                                <form method="POST" action="{{ url_for('student.update_task_status', project_id=project.id, task_id=task.id) }}" class="d-inline mt-1">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                    <input type="hidden" name="status" value="{% if task.status == 'Completed' %}Not Started{% else %}Completed{% endif %}">
+                                    <button type="submit" class="btn btn-link p-0 text-decoration-none border-0 fs-5" title="Toggle Completion">
+                                        {% if task.status == 'Completed' %}
+                                            <i class="fas fa-check-square text-success"></i>
+                                        {% else %}
+                                            <i class="far fa-square text-secondary"></i>
+                                        {% endif %}
+                                    </button>
+                                </form>
 
-                                    <!-- Priority Badge -->
-                                    <span class="badge {% if task.priority == 'Critical' %}bg-danger{% elif task.priority == 'High' %}bg-warning text-dark{% elif task.priority == 'Medium' %}bg-primary{% else %}bg-secondary{% endif %}">
-                                        {{ task.priority }}
-                                    </span>
+                                <div>
+                                    <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                                        <!-- Status Badge -->
+                                        {% if task.status == 'Completed' %}
+                                            <span class="badge bg-success"><i class="fas fa-check me-1"></i> Completed</span>
+                                        {% elif task.status == 'In Progress' %}
+                                            <span class="badge bg-primary"><i class="fas fa-spinner fa-spin me-1"></i> In Progress</span>
+                                        {% elif task.status == 'Blocked' %}
+                                            <span class="badge bg-danger"><i class="fas fa-ban me-1"></i> Blocked</span>
+                                        {% else %}
+                                            <span class="badge bg-light text-dark border">Not Started</span>
+                                        {% endif %}
 
-                                    <!-- Category Badge -->
-                                    <span class="badge bg-light text-secondary border">{{ task.category }}</span>
+                                        <!-- Priority Badge -->
+                                        <span class="badge {% if task.priority == 'Critical' %}bg-danger{% elif task.priority == 'High' %}bg-warning text-dark{% elif task.priority == 'Medium' %}bg-primary{% else %}bg-secondary{% endif %}">
+                                            {{ task.priority }}
+                                        </span>
 
-                                    <h6 class="fw-bold text-dark mb-0 ms-1 {% if task.status == 'Completed' %}text-decoration-line-through text-muted{% endif %}">
-                                        {{ task.title }}
-                                    </h6>
+                                        <!-- Phase & Category -->
+                                        <span class="badge bg-light text-primary border">{{ task.phase or 'Phase ' ~ task.phase_number }}</span>
+                                        <span class="badge bg-light text-secondary border">{{ task.category }}</span>
+                                        <span class="badge bg-light text-muted border"><i class="far fa-clock me-1"></i>{{ task.estimated_hours }} hrs</span>
+
+                                        {% if task.can_parallel %}
+                                            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 small">
+                                                <i class="fas fa-code-branch me-1"></i> Parallel
+                                            </span>
+                                        {% endif %}
+
+                                        <h6 class="fw-bold text-dark mb-0 ms-1 {% if task.status == 'Completed' %}text-decoration-line-through text-muted{% endif %}">
+                                            {{ task.title }}
+                                        </h6>
+                                    </div>
                                 </div>
                             </div>
 
-                            <!-- Interactive Status Change Buttons -->
-                            <div class="d-flex gap-1">
-                                {% if task.status != 'Completed' %}
-                                    <form method="POST" action="{{ url_for('student.update_task_status', project_id=project.id, task_id=task.id) }}" class="d-inline">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                                        <input type="hidden" name="status" value="Completed">
-                                        <button type="submit" class="btn btn-outline-success btn-sm py-0 px-2" title="Mark Completed">
-                                            <i class="fas fa-check"></i> Done
-                                        </button>
-                                    </form>
-                                {% endif %}
-
-                                {% if task.status != 'In Progress' and task.status != 'Completed' %}
-                                    <form method="POST" action="{{ url_for('student.update_task_status', project_id=project.id, task_id=task.id) }}" class="d-inline">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                                        <input type="hidden" name="status" value="In Progress">
-                                        <button type="submit" class="btn btn-outline-primary btn-sm py-0 px-2" title="Start Working">
-                                            <i class="fas fa-play"></i>
-                                        </button>
-                                    </form>
-                                {% endif %}
-
-                                {% if task.status != 'Blocked' %}
-                                    <button class="btn btn-outline-danger btn-sm py-0 px-2" title="Mark Blocked" data-bs-toggle="modal" data-bs-target="#blockedModal{{ task.id }}">
-                                        <i class="fas fa-exclamation-circle"></i> Blocked
+                            <!-- Interactive Action Buttons -->
+                            <div class="d-flex gap-1 flex-wrap">
+                                <!-- Status Dropdown -->
+                                <div class="dropdown d-inline">
+                                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle py-0 px-2" type="button" data-bs-toggle="dropdown">
+                                        Status: {{ task.status }}
                                     </button>
-                                {% endif %}
+                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm small">
+                                        <li>
+                                            <form method="POST" action="{{ url_for('student.update_task_status', project_id=project.id, task_id=task.id) }}">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                <input type="hidden" name="status" value="Not Started">
+                                                <button type="submit" class="dropdown-item"><i class="far fa-circle text-muted me-2"></i> Not Started</button>
+                                            </form>
+                                        </li>
+                                        <li>
+                                            <form method="POST" action="{{ url_for('student.update_task_status', project_id=project.id, task_id=task.id) }}">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                <input type="hidden" name="status" value="In Progress">
+                                                <button type="submit" class="dropdown-item"><i class="fas fa-play text-primary me-2"></i> In Progress</button>
+                                            </form>
+                                        </li>
+                                        <li>
+                                            <form method="POST" action="{{ url_for('student.update_task_status', project_id=project.id, task_id=task.id) }}">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                <input type="hidden" name="status" value="Completed">
+                                                <button type="submit" class="dropdown-item"><i class="fas fa-check text-success me-2"></i> Completed</button>
+                                            </form>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <button class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#blockedModal{{ task.id }}">
+                                                <i class="fas fa-exclamation-triangle me-2"></i> Mark Blocked...
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </div>
 
+                                <!-- Edit Task Button -->
+                                <button type="button" class="btn btn-outline-primary btn-sm py-0 px-2" title="Edit Task"
+                                        onclick="openEditModal({{ task.id }}, '{{ task.title|replace("'", "\\'") }}', '{{ (task.description or '')|replace("'", "\\'") }}', '{{ task.category }}', '{{ task.priority }}', '{{ task.difficulty }}', '{{ task.phase }}', {{ task.estimated_hours }})">
+                                    <i class="fas fa-pencil-alt"></i>
+                                </button>
+
+                                <!-- Delete Task Button -->
                                 <form method="POST" action="{{ url_for('student.delete_task', project_id=project.id, task_id=task.id) }}" class="d-inline" onsubmit="return confirm('Remove task?');">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                                    <button type="submit" class="btn btn-outline-secondary btn-sm py-0 px-2">
+                                    <button type="submit" class="btn btn-outline-secondary btn-sm py-0 px-2" title="Delete Task">
                                         <i class="fas fa-trash-alt"></i>
                                     </button>
                                 </form>
                             </div>
                         </div>
 
-                        <p class="text-secondary small mb-1">{{ task.description }}</p>
+                        <p class="text-secondary small mb-1 ms-4">{{ task.description }}</p>
 
                         {% if task.blocker_reason and task.status == 'Blocked' %}
-                            <div class="p-2 bg-danger bg-opacity-10 border border-danger border-opacity-25 rounded-2 small text-danger mt-2">
+                            <div class="p-2 bg-danger bg-opacity-10 border border-danger border-opacity-25 rounded-2 small text-danger mt-2 ms-4">
                                 <strong><i class="fas fa-exclamation-triangle me-1"></i> Blocker Note:</strong> {{ task.blocker_reason }}
                             </div>
                         {% endif %}
 
                         {% if task.reason %}
-                            <div class="small text-muted fst-italic mt-1">
+                            <div class="small text-muted fst-italic mt-1 ms-4">
                                 <i class="fas fa-lightbulb text-warning me-1"></i> {{ task.reason }}
+                            </div>
+                        {% endif %}
+
+                        <!-- Linked Task Resources -->
+                        {% set task_res_list = task.resources.all() %}
+                        {% if task_res_list %}
+                            <div class="mt-2 ms-4 p-2 bg-light rounded-2 border d-flex flex-wrap align-items-center gap-2">
+                                <span class="small fw-semibold text-dark"><i class="fas fa-cubes text-primary me-1"></i> Required Resources:</span>
+                                {% for r in task_res_list %}
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <span class="badge {% if r.resource_type == 'api' %}bg-info text-dark{% elif r.resource_type == 'dataset' %}bg-success text-white{% else %}bg-purple text-white{% endif %} py-1 px-2 border">
+                                            {{ r.resource_type|upper }}: {{ r.resource_name }}
+                                        </span>
+                                        {% if r.official_url %}
+                                            <a href="{{ r.official_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-secondary py-0 px-2" title="Official Website">
+                                                <i class="fas fa-external-link-alt small"></i>
+                                            </a>
+                                        {% endif %}
+                                        {% if r.documentation_url %}
+                                            <a href="{{ r.documentation_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary py-0 px-2" title="Documentation">
+                                                <i class="fas fa-book small"></i>
+                                            </a>
+                                        {% endif %}
+                                        {% if r.download_url %}
+                                            <a href="{{ r.download_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-success py-0 px-2" title="Download">
+                                                <i class="fas fa-download small"></i>
+                                            </a>
+                                        {% endif %}
+                                        {% if r.api_key_url %}
+                                            <a href="{{ r.api_key_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-warning text-dark py-0 px-2" title="Get API Key">
+                                                <i class="fas fa-key small"></i>
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
                             </div>
                         {% endif %}
                     </div>
@@ -384,8 +597,8 @@
                                     <input type="hidden" name="status" value="Blocked">
                                     <div class="modal-body">
                                         <p class="small text-secondary">Task: <strong>{{ task.title }}</strong></p>
-                                        <label for="blocker_reason" class="form-label small fw-semibold">What is blocking you? (AI will provide troubleshooting advice)</label>
-                                        <textarea class="form-control" name="blocker_reason" rows="3" placeholder="e.g. Database connection string error in Docker container, or PyTorch CUDA out of memory..." required></textarea>
+                                        <label class="form-label small fw-semibold">What is blocking you? (Gemini AI will provide troubleshooting advice)</label>
+                                        <textarea class="form-control" name="blocker_reason" rows="3" placeholder="e.g. Database connection string error in Docker, CORS policy blocking API, or OAuth token refresh failing..." required></textarea>
                                     </div>
                                     <div class="modal-footer">
                                         <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
@@ -400,34 +613,414 @@
 
             <!-- Add Task Form -->
             <div class="card card-modern p-4">
-                <h5 class="fw-bold mb-2"><i class="fas fa-plus-circle text-primary me-2"></i> Add New Task</h5>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5 class="fw-bold mb-0 text-dark"><i class="fas fa-plus-circle text-primary me-2"></i> Add Task</h5>
+                    <span class="text-muted small">Do you want to add any additional tasks?</span>
+                </div>
                 <form method="POST" action="{{ url_for('student.add_task', project_id=project.id) }}" class="row g-2">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                    <div class="col-md-6">
+                    <div class="col-md-5">
                         <input type="text" class="form-control" name="title" placeholder="Task title..." required>
                     </div>
                     <div class="col-md-3">
-                        <select name="category" class="form-select">
-                            <option value="Backend">Backend</option>
-                            <option value="Frontend">Frontend</option>
-                            <option value="Database">Database</option>
-                            <option value="Machine Learning">Machine Learning</option>
-                            <option value="Testing">Testing</option>
-                            <option value="Documentation">Documentation</option>
-                            <option value="Deployment">Deployment</option>
-                            <option value="Presentation">Presentation</option>
+                        <select name="phase" class="form-select">
+                            <option value="Phase 1 — Research & Planning">Phase 1 — Research & Planning</option>
+                            <option value="Phase 2 — UI/UX Design">Phase 2 — UI/UX Design</option>
+                            <option value="Phase 3 — Development" selected>Phase 3 — Development</option>
+                            <option value="Phase 4 — Database">Phase 4 — Database</option>
+                            <option value="Phase 5 — Testing">Phase 5 — Testing</option>
+                            <option value="Phase 6 — Documentation & Deployment">Phase 6 — Documentation & Deployment</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
+                        <input type="number" class="form-control" name="estimated_hours" value="4" min="1" max="50" placeholder="Hours">
+                    </div>
+                    <div class="col-md-2">
                         <button type="submit" class="btn btn-primary w-100">
-                            <i class="fas fa-plus me-1"></i> Add with Duplicate Check
+                            <i class="fas fa-plus me-1"></i> Add Task
                         </button>
                     </div>
                 </form>
             </div>
         </div>
 
-        <!-- TAB 3: AI MENTOR -->
+        <!-- TAB 3: 🎯 AI GUIDANCE & PRIORITIES -->
+        <div class="tab-pane fade" id="guidance">
+            <!-- Pacing & Risk Banner -->
+            {% if pacing and pacing.is_risk_detected %}
+                <div class="alert alert-danger border-2 p-3 mb-4 rounded-3 shadow-sm">
+                    <div class="d-flex align-items-start gap-3">
+                        <i class="fas fa-exclamation-triangle fs-3 text-danger mt-1"></i>
+                        <div>
+                            <strong class="d-block text-danger fs-6">⚠️ Project Risk Detected: Schedule Pacing Alert</strong>
+                            <p class="mb-2 text-dark">{{ pacing.risk_message }}</p>
+                            <div class="d-flex flex-wrap gap-2">
+                                <span class="badge bg-danger text-white"><i class="fas fa-tasks me-1"></i> {{ pacing.progress_percentage }}% Tasks Completed</span>
+                                <span class="badge bg-dark text-white"><i class="fas fa-clock me-1"></i> {{ pacing.time_percentage }}% Timeline Elapsed</span>
+                                <span class="badge bg-warning text-dark"><i class="fas fa-hourglass-half me-1"></i> {{ pacing.days_remaining }} days remaining</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Schedule Pacing Deep Dive Card -->
+            <div class="card card-modern p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0 text-dark">
+                        <i class="fas fa-tachometer-alt text-primary me-2"></i> Schedule Pacing & Timeline Health
+                    </h5>
+                    <span class="badge {% if pacing.is_risk_detected %}bg-danger{% else %}bg-success{% endif %} fs-6 px-3 py-2">
+                        {{ pacing.status_color|capitalize if pacing.status_color else 'Healthy' }} Pacing
+                    </span>
+                </div>
+                <div class="row g-4 mb-3">
+                    <div class="col-md-6 border-end">
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span class="fw-semibold text-muted">Completed Tasks Velocity</span>
+                            <span class="fw-bold text-success">{{ pacing.progress_percentage }}%</span>
+                        </div>
+                        <div class="progress mb-2" style="height: 12px;">
+                            <div class="progress-bar bg-success progress-bar-striped" style="width: {{ pacing.progress_percentage }}%;"></div>
+                        </div>
+                        <small class="text-muted">{{ project.completed_tasks_count }} of {{ tasks|length }} tasks completed.</small>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span class="fw-semibold text-muted">Timeline Elapsed (Deadline vs Creation)</span>
+                            <span class="fw-bold {% if pacing.time_percentage > pacing.progress_percentage + 15 %}text-danger{% else %}text-primary{% endif %}">{{ pacing.time_percentage }}%</span>
+                        </div>
+                        <div class="progress mb-2" style="height: 12px;">
+                            <div class="progress-bar {% if pacing.time_percentage > pacing.progress_percentage + 15 %}bg-danger{% else %}bg-primary{% endif %}" style="width: {{ pacing.time_percentage }}%;"></div>
+                        </div>
+                        <small class="text-muted">{{ pacing.days_remaining }} days remaining until {{ project.deadline.strftime('%b %d, %Y') if project.deadline else 'deadline' }}.</small>
+                    </div>
+                </div>
+                {% if guidance and guidance.summary_advice %}
+                    <div class="p-3 bg-light rounded-3 border-start border-4 border-primary">
+                        <strong class="text-dark small"><i class="fas fa-lightbulb text-warning me-1"></i> Gemini Project Advisor:</strong>
+                        <p class="text-secondary small mb-0 mt-1">{{ guidance.summary_advice }}</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="row g-4 mb-4">
+                <!-- Prioritized Next Tasks -->
+                <div class="col-lg-6">
+                    <div class="card card-modern p-4 h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="fw-bold mb-0 text-dark">
+                                <i class="fas fa-bullseye text-danger me-2"></i> 🎯 Focus Next: Prioritized Tasks
+                            </h5>
+                            <span class="badge bg-danger bg-opacity-10 text-danger small">Highest ROI</span>
+                        </div>
+                        <p class="text-muted small mb-3">
+                            Gemini has ranked these tasks as the most urgent to advance your milestone without hitting blockers.
+                        </p>
+                        {% if guidance and guidance.prioritized_tasks %}
+                            <div class="d-flex flex-column gap-3">
+                                {% for item in guidance.prioritized_tasks %}
+                                    <div class="p-3 rounded-3 border bg-light bg-opacity-50">
+                                        <div class="d-flex justify-content-between align-items-start mb-1">
+                                            <h6 class="fw-bold mb-0 text-dark">
+                                                <span class="badge bg-dark me-1">#{{ loop.index }}</span>
+                                                {{ item.title }}
+                                            </h6>
+                                            <span class="badge bg-danger">{{ item.priority or 'High' }}</span>
+                                        </div>
+                                        <div class="d-flex flex-wrap gap-2 small text-muted my-2">
+                                            <span><i class="fas fa-layer-group me-1"></i>{{ item.phase or 'Phase 3' }}</span>
+                                            <span><i class="fas fa-clock me-1"></i>~{{ item.estimated_hours or 4 }} hrs</span>
+                                            <span><i class="fas fa-tachometer-alt me-1"></i>{{ item.difficulty or 'Medium' }}</span>
+                                        </div>
+                                        <div class="small text-secondary mb-2 fst-italic">
+                                            <i class="fas fa-info-circle text-primary me-1"></i> {{ item.reason or 'Critical path item to unlock subsequent development deliverables.' }}
+                                        </div>
+                                        {% if item.id %}
+                                            <form method="POST" action="{{ url_for('student.update_task_status', project_id=project.id, task_id=item.id) }}" class="d-flex gap-2">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                <input type="hidden" name="status" value="In Progress">
+                                                <button type="submit" class="btn btn-outline-primary btn-sm py-0 px-2">
+                                                    <i class="fas fa-play me-1"></i> Start Task
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4 text-muted">
+                                <i class="fas fa-check-double text-success fs-3 mb-2"></i>
+                                <p class="small mb-0">All high priority tasks are currently completed or underway!</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Parallel Tasks for Team -->
+                <div class="col-lg-6">
+                    <div class="card card-modern p-4 h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="fw-bold mb-0 text-dark">
+                                <i class="fas fa-users-cog text-primary me-2"></i> ⚡ Work in Parallel
+                            </h5>
+                            <span class="badge bg-primary bg-opacity-10 text-primary small">Team Size: {{ project.team_size or 1 }}</span>
+                        </div>
+                        <p class="text-muted small mb-3">
+                            These independent tasks have no dependencies and can be worked on simultaneously by different team members:
+                        </p>
+                        {% if guidance and guidance.parallel_tasks %}
+                            <div class="d-flex flex-column gap-3">
+                                {% for item in guidance.parallel_tasks %}
+                                    <div class="p-3 rounded-3 border bg-light bg-opacity-50">
+                                        <div class="d-flex justify-content-between align-items-start mb-1">
+                                            <strong class="text-dark">{{ item.title }}</strong>
+                                            <span class="badge bg-info text-dark">Parallelizable</span>
+                                        </div>
+                                        <div class="small text-muted my-1">
+                                            <span class="me-2"><i class="fas fa-layer-group me-1"></i>{{ item.phase or 'Phase 2/3' }}</span>
+                                            <span><i class="fas fa-clock me-1"></i>~{{ item.estimated_hours or 3 }} hrs</span>
+                                        </div>
+                                        <div class="small text-secondary">
+                                            {{ item.reason or 'Independent sub-module can be assigned to a teammate without waiting for backend approval.' }}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4 text-muted">
+                                <i class="fas fa-info-circle text-primary fs-3 mb-2"></i>
+                                <p class="small mb-0">Assign tasks across different phases (e.g. UI mockups alongside DB schema) to accelerate progress.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Blocked Tasks Section & Troubleshooting -->
+            <div class="card card-modern p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0 text-dark">
+                        <i class="fas fa-exclamation-circle text-danger me-2"></i> 🚨 Blocked Tasks & Troubleshooting
+                    </h5>
+                    <span class="badge {% if project.blocked_tasks_count > 0 %}bg-danger{% else %}bg-success{% endif %}">
+                        {{ project.blocked_tasks_count }} Blocked
+                    </span>
+                </div>
+
+                {% if guidance and guidance.blocked_tasks and guidance.blocked_tasks|length > 0 %}
+                    <div class="d-flex flex-column gap-3">
+                        {% for b in guidance.blocked_tasks %}
+                            <div class="p-3 rounded-3 border border-danger border-opacity-25 bg-danger bg-opacity-10">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h6 class="fw-bold text-danger mb-0">{{ b.title }}</h6>
+                                    <span class="badge bg-danger">Blocked</span>
+                                </div>
+                                <div class="small mb-2 text-dark">
+                                    <strong>Student Blocker Note:</strong> {{ b.blocker_reason or 'Stuck on technical implementation' }}
+                                </div>
+                                <div class="p-3 bg-white rounded-2 border small">
+                                    <strong class="text-primary"><i class="fas fa-robot me-1"></i> Gemini AI Troubleshooting Advice:</strong>
+                                    <p class="mb-0 text-dark mt-1">{{ b.troubleshooting_tip or 'Check dependency versions, ensure API keys are exported as environment variables, and inspect console network response tabs for error codes.' }}</p>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="p-4 text-center bg-light rounded-3">
+                        <i class="fas fa-check-circle text-success fs-2 mb-2"></i>
+                        <h6 class="fw-bold text-success mb-1">No Blocked Tasks!</h6>
+                        <p class="text-muted small mb-0">None of your tasks are currently marked as blocked. Keep the momentum going!</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="row g-4 mb-4">
+                <!-- Missing Tasks Detector -->
+                <div class="col-lg-6">
+                    <div class="card card-modern p-4 h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="fw-bold mb-0 text-dark">
+                                <i class="fas fa-search-plus text-warning me-2"></i> 🔍 Missing Tasks Detector
+                            </h5>
+                            <span class="badge bg-warning text-dark small">AI Detection</span>
+                        </div>
+                        <p class="text-muted small mb-3">
+                            Based on your domain (<strong>{{ project.domain }}</strong>), Gemini detected common deliverables students often forget:
+                        </p>
+                        {% if guidance and guidance.missing_tasks %}
+                            <div class="d-flex flex-column gap-3">
+                                {% for m in guidance.missing_tasks %}
+                                    <div class="p-3 rounded-3 border bg-light bg-opacity-50">
+                                        <div class="d-flex justify-content-between align-items-start mb-1">
+                                            <strong class="text-dark">{{ m.title }}</strong>
+                                            <span class="badge bg-secondary">{{ m.phase or 'Phase 5 — Testing' }}</span>
+                                        </div>
+                                        <p class="small text-muted mb-2">{{ m.explanation or 'Vital for grading rubric completeness and viva defense.' }}</p>
+                                        <form method="POST" action="{{ url_for('student.add_task', project_id=project.id) }}">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                            <input type="hidden" name="title" value="{{ m.title }}">
+                                            <input type="hidden" name="phase" value="{{ m.phase or 'Phase 5 — Testing' }}">
+                                            <input type="hidden" name="estimated_hours" value="{{ m.estimated_hours or 3 }}">
+                                            <input type="hidden" name="description" value="{{ m.explanation or 'Task suggested by AI guidance' }}">
+                                            <button type="submit" class="btn btn-outline-success btn-sm py-0 px-2">
+                                                <i class="fas fa-plus me-1"></i> Add This Task to Project
+                                            </button>
+                                        </form>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted small">Your current roadmap comprehensively covers standard university deliverables.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Recommended System Architecture -->
+                <div class="col-lg-6">
+                    <div class="card card-modern p-4 h-100">
+                        <h5 class="fw-bold mb-3 text-dark">
+                            <i class="fas fa-sitemap text-primary me-2"></i> 🏗️ System Architecture
+                        </h5>
+                        {% set arch = guidance.architecture if (guidance and guidance.architecture) else project.get_architecture() %}
+                        {% if arch is mapping %}
+                            <div class="d-flex flex-column gap-2 small">
+                                <div class="p-2 bg-light rounded-2">
+                                    <strong class="text-primary d-block">Frontend:</strong>
+                                    <span class="text-secondary">{{ arch.frontend or 'HTML5 / Bootstrap 5 / Vanilla JS' }}</span>
+                                </div>
+                                <div class="p-2 bg-light rounded-2">
+                                    <strong class="text-primary d-block">Backend:</strong>
+                                    <span class="text-secondary">{{ arch.backend or 'Python Flask REST API' }}</span>
+                                </div>
+                                <div class="p-2 bg-light rounded-2">
+                                    <strong class="text-primary d-block">Database:</strong>
+                                    <span class="text-secondary">{{ arch.database or 'SQLite / PostgreSQL' }}</span>
+                                </div>
+                                <div class="p-2 bg-light rounded-2">
+                                    <strong class="text-primary d-block">Security & Authentication:</strong>
+                                    <span class="text-secondary">{{ arch.security or 'Session-based Auth, CSRF Protection, Password Hashing' }}</span>
+                                </div>
+                                <div class="p-2 bg-light rounded-2">
+                                    <strong class="text-primary d-block">Deployment:</strong>
+                                    <span class="text-secondary">{{ arch.deployment or 'Render / Railway / Gunicorn' }}</span>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="p-3 bg-light rounded-3 small text-secondary">
+                                {{ arch or 'Standard Client-Server 3-Tier Architecture with relational database storage and REST API endpoints.' }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 4: 🤖 AI TOOL ADVISOR & 💡 PROMPTS -->
+        <div class="tab-pane fade" id="tools">
+            <!-- Stage-by-Stage AI Tools -->
+            <div class="card card-modern p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h5 class="fw-bold mb-1 text-dark">
+                            <i class="fas fa-tools text-primary me-2"></i> 🛠️ Recommended AI Tools per Stage
+                        </h5>
+                        <p class="text-muted small mb-0">
+                            Accelerate your project execution using these industry-standard AI assistants recommended for <strong>{{ project.project_name }}</strong>:
+                        </p>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    {% set tools_data = ai_tools.stage_tools if (ai_tools and ai_tools.stage_tools) else [
+                        {"stage": "Research & Planning", "tools": ["Gemini 1.5", "ChatGPT", "Elicit"], "purpose": "Literature review, project requirements document, and scope definition"},
+                        {"stage": "UI/UX Design", "tools": ["Figma AI", "v0.dev", "Galileo AI"], "purpose": "Wireframing student/organizer/admin dashboards and interactive prototyping"},
+                        {"stage": "Development", "tools": ["GitHub Copilot", "Cursor AI", "Claude Code"], "purpose": "Code autocompletion, REST API boilerplate, role-based auth implementation"},
+                        {"stage": "Database", "tools": ["DB Designer", "Prisma Studio", "ChatGPT SQL"], "purpose": "Entity relationship diagram (ERD) and relational schema design"},
+                        {"stage": "Testing", "tools": ["Postman AI", "pytest-mock", "Playwright"], "purpose": "Automated endpoint validation, load testing, and edge-case unit test suites"},
+                        {"stage": "Documentation & Deployment", "tools": ["Mintlify", "Render / Railway", "Overleaf AI"], "purpose": "SRS report generation, viva defense slides, and one-click cloud hosting"}
+                    ] %}
+
+                    {% for st in tools_data %}
+                        <div class="col-md-6 col-lg-4">
+                            <div class="p-3 border rounded-3 bg-light h-100 d-flex flex-column">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="fw-bold text-dark mb-0 small">{{ st.stage }}</h6>
+                                    <span class="badge bg-primary bg-opacity-10 text-primary small">Stage {{ loop.index }}</span>
+                                </div>
+                                <div class="d-flex flex-wrap gap-1 mb-2">
+                                    {% for t in st.tools %}
+                                        <span class="badge bg-white text-dark border"><i class="fas fa-bolt text-warning me-1"></i>{{ t }}</span>
+                                    {% endfor %}
+                                </div>
+                                <p class="text-muted small mb-0 mt-auto">{{ st.purpose }}</p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Ready-to-Use Prompts -->
+            <div class="card card-modern p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h5 class="fw-bold mb-1 text-dark">
+                            <i class="fas fa-terminal text-success me-2"></i> 💡 Ready-to-Use Prompts
+                        </h5>
+                        <p class="text-muted small mb-0">
+                            Copy these engineered prompts directly into Gemini, ChatGPT, or the built-in AI Mentor to generate schemas, endpoints, or UI designs:
+                        </p>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    {% set prompt_list = ai_tools.prompts if (ai_tools and ai_tools.prompts) else [
+                        {
+                            "stage": "UI/UX Design",
+                            "title": "Dashboard Wireframe Prompt",
+                            "prompt": "Act as a Senior UI/UX Designer. Create a modern, clean dashboard layout for a " ~ project.project_name ~ " built with Bootstrap 5. Include role-based navigation for Students, Organizers, and Admins, stats summary cards, and an event approval table with actionable badges."
+                        },
+                        {
+                            "stage": "Database",
+                            "title": "SQL Schema & Models Prompt",
+                            "prompt": "Act as a Database Architect. Design a normalized relational SQL schema for " ~ project.project_name ~ ". Include tables for Users (with roles: student, organizer, admin), Events, Registrations, Approvals, and Attendance. Provide proper primary keys, foreign keys with ON DELETE CASCADE, and indexes for performance."
+                        },
+                        {
+                            "stage": "Development",
+                            "title": "REST API Controller Prompt",
+                            "prompt": "Write a secure Python Flask REST API blueprint for " ~ project.project_name ~ " that handles: 1) Event creation with start/end date validation, 2) Student event registration with capacity limits, 3) Status transition approvals. Include CSRF tokens, input sanitization, and JSON response formatting."
+                        },
+                        {
+                            "stage": "Testing",
+                            "title": "Pytest Test Suite Prompt",
+                            "prompt": "Generate a comprehensive Pytest test suite for " ~ project.project_name ~ ". Include tests for: successful registration, registration when event is full (HTTP 400), unauthorized organizer approvals (HTTP 403), and SQL injection attempt handling."
+                        }
+                    ] %}
+
+                    {% for p in prompt_list %}
+                        <div class="col-lg-6">
+                            <div class="card border rounded-3 p-3 h-100 d-flex flex-column bg-white shadow-sm">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="fw-bold text-dark mb-0">{{ p.title }}</h6>
+                                    <span class="badge bg-secondary small">{{ p.stage }}</span>
+                                </div>
+                                <div class="p-3 bg-light rounded-2 font-monospace small text-dark border mb-3 flex-grow-1" style="white-space: pre-wrap; font-size: 0.8rem;">{{ p.prompt }}</div>
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-outline-primary btn-sm px-3" onclick="copyPrompt(this, '{{ p.prompt|replace("'", "\\'")|replace('\n', ' ') }}')">
+                                        <i class="far fa-copy me-1"></i> Copy Prompt
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm px-3" onclick="usePromptInMentor('{{ p.prompt|replace("'", "\\'")|replace('\n', ' ') }}')">
+                                        <i class="fas fa-robot me-1"></i> Ask AI Mentor
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 5: AI MENTOR -->
         <div class="tab-pane fade" id="mentor">
             <div class="row g-4">
                 <!-- Check-in summary -->
@@ -621,6 +1214,381 @@
             </div>
         </div>
 
+        <!-- TAB: ⚡ SMART RESOURCE FINDER -->
+        <div class="tab-pane fade" id="resources">
+            <!-- Header Card -->
+            <div class="card card-modern p-4 mb-4 border-0 shadow-sm">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                    <div>
+                        <h4 class="fw-bold mb-1 text-dark">
+                            <i class="fas fa-cubes text-primary me-2"></i> ⚡ Smart Resources & Verified Developer Hub
+                        </h4>
+                        <p class="text-secondary small mb-0">
+                            Gemini AI has analyzed <strong>{{ project.project_name }}</strong> to discover essential external APIs, downloadable datasets, and specialized AI tools with official documentation and direct links.
+                        </p>
+                    </div>
+                    <form method="POST" action="{{ url_for('student.refresh_project_resources', project_id=project.id) }}" class="d-inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <button type="submit" class="btn btn-primary btn-sm fw-semibold shadow-sm">
+                            <i class="fas fa-sync-alt me-1"></i> Refresh / Re-analyze Resources
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Resource Quick Metrics -->
+                <div class="row g-3 mt-3 text-center">
+                    <div class="col-6 col-md-3">
+                        <div class="p-3 bg-light rounded-3 border">
+                            <div class="text-muted small">Total Resources</div>
+                            <div class="fs-4 fw-bold text-dark">{{ resources|length }}</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="p-3 bg-light rounded-3 border">
+                            <div class="text-muted small">Recommended APIs</div>
+                            <div class="fs-4 fw-bold text-primary">{{ api_resources|length }}</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="p-3 bg-light rounded-3 border">
+                            <div class="text-muted small">Datasets & CSVs</div>
+                            <div class="fs-4 fw-bold text-success">{{ dataset_resources|length }}</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="p-3 bg-light rounded-3 border">
+                            <div class="text-muted small">AI Tools & Prompts</div>
+                            <div class="fs-4 fw-bold text-info">{{ ai_recommendations|length }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 1: RECOMMENDED APIS -->
+            <div class="card card-modern p-4 mb-4 border-0 shadow-sm">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0 text-dark">
+                        <i class="fas fa-network-wired text-primary me-2"></i> 🌐 Recommended APIs
+                    </h5>
+                    <span class="badge bg-primary bg-opacity-10 text-primary">{{ api_resources|length }} Identified</span>
+                </div>
+                <p class="text-muted small mb-4">
+                    Official verified cloud APIs required to integrate real-time feeds, data processing, user authentication, or payment functionality into your project.
+                </p>
+
+                {% if api_resources %}
+                    <div class="row g-4">
+                        {% for api in api_resources %}
+                            <div class="col-lg-6">
+                                <div class="card card-3d resource-card h-100 p-3 shadow-sm d-flex flex-column">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="fw-bold text-dark mb-0 fs-6">{{ api.resource_name }}</h6>
+                                        <div class="d-flex gap-1 flex-wrap justify-content-end">
+                                            <!-- Verification Status Badge -->
+                                            <span class="badge {% if api.verification_status == 'Verified' %}bg-success{% elif api.verification_status == 'Official Source' %}bg-primary{% else %}bg-secondary{% endif %} small">
+                                                <i class="fas fa-check-circle me-1"></i>{{ api.verification_status }}
+                                            </span>
+                                            <!-- Auth Key Requirement Badge -->
+                                            {% if api.authentication_required %}
+                                                <span class="badge bg-warning text-dark small"><i class="fas fa-key me-1"></i> Requires API Key</span>
+                                            {% else %}
+                                                <span class="badge bg-success bg-opacity-10 text-success border small"><i class="fas fa-unlock me-1"></i> No Key Required</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+
+                                    <!-- Purpose & Description -->
+                                    <div class="mb-2">
+                                        <span class="badge bg-light text-primary border me-1">{{ api.pricing_information or 'Free Tier Available' }}</span>
+                                        {% if api.task %}
+                                            <span class="badge bg-light text-secondary border"><i class="fas fa-tasks me-1"></i> Task: {{ api.task.title|truncate(35) }}</span>
+                                        {% endif %}
+                                    </div>
+
+                                    <p class="small text-secondary mb-2">
+                                        <strong>Purpose:</strong> {{ api.purpose }}
+                                    </p>
+                                    <p class="small text-muted mb-3 fst-italic">
+                                        <i class="fas fa-info-circle text-primary me-1"></i> <strong>Why you need this:</strong> {{ api.why_needed or api.description }}
+                                    </p>
+
+                                    <!-- Direct Student Actions (Only render if verified URL exists) -->
+                                    <div class="mt-auto pt-2 border-top d-flex flex-wrap gap-2">
+                                        {% if api.api_key_url %}
+                                            <a href="{{ api.api_key_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-warning btn-sm fw-semibold text-dark">
+                                                <i class="fas fa-key me-1"></i> Get API Key
+                                            </a>
+                                        {% endif %}
+                                        {% if api.official_url %}
+                                            <a href="{{ api.official_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-sm">
+                                                <i class="fas fa-globe me-1"></i> Open Official Website
+                                            </a>
+                                        {% endif %}
+                                        {% if api.documentation_url %}
+                                            <a href="{{ api.documentation_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-secondary btn-sm">
+                                                <i class="fas fa-book me-1"></i> View API Documentation
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4 bg-light rounded-3 text-muted">
+                        <i class="fas fa-check-circle text-success fs-3 mb-2"></i>
+                        <p class="small mb-0">No external third-party APIs strictly required for this project's initial core scope.</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- SECTION 2: RECOMMENDED DATASETS -->
+            <div class="card card-modern p-4 mb-4 border-0 shadow-sm">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0 text-dark">
+                        <i class="fas fa-database text-success me-2"></i> 📊 Recommended Datasets & CSV Downloads
+                    </h5>
+                    <span class="badge bg-success bg-opacity-10 text-success">{{ dataset_resources|length }} Available</span>
+                </div>
+                <p class="text-muted small mb-4">
+                    Verified open academic and machine learning datasets (CSV, Excel, JSON) to train predictive models, seed databases, or benchmark algorithms.
+                </p>
+
+                {% if dataset_resources %}
+                    <div class="row g-4">
+                        {% for ds in dataset_resources %}
+                            <div class="col-lg-6">
+                                <div class="card card-3d resource-card h-100 p-3 shadow-sm d-flex flex-column">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="fw-bold text-dark mb-0 fs-6">{{ ds.resource_name }}</h6>
+                                        <span class="badge {% if ds.verification_status == 'Official Source' %}bg-primary{% else %}bg-success{% endif %} small">
+                                            <i class="fas fa-shield-alt me-1"></i>{{ ds.verification_status }}
+                                        </span>
+                                    </div>
+
+                                    <div class="mb-2">
+                                        <span class="badge bg-light text-success border me-1"><i class="fas fa-file-csv me-1"></i>{{ ds.pricing_information or 'Free Open Dataset' }}</span>
+                                        {% if ds.task %}
+                                            <span class="badge bg-light text-secondary border"><i class="fas fa-tasks me-1"></i> Task: {{ ds.task.title|truncate(35) }}</span>
+                                        {% endif %}
+                                    </div>
+
+                                    <p class="small text-secondary mb-2">
+                                        <strong>Purpose:</strong> {{ ds.purpose }}
+                                    </p>
+                                    <p class="small text-muted mb-3 fst-italic">
+                                        <i class="fas fa-info-circle text-success me-1"></i> <strong>Why you need this:</strong> {{ ds.why_needed or ds.description }}
+                                    </p>
+
+                                    <!-- Direct Student Actions for Datasets -->
+                                    <div class="mt-auto pt-2 border-top d-flex flex-wrap gap-2">
+                                        {% if ds.download_url %}
+                                            <a href="{{ ds.download_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-success btn-sm fw-semibold">
+                                                <i class="fas fa-download me-1"></i> Download Dataset
+                                            </a>
+                                        {% endif %}
+                                        {% if ds.official_url %}
+                                            <a href="{{ ds.official_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-sm">
+                                                <i class="fas fa-external-link-alt me-1"></i> Open Dataset Page
+                                            </a>
+                                        {% endif %}
+                                        {% if ds.documentation_url %}
+                                            <a href="{{ ds.documentation_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-secondary btn-sm">
+                                                <i class="fas fa-book me-1"></i> View Dataset Documentation
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4 bg-light rounded-3 text-muted">
+                        <i class="fas fa-info-circle text-primary fs-3 mb-2"></i>
+                        <p class="small mb-0">This project does not require external datasets. Application data is generated by users.</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- SECTION 3: RECOMMENDED AI TOOLS & CONTEXTUAL PROMPTS -->
+            <div class="card card-modern p-4 mb-4 border-0 shadow-sm">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0 text-dark">
+                        <i class="fas fa-robot text-info me-2"></i> 🤖 Smart AI Tool Advisor & Project-Specific Prompts
+                    </h5>
+                    <span class="badge bg-info bg-opacity-10 text-dark">{{ ai_recommendations|length }} AI Guides</span>
+                </div>
+                <p class="text-muted small mb-4">
+                    Specialized AI assistants recommended for each software engineering phase (Research, Coding, Debugging, UI/UX, Database, Documentation, Testing) with ready-to-run engineered prompts pre-populated with your project specifics.
+                </p>
+
+                <div class="row g-4">
+                    {% for tool in ai_recommendations %}
+                        <div class="col-lg-6">
+                            <div class="card card-3d resource-card h-100 p-3 shadow-sm d-flex flex-column">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <span class="badge bg-primary bg-opacity-10 text-primary fw-bold text-uppercase small">{{ tool.purpose }}</span>
+                                        <h6 class="fw-bold text-dark mt-1 mb-0 fs-6">{{ tool.tool_name }}</h6>
+                                    </div>
+                                    <span class="badge bg-success small"><i class="fas fa-check-circle me-1"></i>{{ tool.verification_status }}</span>
+                                </div>
+
+                                <p class="small text-secondary mb-2 mt-1">
+                                    <strong>Why Recommended:</strong> {{ tool.reason }}
+                                </p>
+
+                                <!-- Action Buttons -->
+                                <div class="d-flex flex-wrap gap-2 mb-3">
+                                    {% if tool.official_url %}
+                                        <a href="{{ tool.official_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-sm py-1">
+                                            <i class="fas fa-external-link-alt me-1"></i> Open Tool
+                                        </a>
+                                    {% endif %}
+                                    {% if tool.documentation_url %}
+                                        <a href="{{ tool.documentation_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-secondary btn-sm py-1">
+                                            <i class="fas fa-graduation-cap me-1"></i> Learn How to Use
+                                        </a>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Project-Specific AI Prompt Box -->
+                                <div class="p-3 bg-light rounded-3 border mt-auto">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <strong class="small text-dark"><i class="fas fa-terminal text-success me-1"></i> Generated Prompt for Your Project:</strong>
+                                        <div class="d-flex gap-1">
+                                            <button type="button" class="btn btn-outline-primary btn-sm py-0 px-2 fw-semibold"
+                                                    onclick="copyPrompt(this, `{{ tool.generated_prompt|replace('`', '\\`') }}`)">
+                                                <i class="fas fa-copy me-1"></i> Copy Prompt
+                                            </button>
+                                            <button type="button" class="btn btn-outline-dark btn-sm py-0 px-2 fw-semibold"
+                                                    onclick="usePromptInMentor(`{{ tool.generated_prompt|replace('`', '\\`') }}`)">
+                                                <i class="fas fa-paper-plane me-1"></i> AI Mentor
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="small text-secondary bg-white p-2 rounded-2 border font-monospace" style="font-size: 0.82rem; white-space: pre-wrap;">
+{{ tool.generated_prompt }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+            </div> <!-- closes #projectTabContent -->
+        </div> <!-- closes right column (col-xl-9 col-lg-8 col-md-7) -->
+    </div> <!-- closes main row (row g-4) -->
+</div> <!-- closes container-fluid -->
+
+<!-- ================= MODALS ================= -->
+
+<!-- 1. EDIT TASK MODAL -->
+<div class="modal fade" id="editTaskModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold"><i class="fas fa-edit text-primary me-2"></i> ✏️ Edit Task</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" id="editTaskForm">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Task Title <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="edit_title" name="title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Description & Goals</label>
+                        <textarea class="form-control" id="edit_description" name="description" rows="3"></textarea>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Phase</label>
+                            <select class="form-select" id="edit_phase" name="phase">
+                                <option value="Phase 1 — Research & Planning">Phase 1 — Research & Planning</option>
+                                <option value="Phase 2 — UI/UX Design">Phase 2 — UI/UX Design</option>
+                                <option value="Phase 3 — Development">Phase 3 — Development</option>
+                                <option value="Phase 4 — Database">Phase 4 — Database</option>
+                                <option value="Phase 5 — Testing">Phase 5 — Testing</option>
+                                <option value="Phase 6 — Documentation & Deployment">Phase 6 — Documentation & Deployment</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Category</label>
+                            <select class="form-select" id="edit_category" name="category">
+                                <option value="Research">Research</option>
+                                <option value="Frontend">Frontend</option>
+                                <option value="Backend">Backend</option>
+                                <option value="Database">Database</option>
+                                <option value="Machine Learning">Machine Learning</option>
+                                <option value="Testing">Testing</option>
+                                <option value="Documentation">Documentation</option>
+                                <option value="Deployment">Deployment</option>
+                                <option value="Presentation">Presentation</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold small">Priority</label>
+                            <select class="form-select" id="edit_priority" name="priority">
+                                <option value="Critical">Critical</option>
+                                <option value="High">High</option>
+                                <option value="Medium">Medium</option>
+                                <option value="Low">Low</option>
+                                <option value="Optional">Optional</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold small">Difficulty</label>
+                            <select class="form-select" id="edit_difficulty" name="difficulty">
+                                <option value="Easy">Easy</option>
+                                <option value="Medium">Medium</option>
+                                <option value="Hard">Hard</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold small">Estimated Hours</label>
+                            <input type="number" step="0.5" class="form-control" id="edit_hours" name="estimated_hours" min="0.5" max="100">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary fw-semibold"><i class="fas fa-save me-1"></i> Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 2. REGENERATE TASKS MODAL -->
+<div class="modal fade" id="regenerateModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold text-primary"><i class="fas fa-robot me-2"></i> 🤖 Regenerate Project Tasks</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('student.regenerate_tasks', project_id=project.id) }}" id="regenForm">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <div class="modal-body">
+                    <p class="small text-secondary">
+                        Ask Gemini to re-analyze your project requirements and recreate the 6-phase roadmap. Existing tasks will be replaced with the updated AI plan.
+                    </p>
+                    <label class="form-label fw-semibold small">Custom Guidance or Modifications (Optional):</label>
+                    <textarea class="form-control" name="instructions" rows="3" placeholder="e.g. Focus more on mobile responsive features and certificate generation, remove complex payment processing..."></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary fw-semibold" id="btnRegenSubmit">
+                        <i class="fas fa-sync-alt me-1"></i> Regenerate with Gemini
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 {% endblock %}
@@ -661,6 +1629,63 @@
     function sendPrompt(text) {
         document.getElementById('chatInput').value = text;
         document.getElementById('chatInput').focus();
+    }
+
+    function openEditModal(taskId, title, desc, cat, priority, diff, phase, hours) {
+        document.getElementById("editTaskForm").action = "{{ url_for('student.create_project') }}".replace('/projects/new', `/projects/{{ project.id }}/tasks/${taskId}/edit`);
+        document.getElementById("edit_title").value = title;
+        document.getElementById("edit_description").value = desc;
+        document.getElementById("edit_category").value = cat;
+        document.getElementById("edit_priority").value = priority;
+        document.getElementById("edit_difficulty").value = diff;
+        document.getElementById("edit_phase").value = phase;
+        document.getElementById("edit_hours").value = hours;
+        
+        new bootstrap.Modal(document.getElementById("editTaskModal")).show();
+    }
+
+    function copyPrompt(button, promptText) {
+        navigator.clipboard.writeText(promptText).then(function() {
+            const originalHTML = button.innerHTML;
+            button.classList.remove('btn-outline-primary');
+            button.classList.add('btn-success');
+            button.innerHTML = '<i class="fas fa-check me-1"></i> Copied!';
+            setTimeout(function() {
+                button.innerHTML = originalHTML;
+                button.classList.remove('btn-success');
+                button.classList.add('btn-outline-primary');
+            }, 2000);
+        }).catch(function(err) {
+            console.error('Could not copy prompt: ', err);
+            // Fallback
+            const ta = document.createElement('textarea');
+            ta.value = promptText;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            alert('Prompt copied to clipboard!');
+        });
+    }
+
+    function usePromptInMentor(promptText) {
+        // Activate the AI Mentor tab
+        const mentorTabBtn = document.getElementById('mentor-tab');
+        if (mentorTabBtn) {
+            bootstrap.Tab.getOrCreateInstance(mentorTabBtn).show();
+        }
+        sendPrompt(promptText);
+    }
+
+    const regenFormEl = document.getElementById("regenForm");
+    if (regenFormEl) {
+        regenFormEl.addEventListener("submit", function() {
+            const btn = document.getElementById("btnRegenSubmit");
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Gemini Regenerating...';
+            }
+        });
     }
 </script>
 {% endblock %}

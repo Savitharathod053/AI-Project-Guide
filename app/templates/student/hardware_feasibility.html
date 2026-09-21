@@ -1,0 +1,1770 @@
+{% extends "base.html" %}
+
+{% block title %}BuildCheck AI — Hardware Feasibility & Working System Guide | {{ project.project_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Dark Futuristic Engineering Theme */
+    .buildcheck-container {
+        color: #e2e8f0;
+    }
+    
+    .buildcheck-hero {
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.9));
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+        border-radius: 16px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .buildcheck-hero::before {
+        content: "";
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+        pointer-events: none;
+    }
+
+    .card-dark-glass {
+        background: rgba(17, 24, 39, 0.85);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(75, 85, 99, 0.4);
+        border-radius: 14px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+
+    .card-dark-glass:hover {
+        border-color: rgba(99, 102, 241, 0.5);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Score Ring Gauge */
+    .score-circle-wrapper {
+        position: relative;
+        width: 140px;
+        height: 140px;
+        margin: 0 auto;
+    }
+
+    .score-circle-svg {
+        transform: rotate(-90deg);
+        width: 140px;
+        height: 140px;
+    }
+
+    .score-circle-bg {
+        fill: none;
+        stroke: rgba(255, 255, 255, 0.1);
+        stroke-width: 10;
+    }
+
+    .score-circle-val {
+        fill: none;
+        stroke-width: 10;
+        stroke-linecap: round;
+        stroke-dasharray: 377;
+        transition: stroke-dashoffset 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .score-center-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+    }
+
+    /* Architecture Visualizer Nodes */
+    .arch-flow-col {
+        background: rgba(15, 23, 42, 0.7);
+        border: 1px solid rgba(59, 130, 246, 0.25);
+        border-radius: 12px;
+        padding: 1.25rem;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .arch-node-item {
+        background: rgba(30, 41, 59, 0.8);
+        border: 1px solid rgba(100, 116, 139, 0.3);
+        border-left: 4px solid #3b82f6;
+        border-radius: 8px;
+        padding: 0.75rem 0.9rem;
+        margin-bottom: 0.75rem;
+        font-size: 0.88rem;
+        transition: all 0.2s ease;
+    }
+
+    .arch-node-item:hover {
+        transform: translateX(3px);
+        background: rgba(30, 41, 59, 1);
+        border-color: rgba(99, 102, 241, 0.6);
+    }
+
+    .arch-node-input { border-left-color: #06b6d4; }
+    .arch-node-proc  { border-left-color: #8b5cf6; }
+    .arch-node-output{ border-left-color: #10b981; }
+    .arch-node-comm  { border-left-color: #f59e0b; }
+
+    .bus-tag {
+        display: inline-block;
+        padding: 0.15rem 0.45rem;
+        font-size: 0.68rem;
+        font-weight: 600;
+        border-radius: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .bus-i2c { background: rgba(139, 92, 246, 0.25); color: #c4b5fd; border: 1px solid rgba(139, 92, 246, 0.4); }
+    .bus-spi { background: rgba(245, 158, 11, 0.25); color: #fde68a; border: 1px solid rgba(245, 158, 11, 0.4); }
+    .bus-uart { background: rgba(59, 130, 246, 0.25); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.4); }
+    .bus-pwm { background: rgba(16, 185, 129, 0.25); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.4); }
+    .bus-analog { background: rgba(236, 72, 153, 0.25); color: #fbcfe8; border: 1px solid rgba(236, 72, 153, 0.4); }
+    .bus-digital { background: rgba(100, 116, 139, 0.25); color: #cbd5e1; border: 1px solid rgba(100, 116, 139, 0.4); }
+
+    /* Tables in dark style */
+    .table-dark-custom {
+        --bs-table-bg: transparent;
+        --bs-table-color: #e2e8f0;
+        --bs-table-border-color: rgba(75, 85, 99, 0.3);
+    }
+    .table-dark-custom th {
+        background: rgba(30, 41, 59, 0.8);
+        color: #94a3b8;
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-weight: 700;
+        border-bottom: 1px solid rgba(100, 116, 139, 0.4);
+    }
+    .table-dark-custom td {
+        vertical-align: middle;
+        font-size: 0.88rem;
+    }
+
+    /* Status Badges */
+    .badge-buildable {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.3));
+        color: #34d399;
+        border: 1px solid rgba(52, 211, 153, 0.4);
+    }
+    .badge-modified {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.3));
+        color: #fbbf24;
+        border: 1px solid rgba(251, 191, 36, 0.4);
+    }
+    .badge-notrec {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(185, 28, 28, 0.3));
+        color: #f87171;
+        border: 1px solid rgba(248, 113, 113, 0.4);
+    }
+
+    /* Subdimension Progress Bars */
+    .sub-prog-track {
+        background: rgba(51, 65, 85, 0.6);
+        border-radius: 6px;
+        height: 7px;
+        overflow: hidden;
+    }
+    .sub-prog-fill {
+        height: 100%;
+        border-radius: 6px;
+        transition: width 1s ease-in-out;
+    }
+
+    /* Modification Option Cards */
+    .mod-card {
+        background: rgba(30, 41, 59, 0.7);
+        border: 1px solid rgba(99, 102, 241, 0.3);
+        border-radius: 10px;
+        padding: 1.1rem;
+        transition: all 0.2s ease;
+    }
+    .mod-card:hover {
+        border-color: rgba(129, 140, 248, 0.7);
+        transform: translateY(-2px);
+    }
+
+    /* 4-Stage Architecture Pipeline Stepper */
+    .pipeline-stage-card {
+        background: rgba(30, 41, 59, 0.6);
+        border: 1px solid rgba(100, 116, 139, 0.3);
+        border-radius: 12px;
+        padding: 1rem;
+        position: relative;
+        height: 100%;
+        transition: all 0.2s ease;
+    }
+    .pipeline-stage-card:hover {
+        border-color: rgba(99, 102, 241, 0.6);
+        background: rgba(30, 41, 59, 0.85);
+    }
+    .pipeline-badge {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 0.9rem;
+    }
+
+    /* Troubleshooting Accordion Dark */
+    .accordion-dark .accordion-item {
+        background: rgba(30, 41, 59, 0.6);
+        border: 1px solid rgba(75, 85, 99, 0.4);
+        margin-bottom: 0.5rem;
+        border-radius: 8px !important;
+        overflow: hidden;
+    }
+    .accordion-dark .accordion-button {
+        background: rgba(30, 41, 59, 0.8);
+        color: #e2e8f0;
+        font-weight: 600;
+        font-size: 0.92rem;
+        box-shadow: none;
+    }
+    .accordion-dark .accordion-button:not(.collapsed) {
+        background: rgba(15, 23, 42, 0.9);
+        color: #93c5fd;
+        border-bottom: 1px solid rgba(59, 130, 246, 0.3);
+    }
+    .accordion-dark .accordion-body {
+        background: rgba(15, 23, 42, 0.6);
+        color: #cbd5e1;
+        font-size: 0.88rem;
+    }
+
+    /* Terminal Simulation Box */
+    .terminal-box {
+        background: #090d16;
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        border-radius: 8px;
+        font-family: 'Courier New', Courier, monospace;
+        color: #34d399;
+        padding: 1rem;
+        white-space: pre-wrap;
+        font-size: 0.85rem;
+        line-height: 1.5;
+    }
+
+    /* Wiring Badge Indicators */
+    .pin-badge {
+        font-family: monospace;
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    .pin-power { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.4); }
+    .pin-gnd   { background: rgba(100, 116, 139, 0.3); color: #cbd5e1; border: 1px solid rgba(100, 116, 139, 0.5); }
+    .pin-data  { background: rgba(59, 130, 246, 0.2); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.4); }
+    .pin-analog{ background: rgba(236, 72, 153, 0.2); color: #fbcfe8; border: 1px solid rgba(236, 72, 153, 0.4); }
+    .pin-i2c   { background: rgba(139, 92, 246, 0.2); color: #c4b5fd; border: 1px solid rgba(139, 92, 246, 0.4); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-5 py-4 buildcheck-container">
+
+    <!-- 1. Header Banner -->
+    <div class="buildcheck-hero p-4 p-md-5 mb-4 text-white">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-2">
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill" style="background: rgba(99, 102, 241, 0.2); border: 1px solid rgba(129, 140, 248, 0.4);">
+                <i class="fas fa-microchip text-info"></i>
+                <span class="small fw-bold text-info text-uppercase" style="letter-spacing: 0.5px;">BuildCheck AI — Engineering Feasibility & Working Guide</span>
+            </div>
+            
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge {% if project.project_category == 'hybrid' %}bg-primary{% else %}bg-info text-dark{% endif %} px-3 py-2 fw-semibold">
+                    <i class="fas fa-layer-group me-1"></i> {{ project.project_type or 'Hardware Project' }}
+                </span>
+                <span class="badge bg-secondary px-3 py-2">
+                    <i class="fas fa-clock me-1"></i> Pre-Procurement Phase
+                </span>
+            </div>
+        </div>
+
+        <h1 class="fw-extrabold display-6 text-white mb-2">{{ project.project_name }}</h1>
+        <p class="text-light text-opacity-75 max-w-2xl mb-3" style="max-width: 840px;">
+            {{ project.description }}
+        </p>
+
+        <!-- Preliminary Analysis Safety Notice -->
+        <div class="alert bg-dark bg-opacity-50 border border-warning border-opacity-50 text-light py-2 px-3 mb-0 d-inline-flex align-items-center gap-2 small rounded-3">
+            <i class="fas fa-shield-alt text-warning"></i>
+            <span>
+                <strong>Engineering Verification:</strong> Component electrical specifications are derived from standard manufacturer datasheets. Follow the 5-step bench verification checklist below before final soldering or PCB manufacture.
+            </span>
+        </div>
+    </div>
+
+    <!-- 2. Feasibility Status Banner & Scorecard (🟢 / 🟡 / 🔴) -->
+    <div class="row g-4 mb-4">
+        <!-- Status Indicator & Score Gauge -->
+        <div class="col-lg-4">
+            <div class="card card-dark-glass p-4 text-center h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <h6 class="text-uppercase text-light text-opacity-75 fw-bold small mb-3" style="letter-spacing: 0.8px;">
+                        Hardware Feasibility Status
+                    </h6>
+                    
+                    <div class="score-circle-wrapper my-2">
+                        <svg class="score-circle-svg" viewBox="0 0 140 140">
+                            <circle class="score-circle-bg" cx="70" cy="70" r="60"></circle>
+                            <circle class="score-circle-val" id="scoreCircleFill" cx="70" cy="70" r="60"
+                                    stroke="{% if analysis.overall_score >= 80 %}#10b981{% elif analysis.overall_score >= 55 %}#f59e0b{% else %}#ef4444{% endif %}"
+                                    style="stroke-dashoffset: calc(377 - (377 * {{ analysis.overall_score }}) / 100);"></circle>
+                        </svg>
+                        <div class="score-center-text">
+                            <span class="display-6 fw-bold text-white">{{ analysis.overall_score|int }}</span>
+                            <span class="text-light text-opacity-75 small">/100</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-3">
+                        <div class="mb-2">
+                            <span class="badge {% if analysis.verdict == 'BUILDABLE' %}badge-buildable{% elif analysis.verdict == 'BUILDABLE_WITH_MODIFICATIONS' %}badge-modified{% else %}badge-notrec{% endif %} px-3 py-2 fs-6 rounded-pill fw-bold">
+                                {{ analysis.verdict_badge }}
+                            </span>
+                        </div>
+                        <span class="badge bg-dark border border-secondary text-light px-2 py-1 small">
+                            {% if analysis.overall_score >= 80 %}
+                                ✅ Feasible for Student Implementation
+                            {% elif analysis.overall_score >= 55 %}
+                                ⚠️ Feasible with Modifications
+                            {% else %}
+                                🔴 Not Recommended as Configured
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-3 border-top border-secondary border-opacity-25 text-start">
+                    <p class="small text-light text-opacity-75 mb-0">
+                        <strong>Executive Verdict:</strong> {{ analysis.verdict_reason }}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7-Dimension Feasibility Breakdown & Quick Stats -->
+        <div class="col-lg-8">
+            <div class="card card-dark-glass p-4 h-100">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h6 class="text-uppercase text-light text-opacity-75 fw-bold small mb-0" style="letter-spacing: 0.8px;">
+                        <i class="fas fa-chart-bar text-primary me-2"></i> 7-Dimension Feasibility Breakdown
+                    </h6>
+                    <span class="badge bg-dark border border-secondary text-light small">
+                        Calculated with +25% safety margin
+                    </span>
+                </div>
+
+                <div class="row g-3">
+                    <!-- Technical Feasibility -->
+                    <div class="col-md-6">
+                        <div class="p-3 rounded-3" style="background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(75, 85, 99, 0.25);">
+                            <div class="d-flex justify-content-between small fw-semibold text-light mb-1">
+                                <span><i class="fas fa-microchip text-info me-1"></i> Technical Feasibility</span>
+                                <span class="text-white">{{ analysis.technical_score|int }}%</span>
+                            </div>
+                            <div class="sub-prog-track">
+                                <div class="sub-prog-fill bg-info" style="width: {{ analysis.technical_score }}%;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Component Compatibility -->
+                    <div class="col-md-6">
+                        <div class="p-3 rounded-3" style="background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(75, 85, 99, 0.25);">
+                            <div class="d-flex justify-content-between small fw-semibold text-light mb-1">
+                                <span><i class="fas fa-plug text-primary me-1"></i> Component Compatibility</span>
+                                <span class="text-white">{{ analysis.compatibility_score|int }}%</span>
+                            </div>
+                            <div class="sub-prog-track">
+                                <div class="sub-prog-fill bg-primary" style="width: {{ analysis.compatibility_score }}%;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Power Compatibility -->
+                    <div class="col-md-6">
+                        <div class="p-3 rounded-3" style="background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(75, 85, 99, 0.25);">
+                            <div class="d-flex justify-content-between small fw-semibold text-light mb-1">
+                                <span><i class="fas fa-bolt text-warning me-1"></i> Power & Current Safety</span>
+                                <span class="text-white">{{ analysis.power_score|int }}%</span>
+                            </div>
+                            <div class="sub-prog-track">
+                                <div class="sub-prog-fill bg-warning" style="width: {{ analysis.power_score }}%;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Budget Feasibility -->
+                    <div class="col-md-6">
+                        <div class="p-3 rounded-3" style="background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(75, 85, 99, 0.25);">
+                            <div class="d-flex justify-content-between small fw-semibold text-light mb-1">
+                                <span><i class="fas fa-wallet text-success me-1"></i> Budget Feasibility</span>
+                                <span class="text-white">{{ analysis.budget_score|int }}%</span>
+                            </div>
+                            <div class="sub-prog-track">
+                                <div class="sub-prog-fill bg-success" style="width: {{ analysis.budget_score }}%;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Component Availability -->
+                    <div class="col-md-6">
+                        <div class="p-3 rounded-3" style="background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(75, 85, 99, 0.25);">
+                            <div class="d-flex justify-content-between small fw-semibold text-light mb-1">
+                                <span><i class="fas fa-store text-info me-1"></i> Component Availability</span>
+                                <span class="text-white">{{ analysis.availability_score|int }}%</span>
+                            </div>
+                            <div class="sub-prog-track">
+                                <div class="sub-prog-fill bg-info" style="width: {{ analysis.availability_score }}%;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Project Complexity -->
+                    <div class="col-md-6">
+                        <div class="p-3 rounded-3" style="background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(75, 85, 99, 0.25);">
+                            <div class="d-flex justify-content-between small fw-semibold text-light mb-1">
+                                <span><i class="fas fa-cogs text-secondary me-1"></i> Circuit Complexity</span>
+                                <span class="text-white">{{ analysis.complexity_score|int }}%</span>
+                            </div>
+                            <div class="sub-prog-track">
+                                <div class="sub-prog-fill bg-secondary" style="width: {{ analysis.complexity_score }}%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Summary Stats Row -->
+                <div class="row g-2 mt-3 pt-3 border-top border-secondary border-opacity-25 text-center">
+                    <div class="col-3">
+                        <span class="small text-light text-opacity-75 d-block">Estimated Draw</span>
+                        <strong class="text-warning fs-6">{{ power.total_current_safe_ma|default(450) }} mA</strong>
+                    </div>
+                    <div class="col-3">
+                        <span class="small text-light text-opacity-75 d-block">Total Power</span>
+                        <strong class="text-info fs-6">{{ power.total_power_safe_watts|default(2.25) }} W</strong>
+                    </div>
+                    <div class="col-3">
+                        <span class="small text-light text-opacity-75 d-block">GPIO Pins</span>
+                        <strong class="text-white fs-6">{{ gpio_analysis.total_pins_required|default(6) }} / {{ gpio_analysis.total_pins_available|default(25) }}</strong>
+                    </div>
+                    <div class="col-3">
+                        <span class="small text-light text-opacity-75 d-block">Est. Cost</span>
+                        <strong class="{% if analysis.budget_status == 'OVER_BUDGET' %}text-danger{% else %}text-success{% endif %} fs-6">₹{{ analysis.estimated_total_cost|int }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CARD 1: 🔍 PROJECT UNDERSTANDING -->
+    <div class="card card-dark-glass p-4 mb-4">
+        <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+            <div>
+                <h5 class="fw-bold text-white mb-1">
+                    <i class="fas fa-brain text-info me-2"></i> 🔍 Project Understanding: What Gemini Understood from the Project
+                </h5>
+                <p class="text-light text-opacity-75 small mb-0">
+                    Comprehensive AI requirements decomposition, operating constraints, and hardware subsystem extraction.
+                </p>
+            </div>
+            <span class="badge bg-dark border border-info text-info px-3 py-1">
+                {{ project.domain or 'Embedded Systems' }}
+            </span>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <h6 class="text-uppercase text-light text-opacity-75 fw-bold small mb-2">Technical Summary & Problem Statement</h6>
+                <div class="p-3 rounded-3 mb-3" style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(100, 116, 139, 0.3);">
+                    <div class="mb-2">
+                        <strong class="text-info d-block">Project Summary:</strong>
+                        <span class="small text-light text-opacity-90">{{ project_understanding.summary if project_understanding else (project.project_summary or project.description) }}</span>
+                    </div>
+                    <div class="mb-2">
+                        <strong class="text-warning d-block">Problem Statement / Core Objective:</strong>
+                        <span class="small text-light text-opacity-90">{{ project_understanding.primary_objective if project_understanding else (project.objective or project.description) }}</span>
+                    </div>
+                    <div>
+                        <strong class="text-success d-block">Operating Environment:</strong>
+                        <span class="small text-light text-opacity-90">{{ project_understanding.operating_environment if project_understanding else 'Engineering Lab Benchtop Prototyping' }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <h6 class="text-uppercase text-light text-opacity-75 fw-bold small mb-2">Identified Hardware Subsystems</h6>
+                <div class="list-group list-group-flush bg-transparent">
+                    <div class="list-group-item bg-transparent text-light px-0 py-2 border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-microchip text-primary me-2"></i> Controller:</span>
+                        <strong class="text-white">{{ project_understanding.detected_controller if (project_understanding and project_understanding.detected_controller) else (processing[0].name if processing else 'ESP32') }}</strong>
+                    </div>
+                    <div class="list-group-item bg-transparent text-light px-0 py-2 border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-sign-in-alt text-info me-2"></i> Sensors:</span>
+                        <span class="text-info fw-semibold">{{ (project_understanding.detected_sensors|join(', ')) if (project_understanding and project_understanding.detected_sensors) else (inputs|map(attribute='name')|join(', ')) }}</span>
+                    </div>
+                    <div class="list-group-item bg-transparent text-light px-0 py-2 border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-sign-out-alt text-success me-2"></i> Actuators & Displays:</span>
+                        <span class="text-success fw-semibold">{{ (project_understanding.detected_actuators|join(', ')) if (project_understanding and project_understanding.detected_actuators) else (outputs|map(attribute='name')|join(', ')) }}</span>
+                    </div>
+                    <div class="list-group-item bg-transparent text-light px-0 py-2 border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-wifi text-warning me-2"></i> Communication Protocol:</span>
+                        <span class="text-warning fw-semibold">{{ project_understanding.communication_protocol if (project_understanding and project_understanding.communication_protocol) else 'Wi-Fi / Serial' }}</span>
+                    </div>
+                    <div class="list-group-item bg-transparent text-light px-0 py-2 border-0 d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-bolt text-danger me-2"></i> Power Architecture:</span>
+                        <span class="text-white">{{ power_architecture.power_supply if power_architecture else '5V 2A Regulated Supply' }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CARD 2: ⚙️ HARDWARE ARCHITECTURE (INPUT → PROCESSING → OUTPUT) -->
+    <div class="card card-dark-glass p-4 mb-4">
+        <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+            <div>
+                <h5 class="fw-bold text-white mb-1">
+                    <i class="fas fa-project-diagram text-primary me-2"></i> ⚙️ Hardware Architecture: Input → Processing → Output Flow
+                </h5>
+                <p class="text-light text-opacity-75 small mb-0">
+                    End-to-end signal conversion pipeline showing what each component does and how the whole system operates.
+                </p>
+            </div>
+            <span class="badge bg-dark border border-primary text-info px-3 py-1">
+                4-Stage Pipeline
+            </span>
+        </div>
+
+        <!-- 4-Stage Visual Stepper -->
+        <div class="row g-3 mb-4">
+            <!-- Stage 1: Physical Input -->
+            <div class="col-md-3">
+                <div class="pipeline-stage-card border-info border-opacity-50">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="pipeline-badge bg-info text-dark">1</span>
+                        <strong class="text-info small text-uppercase">Input Phenomenon</strong>
+                    </div>
+                    <h6 class="text-white fw-bold mb-1">Physical Signal</h6>
+                    <p class="small text-light text-opacity-75 mb-0">
+                        Real-world physical parameter (e.g. soil water content, airborne PM2.5 particles, facial photons, electromagnetic RFID UID).
+                    </p>
+                </div>
+            </div>
+
+            <!-- Stage 2: Sensor / Hardware Interface -->
+            <div class="col-md-3">
+                <div class="pipeline-stage-card border-primary border-opacity-50">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="pipeline-badge bg-primary text-white">2</span>
+                        <strong class="text-primary small text-uppercase">Sensor / Hardware</strong>
+                    </div>
+                    <h6 class="text-white fw-bold mb-1">{% if inputs %}{{ inputs[0].name }}{% else %}Sensor Probe{% endif %}</h6>
+                    <p class="small text-light text-opacity-75 mb-0">
+                        Converts physical phenomenon into calibrated electrical signals (Analog voltage, UART frames, or I2C digital registers).
+                    </p>
+                </div>
+            </div>
+
+            <!-- Stage 3: Processing Unit -->
+            <div class="col-md-3">
+                <div class="pipeline-stage-card border-purple border-opacity-50" style="border-color: rgba(139, 92, 246, 0.5);">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="pipeline-badge bg-purple text-white" style="background: #8b5cf6;">3</span>
+                        <strong class="small text-uppercase" style="color: #c4b5fd;">Processing Unit</strong>
+                    </div>
+                    <h6 class="text-white fw-bold mb-1">{% if processing %}{{ processing[0].name }}{% else %}ESP32 / MCU{% endif %}</h6>
+                    <p class="small text-light text-opacity-75 mb-0">
+                        Samples data, filters noise, computes mathematical thresholds, and executes firmware state machine logic.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Stage 4: Output Actuation -->
+            <div class="col-md-3">
+                <div class="pipeline-stage-card border-success border-opacity-50">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="pipeline-badge bg-success text-dark">4</span>
+                        <strong class="text-success small text-uppercase">Output & Cloud</strong>
+                    </div>
+                    <h6 class="text-white fw-bold mb-1">{% if outputs %}{{ outputs[0].name }}{% else %}Actuator & Display{% endif %}</h6>
+                    <p class="small text-light text-opacity-75 mb-0">
+                        Drives relays/motors, renders metrics on OLED/LCD, triggers audible alarms, and dispatches telemetry over Wi-Fi/MQTT.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Architecture Visualizer Nodes -->
+        <div class="row g-3 mb-4">
+            <!-- Col 1: Inputs -->
+            <div class="col-md-4">
+                <div class="arch-flow-col">
+                    <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+                        <span class="fw-bold text-info"><i class="fas fa-sign-in-alt me-1"></i> INPUTS (Sensors & Triggers)</span>
+                        <span class="badge bg-info bg-opacity-25 text-info">{{ inputs|length }}</span>
+                    </div>
+
+                    {% for inp in inputs %}
+                    <div class="arch-node-item arch-node-input">
+                        <div class="d-flex justify-content-between align-items-start mb-1">
+                            <strong class="text-white">{{ inp.name }}</strong>
+                            <span class="bus-tag {% if inp.pin_type == 'I2C' %}bus-i2c{% elif inp.pin_type == 'Analog' %}bus-analog{% elif inp.pin_type == 'UART' %}bus-uart{% elif inp.pin_type == 'SPI' %}bus-spi{% else %}bus-digital{% endif %}">
+                                {{ inp.pin_type }}
+                            </span>
+                        </div>
+                        <p class="small text-light text-opacity-75 mb-2">{{ inp.purpose }}</p>
+                        <div class="d-flex justify-content-between small text-light text-opacity-50">
+                            <span><i class="fas fa-bolt text-warning me-1"></i>{{ inp.voltage }}</span>
+                            <span><i class="fas fa-wave-square text-info me-1"></i>{{ inp.current_ma }} mA</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Col 2: Processing & Communication -->
+            <div class="col-md-4">
+                <div class="arch-flow-col" style="border-color: rgba(139, 92, 246, 0.4);">
+                    <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+                        <span class="fw-bold text-purple" style="color: #c4b5fd;"><i class="fas fa-microchip me-1"></i> PROCESSING & BUS</span>
+                        <span class="badge bg-purple bg-opacity-25 text-white" style="background: rgba(139, 92, 246, 0.4);">Main Board</span>
+                    </div>
+
+                    {% for proc in processing %}
+                    <div class="arch-node-item arch-node-proc">
+                        <div class="d-flex justify-content-between align-items-start mb-1">
+                            <strong class="text-white">{{ proc.name }}</strong>
+                            <span class="bus-tag bus-i2c">{{ proc.logic_voltage }} Logic</span>
+                        </div>
+                        <p class="small text-light text-opacity-75 mb-2">{{ proc.description }}</p>
+                        <div class="small text-light text-opacity-50 mb-2">
+                            <span><i class="fas fa-microchip text-primary me-1"></i>GPIO: {{ proc.gpio_total }} Pins ({{ proc.gpio_adc }} ADC)</span>
+                        </div>
+                        {% if proc.wireless %}
+                        <div class="d-flex flex-wrap gap-1 mt-2">
+                            {% for w in proc.wireless %}
+                            <span class="badge bg-dark text-info border border-info border-opacity-25 small" style="font-size: 0.7rem;">
+                                <i class="fas fa-wifi me-1"></i> {{ w }}
+                            </span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+
+                    <!-- Communication Modules -->
+                    {% if communication %}
+                    <div class="mt-2">
+                        <span class="small fw-bold text-light text-opacity-50 text-uppercase d-block mb-2">Telemetry & Communication</span>
+                        {% for comm in communication %}
+                        <div class="arch-node-item arch-node-comm">
+                            <div class="d-flex justify-content-between align-items-start mb-1">
+                                <strong class="text-white">{{ comm.name }}</strong>
+                                <span class="bus-tag bus-uart">{{ comm.pin_type }}</span>
+                            </div>
+                            <p class="small text-light text-opacity-75 mb-1">{{ comm.purpose }}</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Col 3: Outputs & Actuators -->
+            <div class="col-md-4">
+                <div class="arch-flow-col" style="border-color: rgba(16, 185, 129, 0.3);">
+                    <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+                        <span class="fw-bold text-success"><i class="fas fa-sign-out-alt me-1"></i> OUTPUTS (Actuators / UI)</span>
+                        <span class="badge bg-success bg-opacity-25 text-success">{{ outputs|length }}</span>
+                    </div>
+
+                    {% for out in outputs %}
+                    <div class="arch-node-item arch-node-output">
+                        <div class="d-flex justify-content-between align-items-start mb-1">
+                            <strong class="text-white">{{ out.name }}</strong>
+                            <span class="bus-tag {% if out.pin_type == 'PWM' %}bus-pwm{% elif out.pin_type == 'I2C' %}bus-i2c{% else %}bus-digital{% endif %}">
+                                {{ out.pin_type }}
+                            </span>
+                        </div>
+                        <p class="small text-light text-opacity-75 mb-2">{{ out.purpose }}</p>
+                        <div class="d-flex justify-content-between small text-light text-opacity-50">
+                            <span><i class="fas fa-bolt text-warning me-1"></i>{{ out.voltage }}</span>
+                            <span><i class="fas fa-tachometer-alt text-success me-1"></i>{{ out.current_ma }} mA</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- End-to-End System Mechanism Explanation -->
+        <div class="p-3 rounded-3" style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(59, 130, 246, 0.3);">
+            <h6 class="text-info fw-bold small text-uppercase mb-2">
+                <i class="fas fa-cogs me-1"></i> Complete End-to-End System Mechanism
+            </h6>
+            <p class="text-light text-opacity-90 small mb-0">
+                The sensor stage acquires real-time physical telemetry. The microcontroller reads the electrical inputs over validated hardware buses (ADC, UART, I2C), normalizes and filters raw readings, and evaluates the project logic against set thresholds. When an actuation condition is reached, the controller safely triggers optocoupler-isolated relays or motor drivers, updates the local display, and dispatches encrypted telemetry packets to cloud dashboards.
+            </p>
+        </div>
+    </div>
+
+    <!-- CARD 3: ⚡ POWER REQUIREMENTS & ELECTRICAL ARCHITECTURE -->
+    <div class="card card-dark-glass p-4 mb-4">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+            <div>
+                <h5 class="fw-bold text-white mb-1">
+                    <i class="fas fa-bolt text-warning me-2"></i> ⚡ Power Requirements & Electrical Architecture
+                </h5>
+                <p class="text-light text-opacity-75 small mb-0">
+                    Comprehensive electrical power distribution, peak burst current calculations, and dedicated step-down voltage regulation.
+                </p>
+            </div>
+            <span class="badge bg-dark border border-warning text-warning px-3 py-1">
+                {{ power_architecture.input_voltage if power_architecture else (power.recommended_psu_voltage|default('5V DC')) }}
+            </span>
+        </div>
+
+        <div class="row g-4 mb-3">
+            <!-- Power Source & Input Voltage -->
+            <div class="col-md-6 col-lg-3">
+                <div class="p-3 rounded-3 h-100" style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(100, 116, 139, 0.3);">
+                    <span class="small text-light text-opacity-75 d-block mb-1"><i class="fas fa-plug text-info me-1"></i> Power Supply Choice:</span>
+                    <strong class="text-white fs-6 d-block mb-1">{{ power_architecture.power_supply if power_architecture else (power.recommended_power_source|default('5V 2A Regulated Supply')) }}</strong>
+                    <span class="small text-info">Input: {{ power_architecture.input_voltage if power_architecture else '5.0V DC' }}</span>
+                </div>
+            </div>
+
+            <!-- Continuous Current Draw -->
+            <div class="col-md-6 col-lg-3">
+                <div class="p-3 rounded-3 h-100" style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(100, 116, 139, 0.3);">
+                    <span class="small text-light text-opacity-75 d-block mb-1"><i class="fas fa-tachometer-alt text-success me-1"></i> Continuous Current:</span>
+                    <strong class="text-success fs-6 d-block mb-1">{{ power_architecture.total_estimated_current if power_architecture else (power.total_current_safe_ma|string + ' mA') }}</strong>
+                    <span class="small text-light text-opacity-50">+25% Engineering Safety Margin</span>
+                </div>
+            </div>
+
+            <!-- Peak Surge / Burst Current -->
+            <div class="col-md-6 col-lg-3">
+                <div class="p-3 rounded-3 h-100" style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(100, 116, 139, 0.3);">
+                    <span class="small text-light text-opacity-75 d-block mb-1"><i class="fas fa-bolt text-warning me-1"></i> Peak Burst Demand:</span>
+                    <strong class="text-warning fs-6 d-block mb-1">{{ power_architecture.peak_current if power_architecture else (power.peak_demand_description|default('750 mA')) }}</strong>
+                    <span class="small text-light text-opacity-50">RF TX / Actuator Inrush pulses</span>
+                </div>
+            </div>
+
+            <!-- Voltage Regulators Required -->
+            <div class="col-md-6 col-lg-3">
+                <div class="p-3 rounded-3 h-100" style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(100, 116, 139, 0.3);">
+                    <span class="small text-light text-opacity-75 d-block mb-1"><i class="fas fa-microchip text-primary me-1"></i> Regulators Required:</span>
+                    {% if power_architecture and power_architecture.regulators_required %}
+                        {% for reg in power_architecture.regulators_required %}
+                            <strong class="text-info small d-block">• {{ reg.regulator }} ({{ reg.output_voltage }})</strong>
+                        {% endfor %}
+                    {% else %}
+                        <strong class="text-white fs-6 d-block">Onboard LDO (3.3V)</strong>
+                        <span class="small text-light text-opacity-50">No external buck regulator needed</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Power Warnings / Circuit Hazard Notice -->
+        {% if power_architecture and power_architecture.power_warnings %}
+        <div class="p-3 rounded-3" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.4);">
+            <h6 class="text-danger fw-bold small text-uppercase mb-2">
+                <i class="fas fa-exclamation-triangle me-1"></i> Critical Power & Current Warnings
+            </h6>
+            {% for w in power_architecture.power_warnings %}
+            <div class="small text-light text-opacity-90 mb-1">
+                <strong>• Warning {{ loop.index }}:</strong> {{ w }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- CARD 4: 🔌 CONNECTIONS & PIN-BY-PIN WIRING TABLE -->
+    <div class="card card-dark-glass p-4 mb-4">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+            <div>
+                <h5 class="fw-bold text-white mb-1">
+                    <i class="fas fa-plug text-warning me-2"></i> 🔌 Connections & Pin-by-Pin Wiring Table
+                </h5>
+                <p class="text-light text-opacity-75 small mb-0">
+                    Exact wiring map connecting each sensor, actuator, and module to validated pins on {% if processing %}{{ processing[0].name }}{% else %}the controller{% endif %}.
+                </p>
+            </div>
+            <span class="badge bg-dark border border-warning text-warning px-3 py-1">
+                {{ wiring_table|length }} Pin Connections
+            </span>
+        </div>
+
+        {% if wiring_table %}
+        <div class="table-responsive">
+            <table class="table table-dark-custom align-middle">
+                <thead>
+                    <tr>
+                        <th style="width: 22%;">Component</th>
+                        <th style="width: 14%;">Component Pin</th>
+                        <th style="width: 24%;">Connects To (Board / Rail)</th>
+                        <th style="width: 20%;">Signal / Purpose</th>
+                        <th style="width: 20%;">Voltage & Practical Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for w in wiring_table %}
+                    <tr>
+                        <td>
+                            <strong class="text-white">{{ w.component }}</strong>
+                        </td>
+                        <td>
+                            {% set p = w.pin|upper %}
+                            <span class="pin-badge {% if 'VCC' in p or '3.3V' in p or '5V' in p or 'VIN' in p %}pin-power{% elif 'GND' in p %}pin-gnd{% elif 'AOUT' in p or 'ADC' in p %}pin-analog{% elif 'SCL' in p or 'SDA' in p %}pin-i2c{% else %}pin-data{% endif %}">
+                                {{ w.pin }}
+                            </span>
+                        </td>
+                        <td>
+                            <strong class="text-info">{{ w.connect_to }}</strong>
+                        </td>
+                        <td class="small text-light text-opacity-75">
+                            {{ w.purpose }}
+                        </td>
+                        <td class="small text-light text-opacity-60">
+                            {{ w.notes }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="p-3 text-muted text-center">Wiring table is being generated...</div>
+        {% endif %}
+    </div>
+
+    <!-- ROW: 🧠 PROCESSING LOGIC & 📊 EXPECTED OUTPUT -->
+    <div class="row g-4 mb-4">
+        <!-- CARD 4: 🧠 PROCESSING LOGIC -->
+        <div class="col-lg-6">
+            <div class="card card-dark-glass p-4 h-100">
+                <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+                    <h5 class="fw-bold text-white mb-0">
+                        <i class="fas fa-brain text-purple me-2" style="color: #c4b5fd;"></i> 🧠 Microcontroller Firmware Processing Logic
+                    </h5>
+                    <span class="badge bg-dark border border-secondary text-info small">Algorithm</span>
+                </div>
+
+                <p class="small text-light text-opacity-75 mb-3">
+                    Step-by-step firmware execution sequence running continuously inside the microcontroller loop:
+                </p>
+
+                <div class="terminal-box mb-3" style="color: #93c5fd; background: rgba(15, 23, 42, 0.95); border-color: rgba(99, 102, 241, 0.4);">{{ processing_logic or '1. Initialize GPIO pins and hardware buses (I2C/SPI/UART).\n2. Sample sensor readings at configured intervals.\n3. Apply digital filtering to eliminate transient spikes.\n4. Evaluate threshold conditions.\n5. Trigger actuation outputs and dispatch telemetry.' }}</div>
+
+                <div class="p-2 rounded bg-dark bg-opacity-75 border border-secondary border-opacity-50 small text-light text-opacity-75">
+                    <i class="fas fa-info-circle text-info me-1"></i>
+                    <strong>Firmware Tip:</strong> Avoid blocking <code>delay()</code> calls in the main loop; always use non-blocking <code>millis()</code> software timers so telemetry and sensor interrupts run smoothly.
+                </div>
+            </div>
+        </div>
+
+        <!-- CARD 5: 📊 EXPECTED OUTPUT -->
+        <div class="col-lg-6">
+            <div class="card card-dark-glass p-4 h-100">
+                <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+                    <h5 class="fw-bold text-white mb-0">
+                        <i class="fas fa-chart-line text-success me-2"></i> 📊 Expected Output & Bench Diagnostics
+                    </h5>
+                    <span class="badge bg-dark border border-secondary text-success small">Test Output</span>
+                </div>
+
+                <p class="small text-light text-opacity-75 mb-3">
+                    Verified physical responses, animated screen readouts, and Serial Monitor logs (115200 baud) during testing:
+                </p>
+
+                <div class="terminal-box mb-3" style="color: #34d399; background: #090d16; border-color: rgba(16, 185, 129, 0.4);">{{ expected_output or '• Serial Monitor (115200 baud): [DIAGNOSTIC] System Booted OK | Sensor Reading: NORMAL\n• Physical Outputs: Actuators respond to threshold triggers within <200ms\n• Display Readout: Live telemetry metrics updated at 1Hz' }}</div>
+
+                <div class="p-2 rounded bg-dark bg-opacity-75 border border-secondary border-opacity-50 small text-light text-opacity-75">
+                    <i class="fas fa-terminal text-success me-1"></i>
+                    <strong>Serial Diagnostics:</strong> Open Arduino Serial Monitor at 115200 baud with Line Ending set to <em>"Both NL & CR"</em>.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CARD 6: 🧪 8-POINT FEASIBILITY CHECK & PHYSICAL VERIFICATION ("WILL THIS WORK?") -->
+    <div class="card card-dark-glass p-4 mb-4">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+            <div>
+                <h5 class="fw-bold text-white mb-1">
+                    <i class="fas fa-vial text-info me-2"></i> 🧪 Feasibility Test & Physical Verification ("Will This Work?")
+                </h5>
+                <p class="text-light text-opacity-75 small mb-0">
+                    Comprehensive 8-point automated check and 5-step bench verification protocol.
+                </p>
+            </div>
+            <span class="badge bg-dark border border-info text-info px-3 py-1">
+                8 Automated Checks + 5-Step Bench Plan
+            </span>
+        </div>
+
+        <!-- Gemini Feasibility Verdict Banner -->
+        {% if feasibility_verification %}
+        <div class="p-3 rounded-3 mb-4" style="background: rgba(15, 23, 42, 0.85); border: 1px solid {% if feasibility_verification.feasibility == 'FEASIBLE' %}rgba(16, 185, 129, 0.4){% elif feasibility_verification.feasibility == 'FEASIBLE_WITH_CHANGES' %}rgba(245, 158, 11, 0.4){% else %}rgba(239, 68, 68, 0.4){% endif %};">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge {% if feasibility_verification.feasibility == 'FEASIBLE' %}badge-buildable{% elif feasibility_verification.feasibility == 'FEASIBLE_WITH_CHANGES' %}badge-modified{% else %}badge-notrec{% endif %} fs-6 px-3 py-1">
+                        {{ feasibility_verification.feasibility }}
+                    </span>
+                    <span class="badge bg-dark border border-secondary text-light small">
+                        Confidence: {{ feasibility_verification.confidence|default('HIGH') }}
+                    </span>
+                </div>
+                <span class="small text-light text-opacity-75">
+                    <i class="fas fa-shield-alt text-info me-1"></i> Two-Stage AI Verification Protocol
+                </span>
+            </div>
+            <p class="small text-light text-opacity-90 mb-3">
+                <strong>Executive Feasibility Rationale:</strong> {{ feasibility_verification.verdict_reasoning }}
+            </p>
+
+            <div class="row g-3">
+                <!-- ⚠️ Problems Found Column -->
+                <div class="col-md-6">
+                    <div class="p-3 rounded-3 h-100" style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.3);">
+                        <strong class="text-danger small text-uppercase d-block mb-2">
+                            <i class="fas fa-exclamation-circle me-1"></i> ⚠️ Problems Found & Incompatibilities
+                        </strong>
+                        {% set all_problems = [] %}
+                        {% if feasibility_verification.issues %}{% for iss in feasibility_verification.issues %}{% set _ = all_problems.append(iss) %}{% endfor %}{% endif %}
+                        {% if feasibility_verification.power_issues %}{% for p_iss in feasibility_verification.power_issues %}{% set _ = all_problems.append(p_iss) %}{% endfor %}{% endif %}
+                        {% if feasibility_verification.compatibility_issues %}{% for c_iss in feasibility_verification.compatibility_issues %}{% set _ = all_problems.append(c_iss) %}{% endfor %}{% endif %}
+                        
+                        {% if all_problems %}
+                            {% for prob in all_problems %}
+                            <div class="small text-light text-opacity-90 mb-1">
+                                • {{ prob }}
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <span class="small text-success"><i class="fas fa-check-circle me-1"></i> No critical circuit conflicts detected.</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- 🔧 Changes Required Column -->
+                <div class="col-md-6">
+                    <div class="p-3 rounded-3 h-100" style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.3);">
+                        <strong class="text-info small text-uppercase d-block mb-2">
+                            <i class="fas fa-wrench me-1"></i> 🔧 Changes Required Before Building
+                        </strong>
+                        {% if feasibility_verification.required_changes %}
+                            {% for chg in feasibility_verification.required_changes %}
+                            <div class="small text-light text-opacity-90 mb-1">
+                                • {{ chg }}
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="small text-light text-opacity-90 mb-1">• Perform multimeter voltage rail test before connecting microcontroller.</div>
+                            <div class="small text-light text-opacity-90 mb-1">• Maintain common GND bus across all sensors and external power supplies.</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- 8-Point Feasibility Checklist Grid -->
+        <h6 class="text-uppercase text-light text-opacity-75 fw-bold small mb-3">
+            <i class="fas fa-check-double text-success me-1"></i> 8-Point Hardware Feasibility Checklist
+        </h6>
+
+        <div class="row g-3 mb-4">
+            {% if feasibility_checks %}
+                {% for chk in feasibility_checks %}
+                <div class="col-md-6 col-lg-3">
+                    <div class="p-3 rounded-3 h-100 d-flex flex-column justify-content-between" style="background: rgba(30, 41, 59, 0.6); border: 1px solid {% if chk.status == 'PASS' %}rgba(16, 185, 129, 0.4){% elif chk.status == 'WARNING' %}rgba(245, 158, 11, 0.4){% else %}rgba(239, 68, 68, 0.4){% endif %};">
+                        <div>
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <span class="badge {% if chk.status == 'PASS' %}badge-buildable{% elif chk.status == 'WARNING' %}badge-modified{% else %}badge-notrec{% endif %}">
+                                    {{ chk.badge }}
+                                </span>
+                                <span class="small text-light text-opacity-50 fw-bold">#{{ loop.index }}</span>
+                            </div>
+                            <strong class="text-white d-block mb-1 small">{{ chk.name }}</strong>
+                            <p class="small text-light text-opacity-75 mb-2">{{ chk.summary }}</p>
+                        </div>
+                        <div class="mt-2 pt-2 border-top border-secondary border-opacity-25">
+                            <span class="small text-light text-opacity-50 d-block" style="font-size: 0.76rem;">{{ chk.details }}</span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-12 text-muted">No automated checks available.</div>
+            {% endif %}
+        </div>
+
+        <!-- "Will This Work?" Engineering Deep-Dive -->
+        {% if testing_verification %}
+        <div class="mt-4 pt-3 border-top border-secondary border-opacity-25">
+            <div class="row g-4">
+                <!-- Why It Works -->
+                <div class="col-lg-6">
+                    <div class="p-3 rounded-3 h-100" style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3);">
+                        <h6 class="text-success fw-bold small text-uppercase mb-2">
+                            <i class="fas fa-check-circle me-1"></i> Why the Proposed Circuit Should Work
+                        </h6>
+                        <div class="small text-light text-opacity-90" style="white-space: pre-line;">
+                            {{ testing_verification.why_it_works }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- What Could Cause Failure & Mitigations -->
+                <div class="col-lg-6">
+                    <div class="p-3 rounded-3 h-100" style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.3);">
+                        <h6 class="text-warning fw-bold small text-uppercase mb-2">
+                            <i class="fas fa-exclamation-triangle me-1"></i> Critical Failure Causes & Circuit Mitigations
+                        </h6>
+                        {% if testing_verification.failure_causes %}
+                            {% for fail in testing_verification.failure_causes %}
+                            <div class="mb-2 pb-2 {% if not loop.last %}border-bottom border-secondary border-opacity-25{% endif %}">
+                                <strong class="text-warning small d-block">• {{ fail.cause }}</strong>
+                                <span class="small text-light text-opacity-75 d-block"><em>Symptom:</em> {{ fail.symptom }}</span>
+                                <span class="small text-info d-block"><strong>Fix:</strong> {{ fail.mitigation }}</span>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <span class="small text-light text-opacity-75">No severe failure risks flagged.</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5-Step Physical Verification Roadmap -->
+            <div class="mt-4">
+                <h6 class="text-uppercase text-light text-opacity-75 fw-bold small mb-3">
+                    <i class="fas fa-tasks text-info me-1"></i> 5-Step Benchtop Physical Verification Roadmap
+                </h6>
+                <div class="row g-3">
+                    {% if testing_verification.physical_test_steps %}
+                        {% for step in testing_verification.physical_test_steps %}
+                        <div class="col-md">
+                            <div class="p-3 rounded-3 h-100" style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(100, 116, 139, 0.3);">
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <span class="badge bg-primary text-white rounded-pill">Step {{ step.step }}</span>
+                                </div>
+                                <strong class="text-white d-block small mb-1">{{ step.title }}</strong>
+                                <p class="small text-light text-opacity-75 mb-0" style="font-size: 0.8rem;">{{ step.action }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Expected Diagnostic Test Values Table -->
+            {% if testing_verification.expected_test_values %}
+            <div class="mt-4">
+                <h6 class="text-uppercase text-light text-opacity-75 fw-bold small mb-2">
+                    <i class="fas fa-tachometer-alt text-warning me-1"></i> Expected Multimeter & Bench Diagnostics
+                </h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-dark-custom align-middle">
+                        <thead>
+                            <tr>
+                                <th>Test Parameter</th>
+                                <th>Expected Reading</th>
+                                <th>Tolerance</th>
+                                <th>Measurement Instrument</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for val in testing_verification.expected_test_values %}
+                            <tr>
+                                <td class="text-white small"><strong>{{ val.parameter }}</strong></td>
+                                <td><span class="badge bg-dark text-success border border-success border-opacity-50">{{ val.expected }}</span></td>
+                                <td class="small text-light text-opacity-75">{{ val.tolerance }}</td>
+                                <td class="small text-info">{{ val.instrument }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Testing Disclaimer -->
+            <div class="alert bg-dark border border-secondary text-light small mt-3 mb-0 d-flex align-items-center gap-2">
+                <i class="fas fa-balance-scale text-warning fs-5"></i>
+                <span>
+                    <strong>Academic Engineering Notice:</strong> {{ testing_verification.disclaimer or 'Physical hardware systems cannot be guaranteed to operate safely without practical breadboard assembly, multimeter voltage checks, and bench testing.' }}
+                </span>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- CARD 7: 💻 SOFTWARE & FIRMWARE REQUIREMENTS -->
+    <div class="card card-dark-glass p-4 mb-4">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+            <div>
+                <h5 class="fw-bold text-white mb-1">
+                    <i class="fas fa-code text-info me-2"></i> 💻 Software & Firmware Requirements
+                </h5>
+                <p class="text-light text-opacity-75 small mb-0">
+                    Programming languages, verified IDEs, official library drivers with direct install commands and documentation links.
+                </p>
+            </div>
+            <span class="badge bg-dark border border-info text-info px-3 py-1">
+                {{ software_reqs.programming_language or 'C++ / Python' }}
+            </span>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <!-- Language & Recommended IDE -->
+            <div class="col-lg-4">
+                <div class="p-3 rounded-3 h-100" style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(100, 116, 139, 0.3);">
+                    <h6 class="text-uppercase text-info fw-bold small mb-3">Development Environment</h6>
+                    <div class="mb-3">
+                        <span class="small text-light text-opacity-50 d-block">Language:</span>
+                        <strong class="text-white fs-6">{{ software_reqs.programming_language or 'C++ (Arduino Framework)' }}</strong>
+                    </div>
+                    {% set ide = software_reqs.recommended_ide %}
+                    {% if ide %}
+                    <div class="mb-3">
+                        <span class="small text-light text-opacity-50 d-block">Recommended IDE:</span>
+                        <strong class="text-info">{{ ide.name }}</strong>
+                        <p class="small text-light text-opacity-75 mt-1 mb-2">{{ ide.description }}</p>
+                        <a href="{{ ide.official_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-info btn-sm rounded-pill px-3">
+                            <i class="fas fa-external-link-alt me-1"></i> Download IDE
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Required Libraries Table -->
+            <div class="col-lg-8">
+                <div class="p-3 rounded-3 h-100" style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(100, 116, 139, 0.3);">
+                    <h6 class="text-uppercase text-success fw-bold small mb-2">Required Libraries & Drivers</h6>
+                    {% if software_reqs.libraries %}
+                    <div class="table-responsive">
+                        <table class="table table-sm table-dark-custom align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Library Name</th>
+                                    <th>Purpose</th>
+                                    <th>Installation Command</th>
+                                    <th>Official Docs</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for lib in software_reqs.libraries %}
+                                <tr>
+                                    <td>
+                                        <strong class="text-white">{{ lib.name }}</strong>
+                                        <span class="badge bg-dark text-light border border-secondary small ms-1">{{ lib.version }}</span>
+                                    </td>
+                                    <td class="small text-light text-opacity-75">{{ lib.purpose }}</td>
+                                    <td><code class="text-warning small">{{ lib.install_cmd }}</code></td>
+                                    <td>
+                                        <a href="{{ lib.official_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary py-0 px-2 rounded-pill small">
+                                            Docs
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <span class="small text-light text-opacity-75">Uses standard native microcontroller libraries.</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- APIs, Databases, Datasets Row -->
+        <div class="row g-3">
+            <!-- APIs -->
+            <div class="col-md-4">
+                <div class="p-3 rounded-3 h-100" style="background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(100, 116, 139, 0.25);">
+                    <h6 class="text-warning fw-bold small text-uppercase mb-2"><i class="fas fa-cloud me-1"></i> Cloud APIs & Platforms</h6>
+                    {% if software_reqs.apis %}
+                        {% for api in software_reqs.apis %}
+                        <div class="mb-2 pb-2 {% if not loop.last %}border-bottom border-secondary border-opacity-25{% endif %}">
+                            <strong class="text-white small d-block">{{ api.name }}</strong>
+                            <span class="small text-light text-opacity-75 d-block mb-1">{{ api.purpose }}</span>
+                            <a href="{{ api.official_url }}" target="_blank" rel="noopener noreferrer" class="small text-info">Official Link →</a>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <span class="small text-light text-opacity-50">Local embedded execution; no external API required.</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Databases -->
+            <div class="col-md-4">
+                <div class="p-3 rounded-3 h-100" style="background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(100, 116, 139, 0.25);">
+                    <h6 class="text-primary fw-bold small text-uppercase mb-2"><i class="fas fa-database me-1"></i> Storage & Databases</h6>
+                    {% if software_reqs.databases %}
+                        {% for db_item in software_reqs.databases %}
+                        <div class="mb-2 pb-2 {% if not loop.last %}border-bottom border-secondary border-opacity-25{% endif %}">
+                            <strong class="text-white small d-block">{{ db_item.name }}</strong>
+                            <span class="small text-light text-opacity-75 d-block mb-1">{{ db_item.purpose }}</span>
+                            <a href="{{ db_item.official_url }}" target="_blank" rel="noopener noreferrer" class="small text-info">Docs →</a>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <span class="small text-light text-opacity-50">Local EEPROM / Flash NVS storage.</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Datasets / Reference Tables -->
+            <div class="col-md-4">
+                <div class="p-3 rounded-3 h-100" style="background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(100, 116, 139, 0.25);">
+                    <h6 class="text-success fw-bold small text-uppercase mb-2"><i class="fas fa-table me-1"></i> Datasets & Models</h6>
+                    {% if software_reqs.datasets %}
+                        {% for ds in software_reqs.datasets %}
+                        <div class="mb-2 pb-2 {% if not loop.last %}border-bottom border-secondary border-opacity-25{% endif %}">
+                            <strong class="text-white small d-block">{{ ds.name }}</strong>
+                            <span class="small text-light text-opacity-75 d-block mb-1">{{ ds.purpose }}</span>
+                            <a href="{{ ds.official_url }}" target="_blank" rel="noopener noreferrer" class="small text-info">Reference →</a>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <span class="small text-light text-opacity-50">Standard ADC calibration curves.</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CARD 8: 💰 DUAL BUDGET ANALYSIS & COMPONENT CUSTOMIZER -->
+    <div class="card card-dark-glass p-4 mb-4">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+            <div>
+                <h5 class="fw-bold text-white mb-1">
+                    <i class="fas fa-wallet text-success me-2"></i> 💰 Dual Budget Calculation & Build Tiers
+                </h5>
+                <p class="text-light text-opacity-75 small mb-0">
+                    Explicit cost breakdown formula comparing Minimum-Budget vs Recommended build versions.
+                </p>
+            </div>
+            <span class="badge bg-dark border border-success text-success px-3 py-1">
+                Save up to ₹{{ (budget_tiers["savings_inr"] if (budget_tiers and "savings_inr" in budget_tiers) else 400)|int }} ({{ budget_tiers["savings_percentage"] if (budget_tiers and "savings_percentage" in budget_tiers) else 22 }}%)
+            </span>
+        </div>
+
+        <!-- Explicit Formula Breakdown Alert -->
+        <div class="p-3 rounded-3 mb-4" style="background: rgba(30, 41, 59, 0.7); border-left: 4px solid #10b981;">
+            <strong class="text-success small text-uppercase d-block mb-1">
+                <i class="fas fa-calculator me-1"></i> Itemized Budget Formula:
+            </strong>
+            <p class="text-white fw-semibold mb-0" style="font-family: monospace; font-size: 0.9rem;">
+                {{ (budget_tiers["total_formula"] if (budget_tiers and "total_formula" in budget_tiers) else 'Component cost + additional modules + wires/connectors (₹120) + power supply = Estimated Total') }}
+            </p>
+        </div>
+
+        <!-- Side-by-Side Build Tiers: Minimum vs Recommended -->
+        <div class="row g-4 mb-4">
+            <!-- Minimum-Budget Version -->
+            <div class="col-lg-6">
+                <div class="p-4 rounded-3 h-100" style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(59, 130, 246, 0.4);">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-50 px-3 py-1">
+                            Minimal Clone Build
+                        </span>
+                        <h4 class="text-primary fw-bold mb-0">₹{{ (budget_tiers["min_budget"]["total_cost"] if (budget_tiers and "min_budget" in budget_tiers and "total_cost" in budget_tiers["min_budget"]) else 1200)|int }}</h4>
+                    </div>
+                    <h6 class="text-white fw-bold mb-2">Minimum-Budget Version</h6>
+                    <p class="small text-light text-opacity-75 mb-3">{{ (budget_tiers["min_budget"]["strategy"] if (budget_tiers and "min_budget" in budget_tiers and "strategy" in budget_tiers["min_budget"]) else 'Minimal clone modules, reuses existing phone chargers, omits non-essential screens in favor of web/serial readout.') }}</p>
+
+                    <div class="list-group list-group-flush bg-transparent">
+                        {% if budget_tiers and "min_budget" in budget_tiers and budget_tiers["min_budget"] and "items" in budget_tiers["min_budget"] %}
+                            {% for item in budget_tiers["min_budget"]["items"] %}
+                            <div class="list-group-item bg-transparent text-light px-0 py-1 border-secondary border-opacity-25 d-flex justify-content-between small">
+                                <span>{{ item.name }}</span>
+                                <strong class="text-white">₹{{ item.price_inr|int }}</strong>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="small text-muted py-2">No budget tier breakdown available.</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recommended Version -->
+            <div class="col-lg-6">
+                <div class="p-4 rounded-3 h-100" style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(16, 185, 129, 0.4);">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50 px-3 py-1">
+                            Recommended Complete Build
+                        </span>
+                        <h4 class="text-success fw-bold mb-0">₹{{ (budget_tiers["recommended_budget"]["total_cost"] if (budget_tiers and "recommended_budget" in budget_tiers and "total_cost" in budget_tiers["recommended_budget"]) else 1850)|int }}</h4>
+                    </div>
+                    <h6 class="text-white fw-bold mb-2">Recommended Version (Lab Demo Ready)</h6>
+                    <p class="small text-light text-opacity-75 mb-3">{{ (budget_tiers["recommended_budget"]["strategy"] if (budget_tiers and "recommended_budget" in budget_tiers and "strategy" in budget_tiers["recommended_budget"]) else 'Branded components with official distributors, dedicated 12V/5V DC power adapter, high-contrast OLED display, and durable presentation enclosure.') }}</p>
+
+                    <div class="list-group list-group-flush bg-transparent">
+                        {% if budget_tiers and "recommended_budget" in budget_tiers and budget_tiers["recommended_budget"] and "items" in budget_tiers["recommended_budget"] %}
+                            {% for item in budget_tiers["recommended_budget"]["items"] %}
+                            <div class="list-group-item bg-transparent text-light px-0 py-1 border-secondary border-opacity-25 d-flex justify-content-between small">
+                                <span>{{ item.name }}</span>
+                                <strong class="text-white">₹{{ item.price_inr|int }}</strong>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="small text-muted py-2">No budget tier breakdown available.</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Interactive Budget Customizer Form -->
+        <div class="row g-4 pt-3 border-top border-secondary border-opacity-25">
+            <div class="col-lg-5">
+                <h6 class="text-white fw-bold mb-2">Budget Customizer</h6>
+                <p class="small text-light text-opacity-75 mb-3">
+                    Adjust your maximum budget or check parts you already own to recalculate total project cost.
+                </p>
+
+                <form method="POST" id="budgetAdjustForm">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-light">Student Maximum Budget (₹ INR)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-dark text-light border-secondary">₹</span>
+                            <input type="number" class="form-control bg-dark text-white border-secondary" name="student_budget"
+                                   id="studentBudgetInput" value="{{ analysis.student_budget|int }}" min="500" step="100" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-light">Preferred Main Controller</label>
+                        <select class="form-select bg-dark text-white border-secondary" name="preferred_controller">
+                            {% if controllers_db %}
+                            {% for cname in controllers_db %}
+                            <option value="{{ cname }}" {% if analysis.preferred_controller == cname %}selected{% endif %}>
+                                {{ cname }} (₹{{ controllers_db[cname].base_price_inr|int }})
+                            </option>
+                            {% endfor %}
+                            {% endif %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-light">Components You Already Own (Deducted from cost)</label>
+                        <div class="p-2 rounded bg-dark border border-secondary border-opacity-50" style="max-height: 130px; overflow-y: auto;">
+                            {% for item in bom %}
+                            <div class="form-check small text-light text-opacity-75">
+                                <input class="form-check-input" type="checkbox" name="available_components" value="{{ item.name }}"
+                                       id="chk_{{ loop.index }}" {% if item.already_owned %}checked{% endif %}>
+                                <label class="form-check-label" for="chk_{{ loop.index }}">
+                                    {{ item.name }} (₹{{ item.price_inr|int }})
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+                        <i class="fas fa-calculator me-1"></i> Update Parameters & Recalculate
+                    </button>
+                </form>
+            </div>
+
+            <!-- Modifications Advice Column -->
+            <div class="col-lg-7">
+                <h6 class="text-white fw-bold mb-2">Cost Optimization Modifications</h6>
+                {% if modifications %}
+                <div class="d-flex flex-column gap-3">
+                    {% for mod in modifications %}
+                    <div class="mod-card">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <strong class="text-info small">{{ mod.title }}</strong>
+                            <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50">
+                                Saves ~₹{{ mod.estimated_cost_reduction|int }}
+                            </span>
+                        </div>
+                        <p class="small text-light text-opacity-90 mb-2">{{ mod.change }}</p>
+                        <div class="row g-2 small text-light text-opacity-75">
+                            <div class="col-md-6">
+                                <span class="text-success"><i class="fas fa-check-circle me-1"></i>Advantage:</span> {{ mod.advantages }}
+                            </div>
+                            <div class="col-md-6">
+                                <span class="text-warning"><i class="fas fa-exclamation-circle me-1"></i>Trade-Off:</span> {{ mod.limitations }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="p-4 text-center text-muted border border-secondary border-opacity-25 rounded-3">
+                    <i class="fas fa-check-circle text-success fs-2 mb-2"></i>
+                    <p class="small text-light text-opacity-75 mb-0">Hardware components are within budget and fully optimized.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- CARD 9: 🛒 COMPONENTS TO BUY (BILL OF MATERIALS) -->
+    <div class="card card-dark-glass p-4 mb-4">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+            <div>
+                <h5 class="fw-bold text-white mb-1">
+                    <i class="fas fa-shopping-cart text-info me-2"></i> 🛒 Components to Buy (Bill of Materials)
+                </h5>
+                <p class="text-light text-opacity-75 small mb-0">
+                    Direct search and purchase options from verified Indian distributors: <strong>Robu.in</strong>, <strong>ElectronicsComp.com</strong>, and <strong>Amazon India</strong>.
+                </p>
+            </div>
+            <span class="badge bg-dark border border-secondary text-light px-3 py-2">
+                <i class="fas fa-box me-1"></i> {{ bom|length }} Components
+            </span>
+        </div>
+
+        <!-- BOM Table -->
+        <div class="table-responsive mb-4">
+            <table class="table table-dark-custom align-middle">
+                <thead>
+                    <tr>
+                        <th>Component</th>
+                        <th>Purpose</th>
+                        <th>Qty</th>
+                        <th>Recommended Specification</th>
+                        <th>Voltage</th>
+                        <th>Current</th>
+                        <th>Necessity</th>
+                        <th>Price</th>
+                        <th>Distributor Links</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in bom %}
+                    <tr>
+                        <td>
+                            <strong class="text-white d-block">{{ item.name }}</strong>
+                            <div class="d-flex align-items-center gap-1 mt-1 flex-wrap">
+                                <span class="badge {% if item.supporting %}bg-warning bg-opacity-25 text-warning border border-warning border-opacity-50{% else %}bg-info bg-opacity-25 text-info border border-info border-opacity-50{% endif %} py-0 px-2" style="font-size: 0.7rem;">
+                                    {% if item.supporting %}Supporting Component{% else %}Primary Component{% endif %}
+                                </span>
+                                <span class="small text-light text-opacity-50">{{ item.status }}</span>
+                            </div>
+                        </td>
+                        <td class="small text-light text-opacity-75" style="max-width: 180px;">
+                            {{ item.purpose }}
+                        </td>
+                        <td class="fw-bold text-center">{{ item.quantity }}</td>
+                        <td class="small text-light text-opacity-75" style="max-width: 200px;">
+                            {{ item.recommended_spec }}
+                        </td>
+                        <td><span class="badge bg-dark text-warning border border-warning border-opacity-25">{{ item.voltage }}</span></td>
+                        <td><span class="badge bg-dark text-info border border-info border-opacity-25">{{ item.current }}</span></td>
+                        <td>
+                            <span class="badge {% if item.necessity == 'Essential' %}bg-danger bg-opacity-75{% elif item.necessity == 'Recommended' %}bg-primary bg-opacity-75{% else %}bg-secondary{% endif %}">
+                                {{ item.necessity }}
+                            </span>
+                        </td>
+                        <td class="fw-bold text-white">
+                            ₹{{ item.price_inr|int }}
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-outline-info btn-sm rounded-pill px-3 shadow-sm d-inline-flex align-items-center gap-1"
+                                    onclick="openBuyModal('{{ item.name|replace("'", "\\'") }}')">
+                                <i class="fas fa-external-link-alt"></i>
+                                <span>Buy Links</span>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Direct Online Purchasing Cards Grid -->
+        <h6 class="text-uppercase text-light text-opacity-75 fw-bold small mb-3">
+            <i class="fas fa-store text-info me-1"></i> Direct Store Links for Indian Distributors
+        </h6>
+
+        <div class="row g-3">
+            {% for item in bom %}
+            {% set prod_info = products[item.name] if (products and item.name in products) else None %}
+            {% if prod_info and prod_info.options %}
+            <div class="col-lg-6 col-xl-4">
+                <div class="p-3 rounded-3 h-100 d-flex flex-column justify-content-between" style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(75, 85, 99, 0.3);">
+                    <div>
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <strong class="text-white fs-6">{{ item.name }}</strong>
+                            <span class="badge bg-dark text-warning border border-secondary">{{ item.voltage }}</span>
+                        </div>
+                        <p class="small text-light text-opacity-75 mb-3">{{ item.recommended_spec }}</p>
+
+                        <!-- Best Value Option -->
+                        {% set opt = prod_info.options[0] %}
+                        {% set is_direct = opt.verified and opt.url %}
+                        <div class="p-2 rounded bg-dark border border-secondary border-opacity-50 mb-2">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="small fw-bold text-warning">{{ opt.tier or (opt.seller ~ ' Option') }}</span>
+                                <strong class="text-success fs-6">{{ opt.price_inr }}</strong>
+                            </div>
+                            <div class="d-flex justify-content-between small text-light text-opacity-50 mt-1">
+                                <span>{{ opt.seller or opt.marketplace }}</span>
+                                <span class="badge {% if is_direct %}bg-success{% else %}bg-dark border border-secondary text-info{% endif %} py-0 px-2" style="font-size: 0.72rem;">
+                                    {% if is_direct %}Verified Direct Link{% else %}Seller Search Link{% endif %}
+                                </span>
+                            </div>
+                            <div class="mt-2 text-end">
+                                <a href="{{ opt.url if is_direct else (opt.search_url or opt.product_url) }}" target="_blank" rel="noopener noreferrer" class="btn {% if is_direct %}btn-success{% else %}btn-outline-info{% endif %} btn-sm py-1 px-3 rounded-pill">
+                                    {% if is_direct %}
+                                        <i class="fas fa-shopping-cart me-1"></i> 🛒 Buy Product
+                                    {% else %}
+                                        <i class="fas fa-search me-1"></i> 🔎 Search Product
+                                    {% endif %}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn btn-dark btn-sm text-info border-secondary mt-2 w-100" onclick="openBuyModal('{{ item.name|replace("'", "\\'") }}')">
+                        <i class="fas fa-list me-1"></i> View All Store Options (Robu / Amazon)
+                    </button>
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- CARD 10: ⚠️ RISKS, ISSUES & CIRCUIT HAZARDS -->
+    {% if compatibility_issues %}
+    <div class="card card-dark-glass p-4 mb-4 border-warning border-opacity-50">
+        <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+            <h5 class="fw-bold text-warning mb-0">
+                <i class="fas fa-exclamation-triangle me-2"></i> ⚠️ Risks & Issues: Compatibility & Electrical Hazard Warnings
+            </h5>
+            <span class="badge bg-warning text-dark fw-bold">
+                {{ compatibility_issues|length }} Hazard(s) Flagged
+            </span>
+        </div>
+        
+        <div class="row g-3">
+            {% for issue in compatibility_issues %}
+            <div class="col-md-6">
+                <div class="p-3 rounded-3 h-100" style="background: rgba(239, 68, 68, 0.1); border: 1px solid {% if issue.severity == 'CRITICAL' %}rgba(239, 68, 68, 0.4){% else %}rgba(245, 158, 11, 0.4){% endif %};">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <strong class="{% if issue.severity == 'CRITICAL' %}text-danger{% else %}text-warning{% endif %}">
+                            {{ issue.hazard }}
+                        </strong>
+                        <span class="badge {% if issue.severity == 'CRITICAL' %}bg-danger{% else %}bg-warning text-dark{% endif %} text-uppercase small">
+                            {{ issue.severity }}
+                        </span>
+                    </div>
+                    <p class="small text-light text-opacity-75 mb-2">
+                        <strong>Electrical Cause:</strong> {{ issue.reason }}
+                    </p>
+                    <div class="p-2 rounded bg-dark bg-opacity-75 border border-secondary border-opacity-50 small text-info">
+                        <i class="fas fa-tools me-1"></i> <strong>Engineered Circuit Solution:</strong> {{ issue.solution }}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- CARD 11: 🔧 CONTEXTUAL HARDWARE TROUBLESHOOTING GUIDE (9 FAULT CATEGORIES) -->
+    <div class="card card-dark-glass p-4 mb-4">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+            <div>
+                <h5 class="fw-bold text-white mb-1">
+                    <i class="fas fa-wrench text-warning me-2"></i> 🔧 Contextual Hardware Troubleshooting Guide
+                </h5>
+                <p class="text-light text-opacity-75 small mb-0">
+                    Step-by-step resolution procedures covering all 9 critical hardware fault categories.
+                </p>
+            </div>
+            <span class="badge bg-dark border border-warning text-warning px-3 py-1">
+                9 Diagnostic Scenarios
+            </span>
+        </div>
+
+        <div class="accordion accordion-dark" id="troubleshootAccordion">
+            {% if troubleshooting %}
+                {% for item in troubleshooting %}
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="heading_{{ loop.index }}">
+                        <button class="accordion-button {% if not loop.first %}collapsed{% endif %}" type="button"
+                                data-bs-toggle="collapse" data-bs-target="#collapse_{{ loop.index }}"
+                                aria-expanded="{% if loop.first %}true{% else %}false{% endif %}"
+                                aria-controls="collapse_{{ loop.index }}">
+                            <span class="me-2">{{ item.issue_title }}</span>
+                        </button>
+                    </h2>
+                    <div id="collapse_{{ loop.index }}" class="accordion-collapse collapse {% if loop.first %}show{% endif %}"
+                         aria-labelledby="heading_{{ loop.index }}" data-bs-parent="#troubleshootAccordion">
+                        <div class="accordion-body">
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <strong class="text-warning small d-block mb-1"><i class="fas fa-stethoscope me-1"></i> Symptoms:</strong>
+                                    <span class="small text-light text-opacity-75">{{ item.symptoms }}</span>
+                                </div>
+                                <div class="col-md-6">
+                                    <strong class="text-info small d-block mb-1"><i class="fas fa-search me-1"></i> Root Cause:</strong>
+                                    <span class="small text-light text-opacity-75">{{ item.root_cause }}</span>
+                                </div>
+                            </div>
+                            <strong class="text-success small d-block mb-2"><i class="fas fa-list-ol me-1"></i> Step-by-Step Resolution:</strong>
+                            <ol class="small text-light text-opacity-90 ps-3 mb-0">
+                                {% for step in item.step_by_step_solution %}
+                                <li class="mb-1">{{ step }}</li>
+                                {% endfor %}
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="p-3 text-muted">Troubleshooting data not available.</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- 12. Master Workflow Action Bar -->
+    <div class="card card-dark-glass p-4 text-center border-primary shadow-lg mb-5">
+        <h4 class="fw-bold text-white mb-2">Ready to Proceed with Hardware Development?</h4>
+        <p class="text-light text-opacity-75 small max-w-xl mx-auto mb-4" style="max-width: 680px;">
+            Once you approve this hardware architecture and bill of materials, ProjectGuard will generate a customized, 6-phase engineering roadmap with circuit design, sensor calibration, firmware state machines, and hardware stress testing milestones.
+        </p>
+
+        <div class="d-flex flex-wrap justify-content-center gap-3">
+            <form method="POST" action="{{ url_for('student.approve_hardware_architecture', project_id=project.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <button type="submit" class="btn btn-success btn-lg px-5 py-3 fw-bold shadow rounded-pill" style="background: linear-gradient(135deg, #10b981, #059669); border: none;">
+                    <i class="fas fa-check-circle me-2"></i> Approve Hardware Design & Generate Tasks
+                </button>
+            </form>
+
+            <a href="{{ url_for('student.dashboard') }}" class="btn btn-outline-secondary btn-lg px-4 py-3 rounded-pill">
+                <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- ==============================================================================
+     MODAL: 3-TIER COMPONENT PURCHASING OPTIONS (ROBU, ELECTRONICSCOMP, AMAZON)
+     ============================================================================== -->
+<div class="modal fade" id="buyModal" tabindex="-1" aria-labelledby="buyModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content card-dark-glass border-primary text-white">
+            <div class="modal-header border-secondary border-opacity-50">
+                <h5 class="modal-title fw-bold" id="buyModalLabel">
+                    <i class="fas fa-shopping-cart text-info me-2"></i> Online Purchasing Options
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4" id="buyModalBody">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="text-muted small mt-2">Loading marketplace options...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Product data cache from server
+    const productsData = {{ products|tojson|safe }};
+
+    function openBuyModal(componentName) {
+        const modalEl = document.getElementById("buyModal");
+        const modal = new bootstrap.Modal(modalEl);
+        document.getElementById("buyModalLabel").innerHTML = `<i class="fas fa-shopping-cart text-info me-2"></i> Options for: ${componentName}`;
+        
+        const bodyEl = document.getElementById("buyModalBody");
+        const productInfo = productsData[componentName];
+
+        if (productInfo && productInfo.options) {
+            let html = `<p class="small text-light text-opacity-75 mb-3">Comparing verified purchasing tiers across Indian robotics & electronics marketplaces (Robu.in, ElectronicsComp, Amazon.in):</p>`;
+            html += `<div class="row g-3">`;
+
+            productInfo.options.forEach(opt => {
+                const isDirect = (opt.verified === true || opt.verified === 'true') && Boolean(opt.url);
+                const targetUrl = isDirect ? opt.url : (opt.search_url || opt.product_url);
+                const btnClass = isDirect ? 'btn-success' : 'btn-outline-info';
+                const btnIcon = isDirect ? 'fa-shopping-cart' : 'fa-search';
+                const btnLabel = isDirect ? '🛒 Buy Product' : '🔎 Search Product';
+                const badgeClass = isDirect ? 'bg-success' : 'bg-dark border border-secondary text-info';
+                const badgeLabel = isDirect ? 'Verified Direct Link' : 'Seller Search Link';
+
+                html += `
+                <div class="col-md-4">
+                    <div class="p-3 rounded-3 h-100 d-flex flex-column justify-content-between" style="background: rgba(30, 41, 59, 0.9); border: 1px solid rgba(99, 102, 241, 0.3);">
+                        <div>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="badge bg-dark text-warning border border-secondary">${opt.tier || (opt.seller || opt.marketplace)}</span>
+                                <span class="badge ${badgeClass} py-0 px-2" style="font-size: 0.72rem;">${badgeLabel}</span>
+                            </div>
+                            <h6 class="fw-bold text-white mb-1">${opt.title}</h6>
+                            <h4 class="text-success fw-bold my-2">${opt.price_inr}</h4>
+                            <div class="small text-light text-opacity-75 mb-1"><i class="fas fa-store text-info me-1"></i>${opt.seller || opt.marketplace}</div>
+                            <div class="small text-light text-opacity-75 mb-1"><i class="fas fa-check text-success me-1"></i>${opt.availability || 'Available'}</div>
+                            <div class="small text-light text-opacity-75 mb-2">${opt.specification || ''}</div>
+                        </div>
+                        <div class="mt-3">
+                            <a href="${targetUrl}" target="_blank" rel="noopener noreferrer" class="btn ${btnClass} btn-sm w-100 py-2 rounded-pill fw-bold">
+                                <i class="fas ${btnIcon} me-1"></i> ${btnLabel}
+                            </a>
+                        </div>
+                    </div>
+                </div>`;
+            });
+
+            html += `</div>`;
+            bodyEl.innerHTML = html;
+        } else {
+            // Fetch dynamically via API
+            fetch(`/api/projects/{{ project.id }}/buildcheck/options/${encodeURIComponent(componentName)}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.status === "success" && data.data && data.data.options) {
+                        productsData[componentName] = data.data;
+                        openBuyModal(componentName);
+                    } else {
+                        bodyEl.innerHTML = `<div class="alert alert-warning">No online purchasing options found for this component.</div>`;
+                    }
+                })
+                .catch(err => {
+                    bodyEl.innerHTML = `<div class="alert alert-danger">Error loading marketplace links.</div>`;
+                });
+        }
+
+        modal.show();
+    }
+</script>
+{% endblock %}

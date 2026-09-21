@@ -1,50 +1,96 @@
 {% extends "base.html" %}
 
-{% block title %}Analyze & Start Project with AI — ProjectGuard{% endblock %}
+{% block title %}Submit Project Idea — AI-Powered Guidance & Failure Prediction{% endblock %}
 
 {% block content %}
 <div class="container py-4">
     <div class="row justify-content-center">
-        <div class="col-lg-8">
+        <div class="col-lg-9 col-xl-8">
+            <!-- Header -->
             <div class="text-center mb-4">
-                <span class="brand-shield mb-2" style="font-size: 1.8rem;"><i class="fas fa-brain"></i></span>
-                <h2 class="fw-bold mt-2">Describe Your Academic Project</h2>
-                <p class="text-muted small max-w-lg mx-auto">
-                    You don't need to write a complex project plan manually. Just enter your project title and what you want to build. <strong>ProjectGuard's AI Mentor</strong> will analyze requirements, identify components, and generate your development tasks.
+                <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill mb-2" style="background: rgba(37, 99, 235, 0.1); border: 1px solid rgba(37, 99, 235, 0.25);">
+                    <i class="fas fa-brain text-primary"></i>
+                    <span class="small fw-semibold text-primary">Google Gemini 6-Phase Task Engine & Risk Predictor</span>
+                </div>
+                <h2 class="fw-bold mt-1">Submit Your Project Idea</h2>
+                <p class="text-muted small max-w-lg mx-auto" style="max-width: 580px;">
+                    Enter your academic project details below. <strong>Google Gemini</strong> will analyze your requirements, identify technical modules, recommend optimal system architecture, suggest stage-wise AI tools with copyable prompts, and generate a structured 6-phase interactive task roadmap.
                 </p>
+                <!-- Quick Demo Fill Button -->
+                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 shadow-sm" onclick="fillExampleProject()">
+                    <i class="fas fa-lightbulb text-warning me-1"></i> Try Example: AI-Based Campus Event Management System
+                </button>
             </div>
 
-            <div class="card card-modern p-4 p-md-5 border-0 shadow-sm">
+            <div class="card card-modern p-4 p-md-5 border-0 shadow-lg position-relative" id="mainCard">
                 <form method="POST" id="aiProjectForm">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
-                    <div class="mb-4">
+                    <!-- 1. Project Title -->
+                    <div class="mb-3">
                         <label for="project_name" class="form-label fw-semibold">
                             <i class="fas fa-heading text-primary me-1"></i> Project Title <span class="text-danger">*</span>
                         </label>
-                        <input type="text" class="form-control form-control-lg fs-6" id="project_name" name="project_name" placeholder="e.g. AI-Based Attendance System with Voice Commands" required autofocus>
+                        <input type="text" class="form-control form-control-lg fs-6" id="project_name" name="project_name" placeholder="e.g. AI-Based Campus Event Management System" required autofocus>
                         <div class="form-text small">Give your capstone or academic project a concise, descriptive title.</div>
                     </div>
 
-                    <div class="mb-4">
+                    <!-- 2. Project Description -->
+                    <div class="mb-3">
                         <label for="description" class="form-label fw-semibold">
-                            <i class="fas fa-align-left text-primary me-1"></i> Project Description & Goals <span class="text-danger">*</span>
+                            <i class="fas fa-align-left text-primary me-1"></i> Project Description & Requirements <span class="text-danger">*</span>
                         </label>
-                        <textarea class="form-control" id="description" name="description" rows="6" placeholder="Describe the application you want to build, user roles, main features, and target technologies...&#10;&#10;Example:&#10;I want to build a web application where faculty can mark student attendance using voice commands. Students should be able to log in, view their attendance percentage, and download monthly summary reports." required></textarea>
-                        <div class="form-text small">The AI analyzes your description to identify architecture layers, database needs, ML components, testing requirements, and viva defense items.</div>
+                        <textarea class="form-control" id="description" name="description" rows="5" placeholder="Describe the application you want to build, user roles, main features, and target technologies...&#10;&#10;Example:&#10;A web application for managing college events, registrations, approvals, and certificates." required></textarea>
+                        <div class="form-text small">Gemini parses your description to extract modules across Research, UI/UX, Development, Database, Testing, and Deployment.</div>
                     </div>
 
-                    <div class="row g-3 mb-4">
+                    <!-- 3. Domain & Team Size -->
+                    <div class="row g-3 mb-3">
                         <div class="col-md-6">
-                            <label for="deadline" class="form-label small fw-semibold">Target Evaluation Deadline (Optional)</label>
-                            <input type="date" class="form-control" id="deadline" name="deadline">
-                            <div class="form-text small">Default: 90 days from today.</div>
+                            <label for="domain" class="form-label fw-semibold small">
+                                <i class="fas fa-layer-group text-primary me-1"></i> Project Domain <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="domain" name="domain" required>
+                                <option value="Web Development" selected>Web Development</option>
+                                <option value="Machine Learning & AI">Machine Learning & AI</option>
+                                <option value="Mobile Applications">Mobile Applications</option>
+                                <option value="Cloud & DevOps">Cloud & DevOps</option>
+                                <option value="Internet of Things (IoT)">Internet of Things (IoT)</option>
+                                <option value="Cybersecurity">Cybersecurity</option>
+                                <option value="Blockchain">Blockchain</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="team_size" class="form-label fw-semibold small">
+                                <i class="fas fa-users text-primary me-1"></i> Team Size (Members) <span class="text-danger">*</span>
+                            </label>
+                            <input type="number" class="form-control" id="team_size" name="team_size" min="1" max="10" value="3" required>
+                            <div class="form-text small">Used to calculate parallelization and velocity capacity.</div>
                         </div>
                     </div>
 
+                    <!-- 4. Deadline & Known Technologies -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label for="deadline" class="form-label fw-semibold small">
+                                <i class="fas fa-calendar-alt text-primary me-1"></i> Project Deadline / Viva Date <span class="text-danger">*</span>
+                            </label>
+                            <input type="date" class="form-control" id="deadline" name="deadline" required>
+                            <div class="form-text small">Crucial for timeline pacing and early delay/failure prediction.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="technologies_known" class="form-label fw-semibold small">
+                                <i class="fas fa-code text-primary me-1"></i> Technologies You Already Know
+                            </label>
+                            <input type="text" class="form-control" id="technologies_known" name="technologies_known" placeholder="e.g. Python, Flask, HTML/CSS, SQLite, Bootstrap">
+                            <div class="form-text small">Gemini will tailor architecture and tasks to your existing skills.</div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Actions -->
                     <div class="d-grid gap-2 pt-3 border-top">
-                        <button type="submit" class="btn btn-primary btn-lg py-3 fw-bold shadow-sm" id="btnAnalyze">
-                            <i class="fas fa-magic me-2"></i> Analyze My Project & Generate Tasks
+                        <button type="submit" class="btn btn-primary btn-lg py-3 fw-bold shadow-sm" id="btnAnalyze" style="background: linear-gradient(135deg, #2563eb, #6366f1); border: none;">
+                            <i class="fas fa-magic me-2"></i> Analyze with Gemini & Generate 6-Phase Plan
                         </button>
                         <a href="{{ url_for('student.dashboard') }}" class="btn btn-outline-secondary py-2">
                             Cancel
@@ -52,11 +98,44 @@
                     </div>
                 </form>
 
-                <!-- Loading State (hidden by default) -->
+                <!-- ============================================================
+                     FUTURISTIC MULTI-STEP GEMINI LOADING OVERLAY
+                     ============================================================ -->
                 <div id="loadingOverlay" class="text-center py-4 d-none">
-                    <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;" role="status"></div>
-                    <h5 class="fw-bold text-dark">AI Mentor is analyzing your project requirements...</h5>
-                    <p class="text-muted small">Generating database schemas, backend logic, testing requirements, and milestone tasks.</p>
+                    <!-- 3D Glowing AI Orb in Thinking State -->
+                    <div class="ai-orb-wrapper mb-3">
+                        <div id="createProjectOrb" data-ai-orb data-orb-size="160" data-orb-state="thinking"></div>
+                        <span class="ai-orb-badge"><i class="fas fa-circle-notch fa-spin me-1"></i> Gemini Active</span>
+                    </div>
+
+                    <h4 class="fw-bold mb-1">AI Assistant is analyzing your project...</h4>
+                    <p class="text-muted small mb-4">Synthesizing project intelligence, tasks, verified resources, and risk models.</p>
+
+                    <!-- Animated 5-Step Process Checklist -->
+                    <div class="text-start mx-auto p-3 bg-light rounded-3 mb-3" id="geminiLoadingSteps" style="max-width: 460px;">
+                        <div class="gemini-step-item step-pending">
+                            <span class="step-icon"><i class="far fa-circle text-muted"></i></span>
+                            <span>Understanding project requirements & scope</span>
+                        </div>
+                        <div class="gemini-step-item step-pending">
+                            <span class="step-icon"><i class="far fa-circle text-muted"></i></span>
+                            <span>Identifying technical modules & architecture</span>
+                        </div>
+                        <div class="gemini-step-item step-pending">
+                            <span class="step-icon"><i class="far fa-circle text-muted"></i></span>
+                            <span>Generating structured 6-phase task roadmap</span>
+                        </div>
+                        <div class="gemini-step-item step-pending">
+                            <span class="step-icon"><i class="far fa-circle text-muted"></i></span>
+                            <span>Matching verified APIs, datasets, and resources</span>
+                        </div>
+                        <div class="gemini-step-item step-pending">
+                            <span class="step-icon"><i class="far fa-circle text-muted"></i></span>
+                            <span>Recommending specialized AI tools & prompt guides</span>
+                        </div>
+                    </div>
+
+                    <span class="badge bg-light text-secondary border px-3 py-1">Please do not close this window</span>
                 </div>
             </div>
         </div>
@@ -66,9 +145,44 @@
 
 {% block extra_js %}
 <script>
+    // Set default deadline 60 days in the future
+    document.addEventListener("DOMContentLoaded", function() {
+        const d = new Date();
+        d.setDate(d.getDate() + 60);
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        const deadlineInput = document.getElementById("deadline");
+        if (deadlineInput && !deadlineInput.value) {
+            deadlineInput.value = `${yyyy}-${mm}-${dd}`;
+        }
+    });
+
+    function fillExampleProject() {
+        document.getElementById("project_name").value = "AI-Based Campus Event Management System";
+        document.getElementById("description").value = "A web application for managing college events, registrations, approvals, and certificates. Includes student role for discovering and registering for events, organizer role for proposing events and managing attendees, and faculty admin role for approving event budgets and generating digitally verifiable completion certificates.";
+        document.getElementById("domain").value = "Web Development";
+        document.getElementById("team_size").value = "3";
+        document.getElementById("technologies_known").value = "Python, Flask, JavaScript, SQLite, Bootstrap";
+    }
+
     document.getElementById("aiProjectForm").addEventListener("submit", function() {
-        document.getElementById("btnAnalyze").disabled = true;
-        document.getElementById("btnAnalyze").innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> AI Analyzing Project...';
+        document.getElementById("aiProjectForm").classList.add("d-none");
+        const overlay = document.getElementById("loadingOverlay");
+        overlay.classList.remove("d-none");
+
+        // Initialize AI Orb in thinking state if not initialized
+        const orbEl = document.getElementById("createProjectOrb");
+        if (orbEl && !orbEl._aiOrb && window.ProjectGuardTheme) {
+            orbEl._aiOrb = new window.ProjectGuardTheme.AIAssistantOrb("createProjectOrb", { size: 160, state: "thinking" });
+        } else if (orbEl && orbEl._aiOrb) {
+            orbEl._aiOrb.setState("thinking", true);
+        }
+
+        // Initialize multi-step loading sequence
+        if (window.ProjectGuardTheme) {
+            window.ProjectGuardTheme.initGeminiLoadingSteps("geminiLoadingSteps");
+        }
     });
 </script>
 {% endblock %}

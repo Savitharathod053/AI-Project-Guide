@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # PROJECTGUARD — AI-Based Student Project Failure Prediction & Early Warning System
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
@@ -224,6 +223,3 @@ All protected endpoints require an authenticated session or Bearer authorization
 - **Statistical Estimation**: ProjectGuard explicitly states on every view that all predictions represent estimated statistical risks based on historical patterns and do not guarantee academic outcomes.
 - **Supportive Tone**: The recommendation engine never utilizes discouraging language (e.g. "your project will fail"). It provides actionable guidance to improve testing, unblock delays, and manage scope.
 - **Explainability**: Every prediction highlights the underlying drivers via Explainable AI attributions, ensuring decisions are transparent to students and mentors.
-=======
-# AI-Project-Guide
->>>>>>> a6aeec6458e403c9780725db4b55b21387ac12fb

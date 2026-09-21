@@ -48,13 +48,17 @@ function initRiskHistoryChart(canvasId, historyData) {
                     min: 0,
                     max: 100,
                     ticks: {
+                        color: 'rgba(148, 163, 184, 0.85)',
                         callback: function(value) { return value + "%"; }
                     },
                     grid: {
-                        color: 'rgba(226, 232, 240, 0.6)'
+                        color: 'rgba(148, 163, 184, 0.18)'
                     }
                 },
                 x: {
+                    ticks: {
+                        color: 'rgba(148, 163, 184, 0.85)'
+                    },
                     grid: {
                         display: false
                     }

@@ -6,9 +6,14 @@ accounts and representative academic projects with AI task breakdowns and ML pre
 """
 
 import os
+import json
 from datetime import date, timedelta
 from app import create_app
-from app.models import db, User, Project, Task, ProjectProgress, Prediction, Recommendation, ProjectCheckin, AIMentorMessage, FacultyFeedback, EarlyWarningAlert
+from app.models import (
+    db, User, Project, Task, ProjectProgress, Prediction, Recommendation,
+    ProjectCheckin, AIMentorMessage, FacultyFeedback, EarlyWarningAlert,
+    ProjectResource, AIRecommendation
+)
 from app.services.feature_engineering import prepare_feature_row
 from app.services.ml_service import get_ml_service
 from app.services.ai_service import get_ai_service

@@ -9,74 +9,432 @@ and context-aware student mentoring.
 import json
 import os
 import re
+import logging
 from typing import Dict, List, Any
+
+logger = logging.getLogger("projectguard.ai_service")
 
 
 class AIService:
     def __init__(self):
+        self.gemini_key = os.environ.get("GEMINI_API_KEY", "") or os.environ.get("GOOGLE_API_KEY", "")
+        self.gemini_model = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
         self.api_key = os.environ.get("AI_API_KEY", "")
         self.model = os.environ.get("AI_MODEL", "gpt-4o-mini")
         self.base_url = os.environ.get("AI_BASE_URL", "")
 
-    def analyze_project_and_generate_tasks(self, title: str, description: str) -> Dict[str, Any]:
+    # =========================================================================
+    # STAGE 1: DEEP PROJECT ANALYSIS & REQUIREMENTS EXTRACTION
+    # =========================================================================
+    def analyze_project_understanding(
+        self,
+        title: str,
+        description: str,
+        domain: str = "Web Development",
+        technologies_known: str = "",
+        team_size: int = 1,
+        deadline_days: int = 60
+    ) -> Dict[str, Any]:
         """
-        Analyzes the project title and description to produce a comprehensive
-        structured JSON plan with core and optional development tasks.
+        Stage 1: Deep Project Analysis & Requirements Extraction.
+        Extracts structured understanding (summary, type, features, users, tech, confidence).
+        Identifies if project description is vague or underspecified and generates clarification questions.
         """
-        prompt = f"""You are ProjectGuard's AI Academic Project Mentor.
-Analyze the following student project and break it down into a structured, realistic academic development plan.
+        logger.info(f"Stage 1 Project Analysis starting for: '{title}' (Domain: {domain})")
 
-PROJECT TITLE: {title}
-PROJECT DESCRIPTION: {description}
+        # Check for trivially vague descriptions immediately
+        desc_clean = (description or "").strip()
+        words = [w for w in re.split(r"\s+", desc_clean) if w]
+        is_too_brief = len(desc_clean) < 40 or len(words) < 6
+
+        prompt = f"""You are an expert Senior Software Architect and Academic Project Guide.
+Analyze the following student capstone / engineering project proposal:
+
+PROJECT PROPOSAL:
+- Title: {title}
+- Description: {description}
+- Domain: {domain}
+- Technologies Known by Student: {technologies_known or "Standard web / database tools"}
+- Team Size: {team_size} members
+- Timeline Remaining: {deadline_days} days
+
+TASK:
+Deeply analyze the project proposal before generating any implementation tasks.
+1. Determine if the description contains enough concrete information to build an accurate, project-specific technical roadmap.
+   - If the description is too vague, generic, or brief (e.g., "Smart College System" with no specific features), set "clarification_required": true, set "confidence_score" between 40 and 75, and formulate 2 to 4 targeted, actionable clarification questions.
+   - If sufficient details are provided, set "clarification_required": false and "confidence_score" between 80 and 100.
+2. Extract the structured project understanding.
+
+Return ONLY valid JSON matching this exact schema:
+{{
+  "project_summary": "Concise 2-sentence technical summary of the exact system requested.",
+  "project_type": "Web Application",
+  "domain": "{domain}",
+  "core_objective": "Primary technical problem this project solves.",
+  "required_features": [
+    "Specific core feature 1",
+    "Specific core feature 2",
+    "Specific core feature 3"
+  ],
+  "optional_features": [
+    "Nice-to-have extension 1"
+  ],
+  "expected_users": [
+    "Primary User Role (e.g. Student, Teacher, Admin)"
+  ],
+  "technologies": [
+    "Confirmed Tech 1", "Confirmed Tech 2"
+  ],
+  "required_data": [
+    "Dataset or inputs needed, if any"
+  ],
+  "required_integrations": [
+    "External API or hardware interface if needed"
+  ],
+  "technology_difficulty": "Medium",
+  "confidence_score": 85,
+  "clarification_required": false,
+  "clarification_questions": []
+}}
+"""
+        parsed = None
+        if self.gemini_key:
+            try:
+                res_text = self._call_gemini_api(prompt)
+                parsed = self._extract_json(res_text)
+            except Exception as e:
+                logger.warning(f"Gemini API error during Stage 1: {e}")
+
+        if not parsed and self.api_key:
+            try:
+                res_text = self._call_llm(prompt)
+                parsed = self._extract_json(res_text)
+            except Exception as e:
+                logger.warning(f"External LLM error during Stage 1: {e}")
+
+        if not parsed or not isinstance(parsed, dict) or "required_features" not in parsed:
+            parsed = self._generate_rule_based_project_understanding(title, description, domain, technologies_known, team_size)
+
+        # Ensure title, description and domain are saved in understanding
+        parsed["title"] = title
+        parsed["description"] = description
+        parsed["domain"] = domain or parsed.get("domain", "Web Development")
+
+        # Programmatic guardrail for vague descriptions
+        if is_too_brief:
+            parsed["confidence_score"] = min(float(parsed.get("confidence_score", 60)), 65.0)
+            parsed["clarification_required"] = True
+            if not parsed.get("clarification_questions"):
+                parsed["clarification_questions"] = [
+                    f"What are the main features and actions users will perform in '{title}'?",
+                    "Who will use the system (e.g., students, teachers, administrators, public)?",
+                    "Is this a web application, mobile app, machine learning pipeline, or IoT hardware system?"
+                ]
+
+        logger.info(f"Stage 1 Result: Confidence={parsed.get('confidence_score')}%, Clarification={parsed.get('clarification_required')}, Features={len(parsed.get('required_features', []))}")
+        return parsed
+
+    # =========================================================================
+    # STAGE 2: REQUIREMENT-TO-TASK GENERATION WITH AI SELF-REVIEW
+    # =========================================================================
+    def generate_tasks_from_requirements(
+        self,
+        understanding: Dict[str, Any],
+        custom_instructions: str = "",
+        team_size: int = 1,
+        deadline_days: int = 60
+    ) -> Dict[str, Any]:
+        """
+        Stage 2: Requirement-to-Task Generation with AI Self-Review.
+        Generates tasks mapped directly to validated requirements without generic placeholders.
+        """
+        title = understanding.get("title", "Project")
+        domain = understanding.get("domain", "Web Development")
+        proj_type = understanding.get("project_type", "Web Application")
+        req_features = understanding.get("required_features", [])
+        exp_users = understanding.get("expected_users", [])
+        confirmed_tech = understanding.get("technologies", [])
+        req_data = understanding.get("required_data", [])
+        req_integrations = understanding.get("required_integrations", [])
+
+        logger.info(f"Stage 2 Task Generation starting for: '{title}' ({len(req_features)} requirements)")
+
+        prompt = f"""You are an expert Senior Technical Project Lead and Engineering Architect.
+Stage 2: Generate an accurate, project-specific, technically rigorous development roadmap.
+
+VALIDATED PROJECT REQUIREMENTS:
+- Project Title: {title}
+- Project Summary: {understanding.get("project_summary")}
+- Project Type: {proj_type}
+- Domain: {domain}
+- Core Objective: {understanding.get("core_objective")}
+- Required Features: {json.dumps(req_features)}
+- Expected Users / Roles: {json.dumps(exp_users)}
+- Technologies Selected: {json.dumps(confirmed_tech)}
+- Required Datasets / Inputs: {json.dumps(req_data)}
+- Required Integrations / APIs: {json.dumps(req_integrations)}
+- Custom Student Instructions / Feedback: {custom_instructions or "None"}
+
+CRITICAL GENERATION RULES:
+1. ACCURACY & RELEVANCE FIRST: Every generated task must directly contribute to implementing a stated requirement or an unavoidable technical dependency.
+2. REQUIREMENT MAPPING: Every task MUST specify "requirement_source" indicating the exact required feature, user role, or dependency it fulfills.
+3. DO NOT ASSUME UNREQUESTED PLATFORMS OR FEATURES:
+   - If this is a Web application, DO NOT generate mobile APK, Flutter, or React Native tasks.
+   - If this is NOT a machine learning project, DO NOT generate model training, dataset labeling, or CNN tasks.
+   - If payments are NOT requested, DO NOT generate Stripe, PayPal, or payment gateway tasks.
+   - If user accounts/login are NOT requested, DO NOT generate authentication wireframes or password reset tasks.
+4. NO GENERIC PLACEHOLDER TASKS:
+   - NEVER generate vague tasks such as: "Develop the system", "Work on backend", "Create frontend", "Complete project", "Do testing".
+   - Generate concrete, actionable milestones (e.g., "Build audio capture controller using Web Speech API", "Design SQLite schema for Student Attendance records").
+5. DYNAMIC DOMAIN-SPECIFIC PHASES:
+   Organize tasks into 5 to 6 logical phases that fit the project domain:
+   * For Web / Software: Phase 1 — Research & Requirement Specification, Phase 2 — UI/UX Wireframing & Design, Phase 3 — Core Feature & API Development, Phase 4 — Database Persistence & Schema Design, Phase 5 — Integration Testing & Quality Assurance, Phase 6 — Deployment & Academic Documentation.
+   * For AI / Machine Learning: Phase 1 — Problem Definition & Data Sourcing, Phase 2 — Data Preprocessing & EDA, Phase 3 — Feature Engineering & Preprocessing Pipeline, Phase 4 — Model Architecture & Training, Phase 5 — Model Evaluation & Validation, Phase 6 — Deployment & Academic Report.
+   * For IoT / Hardware: Phase 1 — Architecture & Component Selection, Phase 2 — Circuit Design & Schematic, Phase 3 — Firmware & Sensor Interfacing, Phase 4 — Cloud & Data Integration, Phase 5 — Hardware Testing & Validation, Phase 6 — Project Documentation & Defense.
+6. AI SELF-REVIEW:
+   Review all generated tasks against the requirements. Strip any task that is an assumption, unrelated, or unrequested.
 
 Return ONLY valid JSON matching this schema:
 {{
-  "project_summary": "A concise 2-sentence summary of the system architecture and purpose.",
-  "main_objective": "The primary problem this project solves.",
-  "project_type": "Capstone / Major Project / Mini-Project",
-  "domain": "Web Development / Machine Learning & AI / Mobile Applications / IoT / Cloud / Blockchain / Cybersecurity",
-  "technology_difficulty": "Easy / Medium / Hard",
-  "suggested_technologies": ["Tech1", "Tech2", "Tech3"],
-  "suggested_modules": ["Module 1", "Module 2", "Module 3"],
-  "core_tasks": [
+  "system_architecture": "Concise architectural design description for this project.",
+  "phases": [
     {{
-      "task_title": "Database Schema Design",
-      "description": "Design relational tables for entities and relationships.",
-      "priority": "Critical / High / Medium",
-      "category": "Database / Backend / Frontend / AI / Testing / Documentation / Deployment",
-      "estimated_difficulty": "Medium",
-      "dependencies": [],
-      "reason": "Foundational requirement for data persistence."
+      "phase_number": 1,
+      "name": "Phase 1 — <Domain Appropriate Name>",
+      "tasks": [
+        {{
+          "title": "Specific, actionable task title",
+          "description": "Clear explanation of technical implementation",
+          "priority": "Critical" or "High" or "Medium" or "Low" or "Optional",
+          "category": "Backend" or "Frontend" or "Database" or "Machine Learning" or "Hardware" or "Testing" or "Documentation" or "Research" or "Deployment",
+          "difficulty": "Easy" or "Medium" or "Hard",
+          "estimated_hours": 4.0,
+          "can_parallel": true,
+          "dependencies": [],
+          "requirement_source": "Exact required feature this task satisfies",
+          "reason": "Why this specific task is technically required"
+        }}
+      ]
     }}
   ],
-  "optional_tasks": [
+  "ai_tools": [
     {{
-      "task_title": "Dark Mode Toggle & UI Polish",
-      "description": "Add user theme toggle.",
-      "priority": "Optional",
-      "category": "UI/UX",
-      "estimated_difficulty": "Easy",
-      "dependencies": [],
-      "reason": "Enhances UX but not required for minimal viable academic demo."
+      "stage": "Phase Name",
+      "tool_name": "Tool Name",
+      "purpose": "Purpose for this specific project",
+      "ready_to_use_prompt": "Specific copyable prompt for this project"
     }}
   ],
-  "potential_missing_tasks": ["API Rate Limiting", "Exporting Attendance CSV", "Unit Testing Core Handlers"],
-  "risks": ["Voice recognition noise in classroom environments", "Database latency during peak check-in"],
-  "questions_for_student": ["Will you use local offline speech recognition or cloud APIs like Whisper/Google Speech?"]
+  "suggested_technologies": ["Tech 1", "Tech 2", "Tech 3"],
+  "parallel_tasks_advice": "Advice for concurrent execution"
 }}
 """
-        # Try external LLM if API key is provided
-        if self.api_key:
+        parsed = None
+        if self.gemini_key:
             try:
-                response_text = self._call_llm(prompt)
-                parsed = self._extract_json(response_text)
-                if parsed and "core_tasks" in parsed and len(parsed["core_tasks"]) > 0:
-                    return parsed
+                res_text = self._call_gemini_api(prompt)
+                parsed = self._extract_json(res_text)
             except Exception as e:
-                print(f"[-] LLM API call error: {e}. Falling back to internal intelligent task generator.")
+                logger.warning(f"Gemini API error during Stage 2: {e}")
 
-        # Fallback intelligent domain-aware generator
-        return self._generate_rule_based_analysis(title, description)
+        if not parsed and self.api_key:
+            try:
+                res_text = self._call_llm(prompt)
+                parsed = self._extract_json(res_text)
+            except Exception as e:
+                logger.warning(f"External LLM error during Stage 2: {e}")
+
+        if not parsed or not isinstance(parsed, dict) or "phases" not in parsed or len(parsed.get("phases", [])) < 3:
+            parsed = self._generate_rule_based_tasks_from_requirements(understanding, custom_instructions, team_size)
+
+        # Sanitize and validate every task through the programmatic validation layer
+        all_tasks = []
+        for phase in parsed.get("phases", []):
+            for t in phase.get("tasks", []):
+                t["phase"] = phase.get("name", "Phase 1 — Research & Planning")
+                t["phase_number"] = phase.get("phase_number", 1)
+                all_tasks.append(t)
+
+        validated_tasks = self.validate_and_sanitize_tasks(all_tasks, understanding)
+
+        # Re-group validated tasks by phase
+        phases_map = {}
+        for t in validated_tasks:
+            p_name = t.get("phase", "Phase 1 — Research & Planning")
+            p_num = t.get("phase_number", 1)
+            if p_name not in phases_map:
+                phases_map[p_name] = {
+                    "phase_number": p_num,
+                    "name": p_name,
+                    "tasks": []
+                }
+            phases_map[p_name]["tasks"].append(t)
+
+        parsed["phases"] = sorted(phases_map.values(), key=lambda x: x["phase_number"])
+        return self._enrich_plan_response(parsed, title, domain)
+
+    # =========================================================================
+    # BACKEND TASK VALIDATION LAYER
+    # =========================================================================
+    def validate_and_sanitize_tasks(
+        self,
+        tasks: List[Dict[str, Any]],
+        understanding: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
+        """
+        Backend Programmatic Validation Layer:
+        1. Anti-generic filter (rejects vague placeholders like 'Develop the system')
+        2. Relevance & contradiction filter (strips unrequested mobile, ML, payment, auth)
+        3. Deduplication filter (eliminates duplicate titles or high token overlap)
+        4. Dependency integrity (removes circular/self/non-existent dependencies)
+        5. Requirement mapping enforcement (ensures requirement_source is present)
+        """
+        title = understanding.get("title", "")
+        domain = understanding.get("domain", "")
+        proj_type = understanding.get("project_type", "")
+        summary = understanding.get("project_summary", "")
+        req_features = understanding.get("required_features", [])
+
+        full_context = f"{title} {domain} {proj_type} {summary} {' '.join(req_features)}".lower()
+
+        is_mobile = proj_type == "Mobile Application" or "mobile" in domain.lower() or any(w in full_context for w in ["mobile", "android", "ios", "flutter", "react native", "smartphone", "apk"])
+        is_ml = "machine learning" in domain.lower() or "ai" in domain.lower() or any(w in full_context for w in ["machine learning", "deep learning", "neural", "nlp", "computer vision", "predict", "classifier", "model training", "dataset"])
+        is_payment = any(w in full_context for w in ["payment", "stripe", "paypal", "credit card", "razorpay", "billing", "checkout fee", "subscription"])
+        is_auth = any(w in full_context for w in ["login", "auth", "user", "student", "teacher", "admin", "account", "register", "password", "role", "portal", "profile"])
+
+        generic_exact = {
+            "develop the system", "work on backend", "create frontend", "complete project",
+            "do testing", "implement features", "start project", "build application",
+            "do coding", "test system", "make frontend", "finish project", "build the entire application",
+            "develop backend", "setup project", "project development", "coding", "testing phase"
+        }
+
+        sanitized = []
+        seen_titles = set()
+
+        for t in tasks:
+            raw_title = (t.get("title") or t.get("task_title") or "").strip()
+            if not raw_title:
+                continue
+
+            title_clean = raw_title.lower()
+
+            # 1. Anti-Generic Check
+            if title_clean in generic_exact:
+                logger.warning(f"Task validation REJECTED generic task: '{raw_title}'")
+                continue
+
+            # 2. Contradiction Checks
+            # Mobile contradiction
+            if not is_mobile and any(m in title_clean for m in ["react native", "android apk", "ios app", "app store", "play store", "flutter mobile", "build apk"]):
+                logger.warning(f"Task validation REJECTED unrequested mobile task for non-mobile project: '{raw_title}'")
+                continue
+
+            # ML contradiction
+            if not is_ml and any(m in title_clean for m in ["train machine learning", "train cnn", "train deep learning", "train neural network", "convolutional neural", "epoch loss", "hyperparameter tuning", "scikit-learn pipeline"]):
+                logger.warning(f"Task validation REJECTED unrequested ML training task for non-ML project: '{raw_title}'")
+                continue
+
+            # Payment contradiction
+            if not is_payment and any(p in title_clean for p in ["stripe", "paypal", "razorpay", "payment gateway", "credit card"]):
+                logger.warning(f"Task validation REJECTED unrequested payment task for non-payment project: '{raw_title}'")
+                continue
+
+            # Auth contradiction
+            if not is_auth and any(a in title_clean for a in ["jwt authentication", "user password reset", "oauth2 login", "login, registration"]):
+                logger.warning(f"Task validation REJECTED unrequested authentication task: '{raw_title}'")
+                continue
+
+            # 3. Deduplication Check
+            tokens = set(re.findall(r"\w+", title_clean))
+            is_dup = False
+            for seen in seen_titles:
+                seen_tokens = set(re.findall(r"\w+", seen))
+                intersection = tokens.intersection(seen_tokens)
+                union = tokens.union(seen_tokens)
+                jaccard = len(intersection) / len(union) if union else 0
+                if title_clean == seen or (jaccard > 0.82 and len(tokens) > 2):
+                    is_dup = True
+                    break
+
+            if is_dup:
+                logger.warning(f"Task validation REJECTED duplicate task: '{raw_title}'")
+                continue
+
+            seen_titles.add(title_clean)
+
+            # 4. Requirement Source Assignment
+            req_source = t.get("requirement_source", "").strip()
+            if not req_source or req_source.lower() in ["none", "general", "n/a"]:
+                if req_features:
+                    best_match = req_features[0]
+                    best_score = 0
+                    for feat in req_features:
+                        f_tokens = set(re.findall(r"\w+", feat.lower()))
+                        score = len(tokens.intersection(f_tokens))
+                        if score > best_score:
+                            best_score = score
+                            best_match = feat
+                    t["requirement_source"] = best_match
+                else:
+                    t["requirement_source"] = understanding.get("core_objective", "Core project deliverable")
+
+            sanitized.append(t)
+
+        # 5. Dependency Validation (remove references to tasks that do not exist or self-references)
+        valid_titles = {s["title"] for s in sanitized}
+        for s in sanitized:
+            deps = s.get("dependencies") or []
+            if isinstance(deps, list):
+                clean_deps = [d for d in deps if d in valid_titles and d != s["title"]]
+                s["dependencies"] = clean_deps
+
+        logger.info(f"Task Validation: {len(tasks)} candidate tasks -> {len(sanitized)} valid sanitized tasks")
+        return sanitized
+
+    # =========================================================================
+    # UNIFIED PIPELINE WRAPPER (BACKWARD COMPATIBILITY)
+    # =========================================================================
+    def analyze_project_and_generate_tasks(
+        self,
+        title: str,
+        description: str,
+        domain: str = "Web Development",
+        technologies_known: str = "",
+        team_size: int = 1,
+        deadline_days: int = 60
+    ) -> Dict[str, Any]:
+        """
+        Two-step workflow:
+        Stage 1: Project understanding, requirement extraction, confidence score, clarification check.
+        Stage 2: Requirement-to-task generation with self-review and backend validation.
+        """
+        understanding = self.analyze_project_understanding(
+            title=title,
+            description=description,
+            domain=domain,
+            technologies_known=technologies_known,
+            team_size=team_size,
+            deadline_days=deadline_days
+        )
+
+        plan = self.generate_tasks_from_requirements(
+            understanding=understanding,
+            custom_instructions="",
+            team_size=team_size,
+            deadline_days=deadline_days
+        )
+
+        # Merge Stage 1 understanding details into plan
+        plan["project_analysis"] = understanding
+        plan["confidence_score"] = understanding.get("confidence_score", 90.0)
+        plan["clarification_required"] = understanding.get("clarification_required", False)
+        plan["clarification_questions"] = understanding.get("clarification_questions", [])
+        plan["project_type"] = understanding.get("project_type", "Web Application")
+        plan["main_objective"] = understanding.get("core_objective", "")
+        plan["project_summary"] = understanding.get("project_summary", "")
+
+        return plan
 
     def detect_missing_tasks(self, project, current_tasks: List[Any]) -> List[Dict[str, Any]]:
         """
@@ -340,170 +698,831 @@ Provide a supportive, concise, practical, and direct engineering response. (Max 
         
         return f"To unblock **{task_title}**:\n1. Inspect exact error logs and stack traces.\n2. Break the problem into isolated unit tests.\n3. Check official framework documentation or consult your faculty mentor."
 
-    def _generate_rule_based_analysis(self, title: str, description: str) -> Dict[str, Any]:
+    def regenerate_project_tasks(self, project, instructions: str = "") -> Dict[str, Any]:
         """
-        Intelligent rule-based generator creating a tailored academic project plan
-        when external LLM APIs are offline.
+        Regenerates tasks for an existing project using validated project understanding
+        combined with student modification instructions.
+        Honors student constraints (e.g., 'remove machine learning tasks', 'remove payment').
         """
-        desc_lower = (description + " " + title).lower()
+        logger.info(f"Regenerating tasks for project {project.id} with instructions: '{instructions}'")
+        understanding = project.get_requirements()
+        if not understanding or not understanding.get("required_features"):
+            understanding = self.analyze_project_understanding(
+                title=project.project_name,
+                description=project.description,
+                domain=project.domain,
+                technologies_known=project.technologies_known or "",
+                team_size=project.team_size
+            )
 
-        # Domain classification
-        if any(w in desc_lower for w in ["ai", "machine learning", "neural", "deep learning", "nlp", "vision", "dataset", "predict", "classify"]):
-            domain = "Machine Learning & AI"
-            difficulty = "Hard"
-        elif any(w in desc_lower for w in ["iot", "arduino", "esp32", "sensor", "hardware", "raspberry", "mqtt"]):
-            domain = "Internet of Things (IoT)"
-            difficulty = "Hard"
-        elif any(w in desc_lower for w in ["blockchain", "solidity", "ethereum", "web3", "smart contract", "crypto"]):
-            domain = "Blockchain"
-            difficulty = "Hard"
-        elif any(w in desc_lower for w in ["mobile", "android", "ios", "flutter", "react native"]):
-            domain = "Mobile Applications"
-            difficulty = "Medium"
-        else:
-            domain = "Web Development"
-            difficulty = "Medium"
+        # Apply student negative constraints to requirements
+        instr_lower = (instructions or "").lower()
+        req_features = list(understanding.get("required_features", []))
 
-        summary = f"A {domain.lower()} system designed to {title.lower()}, integrating modern client-server architecture, database persistence, and robust authentication."
-        objective = f"Deliver a reliable, fully functional {domain} solution fulfilling academic project requirements."
+        if any(w in instr_lower for w in ["remove machine learning", "no ml", "no ai", "remove ml", "remove ai"]):
+            req_features = [f for f in req_features if not any(w in f.lower() for w in ["ml", "machine learning", "ai model", "neural", "predict", "classifier", "train model"])]
+            understanding["domain"] = "Web Development"
+            understanding["project_type"] = "Web Application"
 
-        core_tasks = [
-            {
-                "task_title": "System Architecture & Database Schema Design",
-                "description": "Design relational/NoSQL schemas, entity relationship diagrams (ERD), and API route contracts.",
-                "priority": "Critical",
-                "category": "Database",
-                "estimated_difficulty": "Medium",
-                "dependencies": [],
-                "reason": "Foundational requirement before coding application logic."
-            },
-            {
-                "task_title": "User Authentication & Role-Based Access Control",
-                "description": "Implement secure password hashing, session tokens, and student/faculty permissions.",
-                "priority": "High",
-                "category": "Backend",
-                "estimated_difficulty": "Medium",
-                "dependencies": ["System Architecture & Database Schema Design"],
-                "reason": "Protects user data and enforces role separation."
-            },
-            {
-                "task_title": f"Core {title} Feature Implementation",
-                "description": f"Develop primary business logic and core workflows described in project scope.",
-                "priority": "Critical",
-                "category": "Backend" if domain != "Machine Learning & AI" else "Machine Learning",
-                "estimated_difficulty": "Hard" if difficulty == "Hard" else "Medium",
-                "dependencies": ["User Authentication & Role-Based Access Control"],
-                "reason": "The central deliverable of the project."
-            },
-            {
-                "task_title": "Responsive User Interface & Dashboard",
-                "description": "Build interactive, accessible client-side UI with status badges and forms.",
-                "priority": "High",
-                "category": "Frontend",
-                "estimated_difficulty": "Medium",
-                "dependencies": [f"Core {title} Feature Implementation"],
-                "reason": "Required for student/faculty interaction and evaluation demos."
-            },
-            {
-                "task_title": "REST API Integration & Middleware",
-                "description": "Connect frontend components with backend API endpoints and data models.",
-                "priority": "High",
-                "category": "API",
-                "estimated_difficulty": "Medium",
-                "dependencies": ["Responsive User Interface & Dashboard"],
-                "reason": "Enables dynamic asynchronous data exchange."
-            },
-            {
-                "task_title": "Automated Unit & Integration Testing",
-                "description": "Write automated test cases verifying core business logic and API responses.",
-                "priority": "High",
-                "category": "Testing",
-                "estimated_difficulty": "Medium",
-                "dependencies": ["REST API Integration & Middleware"],
-                "reason": "Prevents regressions and verifies system reliability."
-            },
-            {
-                "task_title": "Academic Project Documentation & Thesis Report",
-                "description": "Draft comprehensive documentation including methodology, system design, and results.",
-                "priority": "High",
-                "category": "Documentation",
-                "estimated_difficulty": "Medium",
-                "dependencies": [],
-                "reason": "Required for final capstone submission and grading."
-            },
-            {
-                "task_title": "Final Viva Presentation Slides & Live Demo Setup",
-                "description": "Prepare slide deck, demo datasets, and backup walkthrough video for defense.",
-                "priority": "Medium",
-                "category": "Presentation",
-                "estimated_difficulty": "Easy",
-                "dependencies": ["Academic Project Documentation & Thesis Report"],
-                "reason": "Prepares team for faculty defense examination."
-            }
-        ]
+        if any(w in instr_lower for w in ["remove payment", "no payment"]):
+            req_features = [f for f in req_features if not any(w in f.lower() for w in ["payment", "stripe", "paypal", "billing", "checkout", "fee"])]
 
-        # Domain specific additions
-        if domain == "Machine Learning & AI":
-            core_tasks.insert(2, {
-                "task_title": "Dataset Curation, Preprocessing & Feature Engineering",
-                "description": "Collect, clean, normalize, and split dataset into stratified train/test partitions.",
-                "priority": "Critical",
-                "category": "Machine Learning",
-                "estimated_difficulty": "Medium",
-                "dependencies": [],
-                "reason": "Model quality depends directly on clean training data."
+        if any(w in instr_lower for w in ["remove mobile", "no mobile"]):
+            req_features = [f for f in req_features if not any(w in f.lower() for w in ["mobile", "android", "ios", "apk", "flutter", "react native"])]
+
+        if any(w in instr_lower for w in ["remove auth", "no auth", "remove login"]):
+            req_features = [f for f in req_features if not any(w in f.lower() for w in ["auth", "login", "password", "session", "jwt", "registration"])]
+
+        # If instructions add specific feature requests
+        if "security" in instr_lower and not any("security" in f.lower() for f in req_features):
+            req_features.append("Security hardening, input sanitization, and automated vulnerability scanning")
+        if "ci/cd" in instr_lower or "pipeline" in instr_lower:
+            req_features.append("Automated CI/CD deployment pipeline and integration tests")
+
+        understanding["required_features"] = req_features
+
+        plan = self.generate_tasks_from_requirements(
+            understanding=understanding,
+            custom_instructions=instructions,
+            team_size=project.team_size
+        )
+        plan["project_analysis"] = understanding
+        return plan
+
+    def analyze_progress_and_guidance(self, project, tasks: List[Any]) -> Dict[str, Any]:
+        """
+        Analyzes live task progress vs timeline and provides:
+        - Timeline pacing warning (e.g., completed 30% tasks, but 60% timeline passed)
+        - Prioritized next tasks
+        - Parallelizable tasks
+        - Blocked tasks resolution advice
+        - Missing tasks
+        - Recommended system architecture
+        """
+        pacing = project.get_timeline_pacing()
+        
+        # Categorize tasks
+        not_started = [t for t in tasks if getattr(t, 'status', '') == 'Not Started']
+        in_progress = [t for t in tasks if getattr(t, 'status', '') == 'In Progress']
+        completed = [t for t in tasks if getattr(t, 'status', '') == 'Completed']
+        blocked = [t for t in tasks if getattr(t, 'status', '') == 'Blocked']
+        
+        # Determine prioritized next tasks
+        prioritized = []
+        if blocked:
+            for b in blocked[:2]:
+                prioritized.append({
+                    "task": b,
+                    "reason": "CRITICAL: Unblocking this task is required before dependent features can proceed.",
+                    "urgency": "Urgent"
+                })
+        
+        for ip in in_progress[:2]:
+            prioritized.append({
+                "task": ip,
+                "reason": "HIGH: Currently active work. Finish this to advance project completion ratio.",
+                "urgency": "High"
             })
-            core_tasks.insert(4, {
-                "task_title": "Model Training, Hyperparameter Tuning & Evaluation",
-                "description": "Train candidate ML models and evaluate Accuracy, Precision, Recall, and ROC-AUC.",
-                "priority": "Critical",
-                "category": "Machine Learning",
-                "estimated_difficulty": "Hard",
-                "dependencies": ["Dataset Curation, Preprocessing & Feature Engineering"],
-                "reason": "Core AI model selection and benchmarking."
-            })
-
-        optional_tasks = [
-            {
-                "task_title": "Dark Mode & UI Polish",
-                "description": "Add optional theme toggle and transition animations.",
-                "priority": "Optional",
-                "category": "UI/UX",
-                "estimated_difficulty": "Easy",
-                "dependencies": [],
-                "reason": "Nice-to-have visual enhancement; not essential for viva demo."
-            },
-            {
-                "task_title": "CSV / PDF Data Export Utility",
-                "description": "Allow users to download reports in PDF or CSV formats.",
-                "priority": "Optional",
-                "category": "Backend",
-                "estimated_difficulty": "Easy",
-                "dependencies": [],
-                "reason": "Helpful utility feature that can be added if time permits."
-            }
-        ]
-
+            
+        for ns in [t for t in not_started if getattr(t, 'priority', '') in ['Critical', 'High']][:3]:
+            if len(prioritized) < 4:
+                prioritized.append({
+                    "task": ns,
+                    "reason": f"FOUNDATIONAL: {getattr(ns, 'category', 'Core')} milestone required for core academic evaluation.",
+                    "urgency": "High"
+                })
+                
+        # Determine parallel tasks
+        parallel_tasks = [t for t in not_started if getattr(t, 'can_parallel', False) or getattr(t, 'category', '') in ['Testing', 'Documentation', 'Frontend']]
+        
+        missing = self.detect_missing_tasks(project, tasks)
+        
         return {
-            "project_summary": summary,
-            "main_objective": objective,
-            "project_type": "Capstone Project",
-            "domain": domain,
-            "technology_difficulty": difficulty,
-            "suggested_technologies": ["Python", "Flask", "React", "PostgreSQL", "Tailwind CSS"],
-            "suggested_modules": ["Authentication Module", "Core Processing Engine", "Reporting & Analytics", "Dashboard UI"],
-            "core_tasks": core_tasks,
-            "optional_tasks": optional_tasks,
-            "potential_missing_tasks": ["API Rate Limiting", "Cross-Browser Compatibility Testing", "Database Backup Script"],
-            "risks": ["Underestimating testing duration near the deadline", "Unresolved software bugs affecting live viva demo"],
-            "questions_for_student": [
-                "Do you plan to host the application online (e.g. Render/Vercel) or demonstrate on a local server?",
-                "Have you gathered or generated the required sample data for testing?"
-            ]
+            "pacing": pacing,
+            "prioritized_tasks": prioritized,
+            "parallel_tasks": parallel_tasks[:4],
+            "blocked_tasks": blocked,
+            "missing_tasks": missing,
+            "architecture": project.architecture_recommendation or "Modern modular three-tier client-server architecture with REST API integration."
         }
 
+    def _enrich_plan_response(self, parsed: Dict[str, Any], title: str, domain: str) -> Dict[str, Any]:
+        """Ensures both structured phases and flattened core_tasks/optional_tasks exist with requirement_source."""
+        phases = parsed.get("phases", [])
+        core_tasks = []
+        optional_tasks = []
+
+        for phase in phases:
+            p_name = phase.get("name", "Phase 1 — Research & Planning")
+            p_num = phase.get("phase_number", 1)
+            for t in phase.get("tasks", []):
+                req_src = t.get("requirement_source", "") or t.get("reason", "")
+                task_item = {
+                    "task_title": t.get("title") or t.get("task_title", "Milestone Task"),
+                    "title": t.get("title") or t.get("task_title", "Milestone Task"),
+                    "description": t.get("description", ""),
+                    "priority": t.get("priority", "High"),
+                    "category": t.get("category", "Backend"),
+                    "estimated_difficulty": t.get("difficulty") or t.get("estimated_difficulty", "Medium"),
+                    "difficulty": t.get("difficulty") or t.get("estimated_difficulty", "Medium"),
+                    "estimated_hours": float(t.get("estimated_hours", 4.0)),
+                    "phase": p_name,
+                    "phase_number": p_num,
+                    "can_parallel": bool(t.get("can_parallel", False)),
+                    "dependencies": t.get("dependencies", []),
+                    "requirement_source": req_src,
+                    "reason": t.get("reason", "")
+                }
+                # Sync phase task fields
+                t["requirement_source"] = req_src
+                t["title"] = task_item["title"]
+                t["task_title"] = task_item["title"]
+                t["phase"] = p_name
+                t["phase_number"] = p_num
+
+                if task_item["priority"] == "Optional":
+                    optional_tasks.append(task_item)
+                else:
+                    core_tasks.append(task_item)
+
+        parsed["core_tasks"] = core_tasks
+        parsed["optional_tasks"] = optional_tasks
+        if "project_summary" not in parsed:
+            parsed["project_summary"] = f"A robust {domain} system designed for {title}."
+        if "suggested_technologies" not in parsed:
+            parsed["suggested_technologies"] = ["Python", "Flask", "React", "PostgreSQL", "Tailwind CSS"]
+        if "system_architecture" not in parsed:
+            parsed["system_architecture"] = "Three-tier architecture with REST API endpoints, relational database persistence, and a modern responsive dashboard."
+        return parsed
+
+    def _generate_rule_based_project_understanding(
+        self,
+        title: str,
+        description: str,
+        domain: str = "Web Development",
+        technologies_known: str = "",
+        team_size: int = 1
+    ) -> Dict[str, Any]:
+        """
+        Rule-based Stage 1 project understanding generator.
+        Extracts features from description text, computes confidence score based on detail level,
+        and identifies clarification questions if underspecified.
+        """
+        desc_clean = (description or "").strip()
+        words = [w for w in re.split(r"\s+", desc_clean) if w]
+        full_text = (title + " " + desc_clean).lower()
+
+        # 1. Determine domain and project type by prioritizing explicit domain
+        dom_lower = (domain or "").lower()
+        if "machine learning" in dom_lower or "ai" in dom_lower:
+            domain = "Machine Learning & AI"
+            project_type = "Machine Learning Pipeline"
+            default_tech = ["Python", "PyTorch / Scikit-Learn", "Pandas / NumPy", "FastAPI / Flask"]
+        elif "iot" in dom_lower or "internet of things" in dom_lower:
+            domain = "Internet of Things (IoT)"
+            project_type = "Internet of Things (IoT)"
+            default_tech = ["C++ / Arduino", "ESP32 / Raspberry Pi", "MQTT", "Python / Flask", "SQLite"]
+        elif "data science" in dom_lower or "analytics" in dom_lower:
+            domain = "Data Science"
+            project_type = "Data Science & Analytics"
+            default_tech = ["Python", "Pandas", "Matplotlib / Seaborn", "Streamlit / Flask", "PostgreSQL"]
+        elif "mobile" in dom_lower:
+            domain = "Mobile Applications"
+            project_type = "Mobile Application"
+            default_tech = ["Flutter / React Native", "Node.js / Express", "Firebase / SQLite"]
+        elif any(w in full_text for w in ["machine learning", "deep learning", "neural network", "nlp", "computer vision", "predictive model", "train model"]):
+            domain = "Machine Learning & AI"
+            project_type = "Machine Learning Pipeline"
+            default_tech = ["Python", "PyTorch / Scikit-Learn", "Pandas / NumPy", "FastAPI / Flask"]
+        elif any(w in full_text for w in ["iot", "arduino", "esp32", "hardware prototype", "raspberry pi", "mqtt", "microcontroller"]):
+            domain = "Internet of Things (IoT)"
+            project_type = "Internet of Things (IoT)"
+            default_tech = ["C++ / Arduino", "ESP32 / Raspberry Pi", "MQTT", "Python / Flask", "SQLite"]
+        elif any(w in full_text for w in ["analytics", "data science", "dashboard", "visualization", "dataset analysis"]):
+            domain = "Data Science"
+            project_type = "Data Science & Analytics"
+            default_tech = ["Python", "Pandas", "Matplotlib / Seaborn", "Streamlit / Flask", "PostgreSQL"]
+        elif any(w in full_text for w in ["mobile app", "android app", "ios app", "flutter", "react native"]):
+            domain = "Mobile Applications"
+            project_type = "Mobile Application"
+            default_tech = ["Flutter / React Native", "Node.js / Express", "Firebase / SQLite"]
+        else:
+            domain = domain or "Web Development"
+            project_type = "Web Application"
+            default_tech = ["Python / Flask", "HTML5 / JavaScript", "SQLite / PostgreSQL", "Bootstrap 5"]
+
+        # Merge known tech
+        known_list = [k.strip() for k in technologies_known.split(",") if k.strip()]
+        for k in known_list:
+            if k not in default_tech:
+                default_tech.insert(0, k)
+
+        # 2. Extract features from description
+        raw_chunks = re.split(r"[\n\r;•\.]+|\band\b", desc_clean)
+        features = []
+        for chunk in raw_chunks:
+            c = chunk.strip().strip("- ")
+            if len(c) > 10 and not any(c.lower().startswith(x) for x in ["a web app", "a mobile app", "this project", "it is designed", "project description"]):
+                features.append(c.capitalize())
+
+        if not features:
+            features = [
+                f"Core functional workflow for {title}",
+                f"Interactive user interface and reporting views for {title}",
+                f"Data persistence, verification, and export capabilities"
+            ]
+
+        # 3. Detect target users
+        expected_users = []
+        if "student" in full_text: expected_users.append("Students")
+        if "teacher" in full_text or "faculty" in full_text: expected_users.append("Faculty / Instructors")
+        if "admin" in full_text: expected_users.append("System Administrators")
+        if "doctor" in full_text or "patient" in full_text: expected_users.append("Medical Staff / Patients")
+        if not expected_users:
+            expected_users = ["Primary Application Users", "System Administrator"]
+
+        # 4. Confidence & Clarification scoring
+        is_brief = len(desc_clean) < 45 or len(words) < 7
+        if is_brief:
+            confidence = 60.0
+            clarification_required = True
+            questions = [
+                f"What are the specific features and user capabilities for '{title}'?",
+                f"Who are the target user roles (e.g. students, teachers, administrators)?",
+                f"What platform (Web application, mobile app, data science pipeline, or IoT hardware) are you building?"
+            ]
+        else:
+            confidence = 92.0
+            clarification_required = False
+            questions = []
+
+        return {
+            "title": title,
+            "description": description,
+            "domain": domain,
+            "project_type": project_type,
+            "project_summary": f"A dedicated {project_type.lower()} in the {domain} domain implementing {title.lower()}, focused on {features[0].lower() if features else 'core functionality'}.",
+            "core_objective": f"Deliver a reliable, project-specific {domain} solution for {title}.",
+            "required_features": features[:6],
+            "optional_features": [f"Advanced export and analytics for {title}"],
+            "expected_users": expected_users,
+            "technologies": default_tech[:5],
+            "required_data": [f"{title} input records and schema fixtures"],
+            "required_integrations": ["Local database engine", "RESTful API endpoints"],
+            "technology_difficulty": "Medium",
+            "confidence_score": confidence,
+            "clarification_required": clarification_required,
+            "clarification_questions": questions
+        }
+
+    def _generate_rule_based_tasks_from_requirements(
+        self,
+        understanding: Dict[str, Any],
+        custom_instructions: str = "",
+        team_size: int = 1
+    ) -> Dict[str, Any]:
+        """
+        Dynamically constructs project-specific phases and concrete tasks
+        mapped directly to the validated requirements.
+        """
+        title = understanding.get("title", "Project")
+        domain = understanding.get("domain", "Web Development")
+        project_type = understanding.get("project_type", "Web Application")
+        features = understanding.get("required_features", [])
+        tech = understanding.get("technologies", ["Python", "Flask", "SQLite"])
+        summary = understanding.get("project_summary", "")
+
+        dom_lower = domain.lower()
+        is_ml = "machine learning" in dom_lower or "ai" in dom_lower or project_type == "Machine Learning Pipeline"
+        is_iot = not is_ml and (project_type in ["Internet of Things (IoT)", "Hardware Prototype"] or "iot" in dom_lower or "hardware" in dom_lower)
+        is_data = not is_ml and not is_iot and ("data science" in dom_lower or project_type == "Data Science & Analytics")
+
+        phases = []
+
+        if is_iot:
+            # IoT Phases
+            phase_names = [
+                "Phase 1 — Architecture & Component Selection",
+                "Phase 2 — Circuit Design & Schematic",
+                "Phase 3 — Firmware & Sensor Interfacing",
+                "Phase 4 — Cloud & Telemetry Integration",
+                "Phase 5 — Hardware Testing & Calibration",
+                "Phase 6 — Project Documentation & Defense"
+            ]
+            phases.append({
+                "phase_number": 1,
+                "name": phase_names[0],
+                "tasks": [
+                    {
+                        "title": f"Specify sensor pinout, power budget & hardware architecture for {title}",
+                        "description": f"Calculate power consumption, select microcontroller ({tech[0] if tech else 'ESP32'}), and map sensor GPIO connections.",
+                        "category": "Hardware", "priority": "Critical", "difficulty": "Medium", "estimated_hours": 4.0, "can_parallel": True,
+                        "dependencies": [], "requirement_source": "Hardware architecture & power budgeting",
+                        "reason": "Foundational hardware specification preventing electrical overload and pin conflicts."
+                    },
+                    {
+                        "title": f"Procure & benchmark sensor modules for {title}",
+                        "description": "Verify sensor operating voltages, test communication protocols (I2C/SPI), and document baseline calibration curves.",
+                        "category": "Hardware", "priority": "High", "difficulty": "Easy", "estimated_hours": 3.0, "can_parallel": True,
+                        "dependencies": [f"Specify sensor pinout, power budget & hardware architecture for {title}"],
+                        "requirement_source": features[0] if features else "Sensor hardware selection",
+                        "reason": "Ensures sensor components operate within required measurement thresholds."
+                    }
+                ]
+            })
+            phases.append({
+                "phase_number": 2,
+                "name": phase_names[1],
+                "tasks": [
+                    {
+                        "title": f"Design circuit schematic & wiring diagram for {title}",
+                        "description": "Create detailed wiring schematic showing pull-up resistors, decoupling capacitors, and power regulation.",
+                        "category": "Hardware", "priority": "Critical", "difficulty": "Medium", "estimated_hours": 4.0, "can_parallel": False,
+                        "dependencies": [f"Specify sensor pinout, power budget & hardware architecture for {title}"],
+                        "requirement_source": "Circuit design & power safety",
+                        "reason": "Prevents wiring shorts during live hardware evaluation."
+                    }
+                ]
+            })
+            phases.append({
+                "phase_number": 3,
+                "name": phase_names[2],
+                "tasks": [
+                    {
+                        "title": f"Implement microcontroller firmware for {features[0] if features else 'sensor data reading'}",
+                        "description": "Write embedded driver to sample analog/digital values at regular polling intervals with error timeouts.",
+                        "category": "Hardware", "priority": "Critical", "difficulty": "Medium", "estimated_hours": 6.0, "can_parallel": False,
+                        "dependencies": [f"Design circuit schematic & wiring diagram for {title}"],
+                        "requirement_source": features[0] if features else "Microcontroller firmware",
+                        "reason": "Core firmware logic for physical data acquisition."
+                    }
+                ]
+            })
+            phases.append({
+                "phase_number": 4,
+                "name": phase_names[3],
+                "tasks": [
+                    {
+                        "title": f"Implement MQTT / HTTP telemetry publishing for {title}",
+                        "description": "Configure WiFi connection, secure MQTT payload publishing, and cloud telemetry logging.",
+                        "category": "Backend", "priority": "High", "difficulty": "Medium", "estimated_hours": 5.0, "can_parallel": False,
+                        "dependencies": [f"Implement microcontroller firmware for {features[0] if features else 'sensor data reading'}"],
+                        "requirement_source": features[1] if len(features) > 1 else "Telemetry cloud gateway",
+                        "reason": "Enables remote real-time monitoring of device telemetry."
+                    }
+                ]
+            })
+            phases.append({
+                "phase_number": 5,
+                "name": phase_names[4],
+                "tasks": [
+                    {
+                        "title": f"Perform sensor calibration, noise filtering & hardware stress tests",
+                        "description": "Test readings against reference standards, implement moving-average smoothing, and test network drop reconnection.",
+                        "category": "Testing", "priority": "Critical", "difficulty": "Medium", "estimated_hours": 4.0, "can_parallel": True,
+                        "dependencies": [f"Implement MQTT / HTTP telemetry publishing for {title}"],
+                        "requirement_source": "Hardware reliability & measurement accuracy",
+                        "reason": "Eliminates sensor jitter and false alerts during project demonstration."
+                    }
+                ]
+            })
+            phases.append({
+                "phase_number": 6,
+                "name": phase_names[5],
+                "tasks": [
+                    {
+                        "title": f"Prepare circuit diagrams, bill of materials (BOM) & final thesis report",
+                        "description": "Compile complete project report with schematic diagrams, calibration curves, and viva defense slides.",
+                        "category": "Documentation", "priority": "Critical", "difficulty": "Easy", "estimated_hours": 6.0, "can_parallel": True,
+                        "dependencies": [],
+                        "requirement_source": "Academic capstone deliverable",
+                        "reason": "Required for external viva evaluation and grading."
+                    }
+                ]
+            })
+
+        elif is_ml:
+            # Machine Learning Phases
+            phase_names = [
+                "Phase 1 — Problem Definition & Data Sourcing",
+                "Phase 2 — Data Preprocessing & Exploratory Analysis",
+                "Phase 3 — Feature Engineering & Preprocessing Pipeline",
+                "Phase 4 — Model Architecture & Training",
+                "Phase 5 — Model Evaluation & Metric Validation",
+                "Phase 6 — Model Serving & Capstone Report"
+            ]
+            phases.append({
+                "phase_number": 1,
+                "name": phase_names[0],
+                "tasks": [
+                    {
+                        "title": f"Acquire, inspect & validate benchmark dataset for {title}",
+                        "description": "Source primary dataset, verify row count, inspect class distributions, and document licensing.",
+                        "category": "Research", "priority": "Critical", "difficulty": "Easy", "estimated_hours": 4.0, "can_parallel": True,
+                        "dependencies": [], "requirement_source": features[0] if features else "Dataset acquisition",
+                        "reason": "Provides clean ground-truth training and evaluation data."
+                    }
+                ]
+            })
+            phases.append({
+                "phase_number": 2,
+                "name": phase_names[1],
+                "tasks": [
+                    {
+                        "title": f"Perform exploratory data analysis (EDA) & missing value imputation for {title}",
+                        "description": "Analyze feature correlations, generate distribution histograms, and handle missing/outlier records.",
+                        "category": "Machine Learning", "priority": "High", "difficulty": "Medium", "estimated_hours": 5.0, "can_parallel": False,
+                        "dependencies": [f"Acquire, inspect & validate benchmark dataset for {title}"],
+                        "requirement_source": "Data quality & distribution inspection",
+                        "reason": "Prevents training distortions caused by skewed or dirty data."
+                    }
+                ]
+            })
+            phases.append({
+                "phase_number": 3,
+                "name": phase_names[2],
+                "tasks": [
+                    {
+                        "title": f"Construct feature transformation & scaling pipeline for {features[0] if features else 'model inputs'}",
+                        "description": "Implement standard scaling, one-hot encoding, and train/validation/test stratified splitting.",
+                        "category": "Machine Learning", "priority": "Critical", "difficulty": "Medium", "estimated_hours": 4.0, "can_parallel": False,
+                        "dependencies": [f"Perform exploratory data analysis (EDA) & missing value imputation for {title}"],
+                        "requirement_source": features[0] if features else "Feature engineering",
+                        "reason": "Ensures reproducible numerical input matrices for model training."
+                    }
+                ]
+            })
+            phases.append({
+                "phase_number": 4,
+                "name": phase_names[3],
+                "tasks": [
+                    {
+                        "title": f"Train baseline & optimized models for {title}",
+                        "description": "Train candidate ML models, perform hyperparameter tuning using cross-validation, and log loss curves.",
+                        "category": "Machine Learning", "priority": "Critical", "difficulty": "Hard", "estimated_hours": 8.0, "can_parallel": False,
+                        "dependencies": [f"Construct feature transformation & scaling pipeline for {features[0] if features else 'model inputs'}"],
+                        "requirement_source": features[1] if len(features) > 1 else features[0] if features else "Model training",
+                        "reason": "Central computational deliverable for machine learning capstone."
+                    }
+                ]
+            })
+            phases.append({
+                "phase_number": 5,
+                "name": phase_names[4],
+                "tasks": [
+                    {
+                        "title": f"Evaluate model performance (Confusion Matrix, Precision/Recall, ROC-AUC)",
+                        "description": "Benchmark final model against test split, plot confusion matrix, and analyze prediction error cases.",
+                        "category": "Testing", "priority": "Critical", "difficulty": "Medium", "estimated_hours": 4.0, "can_parallel": True,
+                        "dependencies": [f"Train baseline & optimized models for {title}"],
+                        "requirement_source": "Model validation & evaluation rigor",
+                        "reason": "Provides quantitative evidence of model effectiveness for examiners."
+                    }
+                ]
+            })
+            phases.append({
+                "phase_number": 6,
+                "name": phase_names[5],
+                "tasks": [
+                    {
+                        "title": f"Build inference REST API & compile academic project report for {title}",
+                        "description": "Wrap model in FastAPI/Flask inference endpoint and write comprehensive academic thesis report.",
+                        "category": "Documentation", "priority": "High", "difficulty": "Medium", "estimated_hours": 6.0, "can_parallel": True,
+                        "dependencies": [f"Evaluate model performance (Confusion Matrix, Precision/Recall, ROC-AUC)"],
+                        "requirement_source": "Academic capstone deliverable & deployment",
+                        "reason": "Enables interactive model demonstration during viva panel."
+                    }
+                ]
+            })
+
+        elif is_data:
+            # Data Science Phases
+            phase_names = [
+                "Phase 1 — Requirements & Data Sourcing",
+                "Phase 2 — Data Cleansing & Validation",
+                "Phase 3 — Exploratory Data Analysis & Correlation",
+                "Phase 4 — Analytical Modeling & Visual Dashboards",
+                "Phase 5 — Metric Validation & Sensitivity Analysis",
+                "Phase 6 — Insights Report & Presentation"
+            ]
+            phases.append({
+                "phase_number": 1,
+                "name": phase_names[0],
+                "tasks": [
+                    {
+                        "title": f"Define analytic objectives & source primary dataset for {title}",
+                        "description": "Establish key performance indicators (KPIs), acquire raw data files, and verify schema integrity.",
+                        "category": "Research", "priority": "Critical", "difficulty": "Easy", "estimated_hours": 3.0, "can_parallel": True,
+                        "dependencies": [], "requirement_source": features[0] if features else "Data acquisition",
+                        "reason": "Establishes data baseline for analysis."
+                    }
+                ]
+            })
+            phases.append({
+                "phase_number": 2,
+                "name": phase_names[1],
+                "tasks": [
+                    {
+                        "title": f"Build automated data cleaning & deduplication scripts for {title}",
+                        "description": "Write pandas scripts to cleanse anomalies, standardize timestamps, and handle null records.",
+                        "category": "Backend", "priority": "High", "difficulty": "Medium", "estimated_hours": 4.0, "can_parallel": False,
+                        "dependencies": [f"Define analytic objectives & source primary dataset for {title}"],
+                        "requirement_source": "Data quality assurance",
+                        "reason": "Guarantees clean data input for dashboard visualization."
+                    }
+                ]
+            })
+            phases.append({
+                "phase_number": 3,
+                "name": phase_names[2],
+                "tasks": [
+                    {
+                        "title": f"Conduct statistical exploratory data analysis & trend discovery",
+                        "description": "Generate summary statistics, calculate correlation coefficients, and identify key drivers.",
+                        "category": "Research", "priority": "High", "difficulty": "Medium", "estimated_hours": 5.0, "can_parallel": False,
+                        "dependencies": [f"Build automated data cleaning & deduplication scripts for {title}"],
+                        "requirement_source": features[1] if len(features) > 1 else features[0] if features else "Trend discovery",
+                        "reason": "Discovers analytical insights to answer core project questions."
+                    }
+                ]
+            })
+            phases.append({
+                "phase_number": 4,
+                "name": phase_names[3],
+                "tasks": [
+                    {
+                        "title": f"Build interactive analytics dashboard & visualization charts for {title}",
+                        "description": "Create responsive dashboard with filterable charts, aggregate summaries, and drill-down views.",
+                        "category": "Frontend", "priority": "Critical", "difficulty": "Medium", "estimated_hours": 6.0, "can_parallel": False,
+                        "dependencies": [f"Conduct statistical exploratory data analysis & trend discovery"],
+                        "requirement_source": features[0] if features else "Interactive dashboard",
+                        "reason": "Primary user interface demonstrating analytical findings."
+                    }
+                ]
+            })
+            phases.append({
+                "phase_number": 5,
+                "name": phase_names[4],
+                "tasks": [
+                    {
+                        "title": f"Validate metric calculations & perform sensitivity analysis",
+                        "description": "Run automated test fixtures to verify dashboard formulas, aggregations, and edge cases.",
+                        "category": "Testing", "priority": "High", "difficulty": "Easy", "estimated_hours": 3.0, "can_parallel": True,
+                        "dependencies": [f"Build interactive analytics dashboard & visualization charts for {title}"],
+                        "requirement_source": "Metric validation",
+                        "reason": "Ensures calculations displayed to faculty evaluators are mathematically sound."
+                    }
+                ]
+            })
+            phases.append({
+                "phase_number": 6,
+                "name": phase_names[5],
+                "tasks": [
+                    {
+                        "title": f"Compile comprehensive data insights report & executive slide deck",
+                        "description": "Draft findings chapter, document methodology, export high-res visual plots, and prepare defense deck.",
+                        "category": "Documentation", "priority": "Critical", "difficulty": "Easy", "estimated_hours": 5.0, "can_parallel": True,
+                        "dependencies": [], "requirement_source": "Academic report deliverable",
+                        "reason": "Essential academic capstone submission."
+                    }
+                ]
+            })
+
+        else:
+            # Web / Software Application
+            phase_names = [
+                "Phase 1 — Research & Requirement Specification",
+                "Phase 2 — UI/UX Wireframing & Design",
+                "Phase 3 — Core Feature & API Development",
+                "Phase 4 — Database Persistence & Schema Design",
+                "Phase 5 — Integration Testing & Quality Assurance",
+                "Phase 6 — Deployment & Academic Documentation"
+            ]
+            phases.append({
+                "phase_number": 1,
+                "name": phase_names[0],
+                "tasks": [
+                    {
+                        "title": f"Analyze functional requirements & user workflows for {title}",
+                        "description": f"Document user roles, input/output data flows, and specify API contracts for {', '.join(features[:2]) if features else 'core modules'}.",
+                        "category": "Research", "priority": "High", "difficulty": "Easy", "estimated_hours": 3.0, "can_parallel": True,
+                        "dependencies": [], "requirement_source": features[0] if features else "Requirements analysis",
+                        "reason": "Prevents feature creep and defines development scope."
+                    }
+                ]
+            })
+            phases.append({
+                "phase_number": 2,
+                "name": phase_names[1],
+                "tasks": [
+                    {
+                        "title": f"Design user interface layouts & views for {features[0] if features else title}",
+                        "description": "Design clean, responsive web views with intuitive forms, feedback states, and modern layout.",
+                        "category": "Frontend", "priority": "High", "difficulty": "Medium", "estimated_hours": 4.0, "can_parallel": True,
+                        "dependencies": [f"Analyze functional requirements & user workflows for {title}"],
+                        "requirement_source": features[0] if features else "User interface design",
+                        "reason": "Primary user interaction surface."
+                    }
+                ]
+            })
+
+            # Feature-driven tasks in Phase 3
+            dev_tasks = []
+            for i, f in enumerate(features[:3]):
+                dev_tasks.append({
+                    "title": f"Implement backend controllers & business logic for {f}",
+                    "description": f"Write server-side endpoints, validation logic, and state handling specifically for {f}.",
+                    "category": "Backend", "priority": "Critical", "difficulty": "Medium", "estimated_hours": 5.0, "can_parallel": i > 0,
+                    "dependencies": [f"Analyze functional requirements & user workflows for {title}"],
+                    "requirement_source": f,
+                    "reason": f"Fulfills core requirement: {f}"
+                })
+            if not dev_tasks:
+                dev_tasks.append({
+                    "title": f"Implement core application controllers and business logic for {title}",
+                    "description": "Develop server-side routing, request validation, and processing logic.",
+                    "category": "Backend", "priority": "Critical", "difficulty": "Medium", "estimated_hours": 6.0, "can_parallel": False,
+                    "dependencies": [f"Analyze functional requirements & user workflows for {title}"],
+                    "requirement_source": "Core application logic",
+                    "reason": "Central functional deliverable of the project."
+                })
+
+            phases.append({
+                "phase_number": 3,
+                "name": phase_names[2],
+                "tasks": dev_tasks
+            })
+
+            phases.append({
+                "phase_number": 4,
+                "name": phase_names[3],
+                "tasks": [
+                    {
+                        "title": f"Design relational schema & database tables for {title}",
+                        "description": f"Create normalized database models, define primary/foreign keys, and configure indexes for fast querying.",
+                        "category": "Database", "priority": "Critical", "difficulty": "Medium", "estimated_hours": 4.0, "can_parallel": False,
+                        "dependencies": [f"Analyze functional requirements & user workflows for {title}"],
+                        "requirement_source": "Data persistence and relational integrity",
+                        "reason": "Provides reliable persistent storage for all application entities."
+                    }
+                ]
+            })
+
+            phases.append({
+                "phase_number": 5,
+                "name": phase_names[4],
+                "tasks": [
+                    {
+                        "title": f"Implement automated endpoint tests & edge-case validation for {title}",
+                        "description": f"Write test cases for input sanitization, error responses, and verify successful operations for {features[0] if features else 'core features'}.",
+                        "category": "Testing", "priority": "Critical", "difficulty": "Medium", "estimated_hours": 4.0, "can_parallel": True,
+                        "dependencies": [dev_tasks[0]["title"]],
+                        "requirement_source": "Quality assurance and defect prevention",
+                        "reason": "Guarantees system stability during evaluation."
+                    }
+                ]
+            })
+
+            phases.append({
+                "phase_number": 6,
+                "name": phase_names[5],
+                "tasks": [
+                    {
+                        "title": f"Write academic capstone project report & prepare viva defense slides",
+                        "description": f"Document system architecture, database schema, implementation details, and create viva demo slides.",
+                        "category": "Documentation", "priority": "Critical", "difficulty": "Easy", "estimated_hours": 6.0, "can_parallel": True,
+                        "dependencies": [], "requirement_source": "Academic capstone deliverable",
+                        "reason": "Primary graded component for academic degree evaluation."
+                    }
+                ]
+            })
+
+        # Generate contextual AI tools matching the domain
+        ai_tools = [
+            {
+                "stage": phases[0]["name"],
+                "tool_name": "ChatGPT / Perplexity AI",
+                "purpose": f"Literature survey, requirement extraction, and state-of-the-art comparison for {title}",
+                "ready_to_use_prompt": f"Act as an academic advisor. Analyze my project '{title}' in the {domain} domain. Generate a comparative matrix of existing approaches, key technical risks, and architectural best practices."
+            },
+            {
+                "stage": phases[2]["name"],
+                "tool_name": "GitHub Copilot / Cursor AI",
+                "purpose": f"Scaffolding modules, boilerplate code, and testing for {features[0] if features else title}",
+                "ready_to_use_prompt": f"Generate clean, modular code for '{title}' implementing {features[0] if features else 'core features'} using {tech[0] if tech else 'Python'} with error handling and docstrings."
+            },
+            {
+                "stage": phases[4]["name"],
+                "tool_name": "Pytest / Postman",
+                "purpose": f"Automated test suite generation and edge-case validation",
+                "ready_to_use_prompt": f"Generate automated test cases for '{title}' covering valid inputs, boundary conditions, and invalid inputs."
+            },
+            {
+                "stage": phases[5]["name"],
+                "tool_name": "LaTeX / Overleaf & Render",
+                "purpose": "Academic report drafting and cloud deployment configuration",
+                "ready_to_use_prompt": f"Draft the system implementation and evaluation chapter for my academic project report titled '{title}'."
+            }
+        ]
+
+        result = {
+            "project_type": project_type,
+            "domain": domain,
+            "project_summary": summary or f"A dedicated {domain} project designed to implement {title}.",
+            "main_objective": understanding.get("core_objective", f"Deliver an end-to-end working system for {title}."),
+            "technology_difficulty": understanding.get("technology_difficulty", "Medium"),
+            "suggested_technologies": tech,
+            "system_architecture": f"Modern modular architecture tailored to {project_type}: Layered services with {tech[0] if tech else 'core engine'}, robust persistence, and automated validation.",
+            "phases": phases,
+            "ai_tools": ai_tools,
+            "parallel_tasks_advice": "Team members can work on UI/frontend wireframing and database schema design concurrently once Phase 1 requirements are confirmed.",
+            "prioritized_tasks": [
+                phases[0]["tasks"][0]["title"],
+                phases[2]["tasks"][0]["title"]
+            ]
+        }
+        return result
+
+    def _generate_rule_based_analysis(
+        self,
+        title: str,
+        description: str,
+        domain: str = "Web Development",
+        technologies_known: str = "",
+        team_size: int = 1
+    ) -> Dict[str, Any]:
+        """
+        Backward-compatible rule-based generator that uses Stage 1 understanding
+        and Stage 2 task generation.
+        """
+        understanding = self._generate_rule_based_project_understanding(
+            title=title,
+            description=description,
+            domain=domain,
+            technologies_known=technologies_known,
+            team_size=team_size
+        )
+        plan = self._generate_rule_based_tasks_from_requirements(
+            understanding=understanding,
+            custom_instructions="",
+            team_size=team_size
+        )
+        plan["project_analysis"] = understanding
+        return self._enrich_plan_response(plan, title, domain)
+
+    def _call_gemini_api(self, prompt: str) -> str:
+        """Invokes Google Gemini API directly using REST protocol with multi-model fallback."""
+        import urllib.request
+        import json
+
+        models = [
+            self.gemini_model or "gemini-3.5-flash-lite",
+            "gemini-3.5-flash-lite",
+            "gemini-3.1-flash-lite",
+            "gemini-flash-lite-latest"
+        ]
+        models_dedup = []
+        for m in models:
+            if m and m not in models_dedup:
+                models_dedup.append(m)
+
+        for m in models_dedup:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent?key={self.gemini_key}"
+            payload = {
+                "contents": [
+                    {
+                        "parts": [
+                            {"text": prompt}
+                        ]
+                    }
+                ],
+                "generationConfig": {
+                    "temperature": 0.2,
+                    "responseMimeType": "application/json"
+                }
+            }
+            data_bytes = json.dumps(payload).encode("utf-8")
+            req = urllib.request.Request(
+                url,
+                data=data_bytes,
+                headers={"Content-Type": "application/json"},
+                method="POST"
+            )
+            try:
+                with urllib.request.urlopen(req, timeout=15) as resp:
+                    body = json.loads(resp.read().decode("utf-8"))
+                    candidates = body.get("candidates", [])
+                    if candidates:
+                        parts = candidates[0].get("content", {}).get("parts", [])
+                        if parts:
+                            return parts[0].get("text", "")
+            except Exception as e:
+                logger.warning(f"AIService Gemini model {m} failed: {e}")
+                continue
+        return ""
+
     def _call_llm(self, prompt: str) -> str:
-        """Helper to invoke configured LLM API."""
+        """Helper to invoke OpenAI-compatible endpoint."""
         import urllib.request
         import json
 
@@ -529,6 +1548,8 @@ Provide a supportive, concise, practical, and direct engineering response. (Max 
 
     def _extract_json(self, text: str) -> Dict[str, Any]:
         """Safely parses JSON even if wrapped in markdown codeblocks."""
+        if not text:
+            return {}
         try:
             return json.loads(text)
         except Exception:
@@ -536,6 +1557,13 @@ Provide a supportive, concise, practical, and direct engineering response. (Max 
             if match:
                 try:
                     return json.loads(match.group(1))
+                except Exception:
+                    pass
+            start = text.find("{")
+            end = text.rfind("}")
+            if start != -1 and end != -1 and end > start:
+                try:
+                    return json.loads(text[start:end+1])
                 except Exception:
                     pass
         return {}

@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Project Clarification — {{ project.project_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-9 col-xl-8">
+            <!-- Header -->
+            <div class="text-center mb-4">
+                <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill mb-2" style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.3);">
+                    <i class="fas fa-exclamation-triangle text-warning"></i>
+                    <span class="small fw-semibold text-warning">Project Requirements Clarification</span>
+                </div>
+                <h2 class="fw-bold mt-1">Help Gemini Refine Your Project Roadmap</h2>
+                <p class="text-muted small max-w-lg mx-auto" style="max-width: 600px;">
+                    To prevent generating generic or irrelevant tasks, our AI analyzer evaluated your project description and identified a few missing specifics. Answering the questions below guarantees that your 6-phase roadmap matches your exact implementation requirements.
+                </p>
+            </div>
+
+            <!-- Analysis Confidence & Overview Card -->
+            <div class="card card-modern p-4 mb-4 border-0 shadow-sm bg-light">
+                <div class="d-flex align-items-start gap-3">
+                    <div class="brand-shield mt-1 bg-warning text-dark"><i class="fas fa-search-plus"></i></div>
+                    <div class="w-100">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                            <h5 class="fw-bold mb-0 text-dark">{{ project.project_name }}</h5>
+                            <span class="badge bg-warning text-dark px-3 py-1 rounded-pill fw-semibold">
+                                <i class="fas fa-shield-alt me-1"></i> Confidence: {{ (project.confidence_score or 65)|round(0) }}% (Target: &ge; 80%)
+                            </span>
+                        </div>
+                        <p class="text-secondary small mb-2">
+                            <strong>Current Description:</strong> {{ project.description }}
+                        </p>
+                        <div class="d-flex flex-wrap gap-2 small">
+                            <span class="badge bg-white text-dark border"><strong>Domain:</strong> {{ project.domain }}</span>
+                            <span class="badge bg-white text-dark border"><strong>Team:</strong> {{ project.team_size }} member(s)</span>
+                            {% if understanding.get('technologies') %}
+                                <span class="badge bg-white text-dark border"><strong>Detected Tech:</strong> {{ understanding.get('technologies')|join(', ') }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Clarification Questions Form -->
+            <div class="card card-modern p-4 p-md-5 border-0 shadow-lg position-relative" id="clarifyCard">
+                <form method="POST" id="clarifyForm" action="{{ url_for('student.clarify_project', project_id=project.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+                    <h5 class="fw-bold text-primary mb-3">
+                        <i class="fas fa-clipboard-question me-2"></i> Clarification Questions
+                    </h5>
+                    <p class="text-muted small mb-4">
+                        Please provide concise answers to the following questions. Your responses will be directly fed into Gemini Stage 2 task synthesis to produce customized, module-specific development tasks.
+                    </p>
+
+                    {% for q in questions %}
+                        <div class="mb-4 p-3 bg-light rounded-3 border">
+                            <label for="question_{{ loop.index0 }}" class="form-label fw-bold text-dark d-flex align-items-start gap-2">
+                                <span class="badge bg-primary rounded-circle px-2 py-1">{{ loop.index }}</span>
+                                <span>{{ q }}</span>
+                            </label>
+                            <textarea class="form-control bg-white" id="question_{{ loop.index0 }}" name="question_{{ loop.index0 }}" rows="2" placeholder="Your answer (e.g. key tools, target algorithms, or expected user roles)..." required></textarea>
+                        </div>
+                    {% else %}
+                        <div class="mb-4 p-3 bg-light rounded-3 border">
+                            <label for="general_notes" class="form-label fw-bold text-dark">
+                                Provide more specific requirements for {{ project.project_name }}:
+                            </label>
+                            <textarea class="form-control bg-white" id="general_notes" name="general_notes" rows="4" placeholder="Detail your core features, libraries, target users, and integrations..." required></textarea>
+                        </div>
+                    {% endfor %}
+
+                    <!-- Optional Additional Notes -->
+                    <div class="mb-4">
+                        <label for="general_notes" class="form-label fw-semibold small text-secondary">
+                            <i class="fas fa-plus-circle me-1"></i> Additional Requirements or Constraints (Optional)
+                        </label>
+                        <textarea class="form-control" id="general_notes" name="general_notes" rows="2" placeholder="e.g. Do not include payment gateways, must support offline caching, use SQLite rather than PostgreSQL..."></textarea>
+                    </div>
+
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg shadow-sm fw-bold py-3" id="submitBtn">
+                            <i class="fas fa-wand-magic-sparkles me-2"></i> Generate Verified Roadmap with Clarifications
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Processing Overlay -->
+                <div id="loadingOverlay" class="position-absolute top-0 start-0 w-100 h-100 bg-white bg-opacity-90 d-none flex-column justify-content-center align-items-center rounded-3" style="z-index: 10;">
+                    <div class="spinner-border text-primary mb-3" style="width: 3.5rem; height: 3.5rem;" role="status"></div>
+                    <h5 class="fw-bold text-dark mb-1">Synthesizing Project Requirements...</h5>
+                    <p class="text-muted small text-center px-4">
+                        Gemini is aligning tasks against your clarifications and executing self-review to eliminate irrelevant tasks.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('clarifyForm').addEventListener('submit', function() {
+    document.getElementById('loadingOverlay').classList.remove('d-none');
+    document.getElementById('loadingOverlay').classList.add('d-flex');
+    document.getElementById('submitBtn').disabled = true;
+});
+</script>
+{% endblock %}
