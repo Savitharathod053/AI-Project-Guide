@@ -3,33 +3,7 @@
 {% block title %}{{ project.project_name }} — AI Project Workspace{% endblock %}
 
 {% block content %}
-<style>
-    #projectTab .nav-link {
-        color: #334155;
-        border-radius: 8px;
-        transition: all 0.15s ease-in-out;
-        border: 1px solid transparent;
-    }
-    #projectTab .nav-link:hover {
-        background-color: #f1f5f9;
-        color: #0f172a;
-    }
-    #projectTab .nav-link.active {
-        background-color: #0d6efd !important;
-        color: #ffffff !important;
-        box-shadow: 0 4px 10px rgba(13, 110, 253, 0.25);
-    }
-    #projectTab .nav-link.active i,
-    #projectTab .nav-link.active span {
-        color: #ffffff !important;
-    }
-    #projectTab .nav-link.active .badge {
-        background-color: rgba(255, 255, 255, 0.25) !important;
-        color: #ffffff !important;
-        border-color: transparent !important;
-    }
-</style>
-<div class="container-fluid px-lg-4 py-3">
+<div class="container-xl py-2">
     <!-- Breadcrumb & Top Bar -->
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
         <div>
@@ -147,7 +121,7 @@
                     </a>
                 </div>
 
-                <ul class="nav nav-pills flex-column gap-1" id="projectTab" role="tablist">
+                <ul class="nav nav-pills flex-column gap-1 workspace-nav" id="projectTab" role="tablist">
                     {% if project.project_category in ['hardware', 'hybrid'] %}
                     <li class="nav-item">
                         <a href="{{ url_for('student.hardware_feasibility', project_id=project.id) }}" class="nav-link text-start py-2 px-3 fw-semibold d-flex align-items-center justify-content-between w-100 text-info bg-light border border-info mb-1">
@@ -1280,7 +1254,7 @@
                     <div class="row g-4">
                         {% for api in api_resources %}
                             <div class="col-lg-6">
-                                <div class="card card-3d resource-card h-100 p-3 shadow-sm d-flex flex-column">
+                                <div class="card card-modern resource-card h-100 p-3 shadow-xs d-flex flex-column">
                                     <div class="d-flex justify-content-between align-items-start mb-2">
                                         <h6 class="fw-bold text-dark mb-0 fs-6">{{ api.resource_name }}</h6>
                                         <div class="d-flex gap-1 flex-wrap justify-content-end">
@@ -1358,7 +1332,7 @@
                     <div class="row g-4">
                         {% for ds in dataset_resources %}
                             <div class="col-lg-6">
-                                <div class="card card-3d resource-card h-100 p-3 shadow-sm d-flex flex-column">
+                                <div class="card card-modern resource-card h-100 p-3 shadow-xs d-flex flex-column">
                                     <div class="d-flex justify-content-between align-items-start mb-2">
                                         <h6 class="fw-bold text-dark mb-0 fs-6">{{ ds.resource_name }}</h6>
                                         <span class="badge {% if ds.verification_status == 'Official Source' %}bg-primary{% else %}bg-success{% endif %} small">
@@ -1425,7 +1399,7 @@
                 <div class="row g-4">
                     {% for tool in ai_recommendations %}
                         <div class="col-lg-6">
-                            <div class="card card-3d resource-card h-100 p-3 shadow-sm d-flex flex-column">
+                            <div class="card card-modern resource-card h-100 p-3 shadow-xs d-flex flex-column">
                                 <div class="d-flex justify-content-between align-items-start mb-2">
                                     <div>
                                         <span class="badge bg-primary bg-opacity-10 text-primary fw-bold text-uppercase small">{{ tool.purpose }}</span>

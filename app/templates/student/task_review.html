@@ -1,322 +1,308 @@
 {% extends "base.html" %}
 
-{% block title %}Review Gemini 6-Phase Roadmap — {{ project.project_name }}{% endblock %}
+{% block title %}Review Project Roadmap — {{ project.project_name }}{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <!-- Header -->
+<div class="container-xl py-2">
+
+    <!-- ====================================================================
+         1. PAGE HEADER & ACTIONS
+         ==================================================================== -->
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
         <div>
-            <span class="badge bg-success bg-opacity-10 text-success px-3 py-1 rounded-pill mb-1 fw-semibold">
-                <i class="fas fa-brain me-1"></i> Gemini 6-Phase Roadmap Generated
-            </span>
-            <h2 class="fw-bold mb-0">Project Development Roadmap</h2>
-            <p class="text-muted small mb-0">
-                Project: <span class="fw-bold text-dark">{{ project.project_name }}</span> 
-                • Domain: <span class="badge bg-light text-dark border">{{ project.domain }}</span>
-                • Team Size: <span class="fw-semibold text-dark">{{ project.team_size }} member(s)</span>
-                • Total Work: <span class="badge bg-primary text-white">{{ total_tasks }} tasks ({{ total_hours|round(1) }} est. hrs)</span>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge badge-ai"><i class="fas fa-sparkles me-1"></i> AI Roadmap Generated</span>
+                <span class="badge badge-neutral">{{ project.domain }}</span>
+            </div>
+            <h1 class="h2 mb-1">Review Project Plan & Roadmap</h1>
+            <p class="text-secondary small mb-0">
+                Review the AI-decomposed requirements, architecture, and 6-phase development tasks before starting your project.
             </p>
         </div>
 
-        <div class="d-flex flex-wrap gap-2">
-            <!-- Regenerate Button -->
-            <button type="button" class="btn btn-outline-primary px-3 shadow-sm fw-semibold" data-bs-toggle="modal" data-bs-target="#regenerateModal">
-                <i class="fas fa-robot me-1"></i> Regenerate Tasks
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#regenerateModal">
+                <i class="fas fa-sync-alt me-1"></i> Regenerate
             </button>
-            <!-- Add Task Button -->
-            <button type="button" class="btn btn-outline-success px-3 shadow-sm fw-semibold" data-bs-toggle="modal" data-bs-target="#addTaskModal">
+            <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#addTaskModal">
                 <i class="fas fa-plus me-1"></i> Add Task
             </button>
-            <!-- Confirm Plan & Start Button -->
-            <form method="POST" action="{{ url_for('student.approve_roadmap', project_id=project.id) }}" class="d-inline">
+            <form method="POST" action="{{ url_for('student.approve_roadmap', project_id=project.id) }}" class="m-0">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                <button type="submit" class="btn btn-primary px-4 shadow-sm fw-bold">
-                    <i class="fas fa-check-circle me-1"></i> Approve Roadmap & Open Workspace
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-check me-1"></i> Approve Roadmap & Open Workspace
                 </button>
             </form>
         </div>
     </div>
 
-    <!-- AI Summary Banner & Architecture -->
-    <div class="card card-modern p-4 mb-4 border-0 shadow-sm bg-light">
-        <div class="d-flex align-items-start gap-3">
-            <div class="brand-shield mt-1"><i class="fas fa-microchip"></i></div>
-            <div class="w-100">
-                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-1">
-                    <h5 class="fw-bold mb-0">Gemini Architecture & Project Overview</h5>
-                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-1 rounded-pill fw-semibold">
-                        <i class="fas fa-shield-alt me-1"></i> Analysis Confidence: {{ (project.confidence_score or 90)|round(0) }}%
-                    </span>
-                </div>
-                <p class="text-secondary small mb-2">{{ project.project_summary or project.description }}</p>
-                {% if project.architecture_recommendation %}
-                    <div class="p-3 bg-white rounded-3 small border mb-2">
-                        <strong class="text-primary"><i class="fas fa-network-wired me-1"></i> Recommended System Architecture:</strong>
-                        <div class="text-secondary mt-1">{{ project.architecture_recommendation }}</div>
-                    </div>
-                {% endif %}
-                <div class="d-flex flex-wrap gap-2 small">
-                    <span class="badge bg-white text-dark border"><strong>Type:</strong> {{ project.project_type or 'Web Application' }}</span>
-                    <span class="badge bg-white text-dark border"><strong>Domain:</strong> {{ project.domain }}</span>
-                    <span class="badge bg-white text-dark border"><strong>Objective:</strong> {{ project.objective }}</span>
-                    <span class="badge bg-white text-dark border"><strong>Difficulty:</strong> {{ project.technology_difficulty }}</span>
-                    <span class="badge bg-white text-dark border"><strong>Tech:</strong> {{ project.technologies }}</span>
-                    {% if project.technologies_known %}
-                        <span class="badge bg-white text-dark border"><strong>Known Tech:</strong> {{ project.technologies_known }}</span>
-                    {% endif %}
+    <!-- Meta Highlights Row -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card-stat">
+                <div class="stat-label">Project</div>
+                <div class="h5 mb-0 text-heading text-truncate" title="{{ project.project_name }}">{{ project.project_name }}</div>
+                <div class="stat-desc">{{ project.team_size }} team member(s)</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card-stat">
+                <div class="stat-label">Total Workload</div>
+                <div class="h5 mb-0 text-primary">{{ total_tasks }} Tasks</div>
+                <div class="stat-desc">~{{ total_hours|round(1) }} estimated hours</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card-stat">
+                <div class="stat-label">Analysis Confidence</div>
+                <div class="h5 mb-0 text-success">{{ (project.confidence_score or 90)|round(0) }}%</div>
+                <div class="stat-desc">Requirements clarity score</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card-stat">
+                <div class="stat-label">Technical Difficulty</div>
+                <div class="h5 mb-0 text-heading">{{ project.technology_difficulty or 'Medium' }}</div>
+                <div class="stat-desc">{{ project.project_type or 'Capstone' }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         2. PROJECT ANALYSIS OVERVIEW (CLEAR STRUCTURED SECTIONS)
+         ==================================================================== -->
+    <div class="card card-modern p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+            <h2 class="h4 mb-0">Project Architecture & Requirement Decomposition</h2>
+            <span class="badge badge-neutral">Automated Analysis</span>
+        </div>
+
+        <div class="row g-4">
+            <!-- Left: Scope & Requirements -->
+            <div class="col-lg-6">
+                <!-- Project Overview -->
+                <div class="mb-3">
+                    <span class="stat-label d-block mb-1">Project Summary</span>
+                    <p class="small text-secondary mb-0">
+                        {{ project.project_summary or project.description }}
+                    </p>
                 </div>
 
+                <!-- Verified Requirements -->
                 {% if understanding and understanding.get('required_features') %}
-                    <div class="mt-3 pt-2 border-top">
-                        <span class="small fw-bold text-dark d-block mb-1"><i class="fas fa-list-check text-primary me-1"></i> Verified Project Requirements:</span>
+                    <div class="mb-3">
+                        <span class="stat-label d-block mb-1">Confirmed Requirements</span>
                         <div class="d-flex flex-wrap gap-1">
                             {% for feat in understanding.get('required_features') %}
-                                <span class="badge bg-white text-secondary border small"><i class="fas fa-check text-success me-1"></i>{{ feat }}</span>
+                                <span class="badge badge-neutral bg-light text-secondary">
+                                    <i class="fas fa-check text-success me-1"></i>{{ feat }}
+                                </span>
                             {% endfor %}
                         </div>
+                    </div>
+                {% endif %}
+
+                <!-- Core Objective -->
+                <div>
+                    <span class="stat-label d-block mb-1">Core Objective</span>
+                    <span class="small text-secondary">{{ project.objective }}</span>
+                </div>
+            </div>
+
+            <!-- Right: System Architecture, Tech & Missing Gaps -->
+            <div class="col-lg-6">
+                <!-- Recommended Architecture -->
+                {% if project.architecture_recommendation %}
+                    <div class="p-3 bg-light rounded-3 border mb-3">
+                        <span class="stat-label d-block mb-1 text-primary">Recommended System Architecture</span>
+                        <p class="small text-secondary mb-0">
+                            {{ project.architecture_recommendation }}
+                        </p>
+                    </div>
+                {% endif %}
+
+                <!-- Technologies & Dependencies -->
+                <div class="mb-3">
+                    <span class="stat-label d-block mb-1">Identified Technologies & Libraries</span>
+                    <div class="d-flex flex-wrap gap-1">
+                        {% for tech in project.technologies.split(',') %}
+                            <span class="badge badge-neutral">{{ tech.strip() }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Assumptions or Gaps (If Any) -->
+                {% if understanding and understanding.get('potential_missing_requirements') %}
+                    <div class="p-3 bg-light rounded-3 border">
+                        <span class="stat-label d-block mb-1 text-warning">Potential Missing Requirements / Recommendations</span>
+                        <ul class="mb-0 ps-3 small text-secondary">
+                            {% for gap in understanding.get('potential_missing_requirements') %}
+                                <li>{{ gap }}</li>
+                            {% endfor %}
+                        </ul>
                     </div>
                 {% endif %}
             </div>
         </div>
     </div>
 
-    <!-- Structured 6-Phase Tasks Section -->
+    <!-- ====================================================================
+         3. 6-PHASE TASK ROADMAP & TASK MANAGEMENT
+         ==================================================================== -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="h4 mb-0">6-Phase Development Roadmap</h2>
+            <span class="small text-muted">Tasks mapped sequentially across the complete project lifecycle</span>
+        </div>
+        <!-- Quick Search Filter -->
+        <div class="d-flex align-items-center gap-2">
+            <input type="text" id="taskSearchInput" class="form-control form-control-sm" placeholder="Search tasks..." style="max-width: 220px;" onkeyup="filterTasks()">
+        </div>
+    </div>
+
     {% if phases_list %}
         {% for phase in phases_list %}
-            <div class="card card-modern p-4 mb-4">
-                <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
-                    <div>
-                        <h5 class="fw-bold mb-0 text-primary">
-                            <span class="badge bg-primary me-2">{{ phase.phase_number }}</span>{{ phase.name }}
-                        </h5>
-                        <span class="text-muted small">{{ phase.tasks|length }} tasks planned</span>
+            <div class="card card-modern p-4 mb-3 phase-container">
+                <!-- Phase Header -->
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 pb-2 border-bottom">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge badge-neutral fw-bold">Phase {{ phase.phase_number }}</span>
+                        <h3 class="h4 mb-0">{{ phase.name }}</h3>
+                        <span class="badge badge-neutral text-muted">{{ phase.tasks|length }} tasks</span>
                     </div>
-                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="openAddTaskForPhase('{{ phase.name }}', {{ phase.phase_number }})">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="openAddTaskForPhase('{{ phase.name }}', {{ phase.phase_number }})">
                         <i class="fas fa-plus me-1"></i> Add to Phase
                     </button>
                 </div>
 
-                <div class="d-flex flex-column gap-3">
+                <!-- Phase Tasks List -->
+                <div class="d-flex flex-column gap-2">
                     {% for task in phase.tasks %}
-                        <div class="card card-3d border p-3 rounded-3 shadow-sm mb-2">
-                            <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+                        <div class="p-3 bg-light rounded-3 border task-item-card">
+                            <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-1">
                                 <div>
-                                    <div class="d-flex align-items-center gap-2 flex-wrap">
-                                        <span class="badge {% if task.priority == 'Critical' %}bg-danger{% elif task.priority == 'High' %}bg-warning text-dark{% elif task.priority == 'Medium' %}bg-primary{% else %}bg-secondary{% endif %}">
+                                    <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                                        <span class="badge {% if task.priority == 'Critical' %}badge-risk-critical{% elif task.priority == 'High' %}badge-risk-moderate{% else %}badge-neutral{% endif %}">
                                             {{ task.priority }}
                                         </span>
-                                        <span class="badge bg-light text-secondary border">{{ task.category }}</span>
-                                        <span class="badge bg-light text-muted border"><i class="far fa-clock me-1"></i>{{ task.estimated_hours }} hrs</span>
+                                        <span class="badge badge-neutral">{{ task.category }}</span>
+                                        <span class="badge badge-neutral text-muted">{{ task.estimated_hours }} hrs</span>
                                         {% if task.can_parallel %}
-                                            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">
-                                                <i class="fas fa-code-branch me-1"></i> Parallelizable
+                                            <span class="badge badge-risk-low">
+                                                <i class="fas fa-code-branch me-1"></i> Parallel
                                             </span>
                                         {% endif %}
-                                        <h6 class="fw-bold text-dark mb-0 ms-1">{{ task.title }}</h6>
+                                        <strong class="text-heading ms-1 task-title-text">{{ task.title }}</strong>
                                     </div>
+                                    <p class="small text-secondary mb-1">{{ task.description }}</p>
+                                    {% if task.requirement_source %}
+                                        <span class="badge badge-neutral bg-white text-muted" style="font-size: 0.7rem;">
+                                            Requirement: {{ task.requirement_source }}
+                                        </span>
+                                    {% endif %}
                                 </div>
 
-                                <!-- Action Buttons: Edit & Delete -->
-                                <div class="d-flex gap-2">
-                                    <button type="button" class="btn btn-outline-primary btn-sm py-0 px-2" title="Edit Task"
+                                <!-- Actions -->
+                                <div class="d-flex align-items-center gap-1">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm"
                                             onclick="openEditModal({{ task.id }}, '{{ task.title|replace("'", "\\'") }}', '{{ (task.description or '')|replace("'", "\\'") }}', '{{ task.category }}', '{{ task.priority }}', '{{ task.difficulty }}', '{{ task.phase }}', {{ task.estimated_hours }})">
-                                        <i class="fas fa-pencil-alt me-1"></i> Edit
+                                        <i class="fas fa-pencil-alt"></i>
                                     </button>
-                                    <form method="POST" action="{{ url_for('student.delete_task', project_id=project.id, task_id=task.id) }}" class="d-inline" onsubmit="return confirm('Remove this task?');">
+                                    <form method="POST" action="{{ url_for('student.delete_task', project_id=project.id, task_id=task.id) }}" class="m-0" onsubmit="return confirm('Delete this task?');">
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                                        <button type="submit" class="btn btn-outline-danger btn-sm py-0 px-2" title="Delete Task">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm">
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
                                     </form>
                                 </div>
                             </div>
-
-                            <p class="text-secondary small mb-1">{{ task.description }}</p>
-                            
-                            {% if task.requirement_source %}
-                                <div class="mb-1">
-                                    <span class="badge bg-info bg-opacity-10 text-primary border border-info border-opacity-25 small">
-                                        <i class="fas fa-link me-1"></i> Mapped Requirement: {{ task.requirement_source }}
-                                    </span>
-                                </div>
-                            {% endif %}
-
-                            {% if task.reason %}
-                                <div class="small text-muted fst-italic">
-                                    <i class="fas fa-info-circle text-primary me-1"></i> <strong>Why this matters:</strong> {{ task.reason }}
-                                </div>
-                            {% endif %}
                         </div>
                     {% endfor %}
                 </div>
             </div>
         {% endfor %}
-    {% else %}
-        <!-- Fallback Core Tasks if phases missing -->
-        <div class="card card-modern p-4 mb-4">
-            <h5 class="fw-bold mb-3 text-primary"><i class="fas fa-tasks me-2"></i> Development Tasks</h5>
-            <div class="d-flex flex-column gap-3">
-                {% for task in core_tasks %}
-                    <div class="card border p-3 rounded-3 bg-white">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <span class="badge bg-primary me-2">{{ task.priority }}</span>
-                                <span class="badge bg-light text-secondary border me-2">{{ task.category }}</span>
-                                <strong class="text-dark">{{ task.title }}</strong>
-                                <p class="text-muted small mb-0 mt-1">{{ task.description }}</p>
-                                {% if task.requirement_source %}
-                                    <div class="mt-1">
-                                        <span class="badge bg-info bg-opacity-10 text-primary border border-info border-opacity-25 small">
-                                            <i class="fas fa-link me-1"></i> Mapped Requirement: {{ task.requirement_source }}
-                                        </span>
-                                    </div>
-                                {% endif %}
-                            </div>
-                            <div class="d-flex gap-2">
-                                <form method="POST" action="{{ url_for('student.delete_task', project_id=project.id, task_id=task.id) }}">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                                    <button type="submit" class="btn btn-outline-danger btn-sm py-0"><i class="fas fa-trash-alt"></i></button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-        </div>
     {% endif %}
 
-    <!-- Ask Student Prompt & Add Additional Task Section -->
-    <div class="card card-modern p-4 mb-4 border-primary border-opacity-25 bg-white shadow-sm">
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-2">
-            <div>
-                <h5 class="fw-bold mb-1 text-dark">
-                    <i class="fas fa-question-circle text-primary me-2"></i> Do you want to add any additional tasks?
-                </h5>
-                <p class="text-muted small mb-0">
-                    The student has full control over the AI-generated roadmap. You can add custom requirements or click below to modify tasks.
-                </p>
-            </div>
-            <div class="d-flex gap-2">
-                <button type="button" class="btn btn-primary btn-sm px-3" data-bs-toggle="modal" data-bs-target="#addTaskModal">
-                    <i class="fas fa-plus me-1"></i> ➕ Add Task
-                </button>
-                <button type="button" class="btn btn-outline-secondary btn-sm px-3" data-bs-toggle="modal" data-bs-target="#regenerateModal">
-                    <i class="fas fa-sync-alt me-1"></i> 🤖 Regenerate Tasks
-                </button>
-            </div>
-        </div>
-
-        <form method="POST" action="{{ url_for('student.add_task', project_id=project.id) }}" class="row g-2 mt-2">
+    <!-- Bottom Actions -->
+    <div class="d-flex justify-content-between align-items-center pt-3 pb-4">
+        <a href="{{ url_for('student.dashboard') }}" class="btn btn-outline-secondary">
+            Back to Dashboard
+        </a>
+        <form method="POST" action="{{ url_for('student.approve_roadmap', project_id=project.id) }}" class="m-0">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-            <div class="col-md-5">
-                <input type="text" class="form-control" name="title" placeholder="e.g. Implement automated QR code check-in scanner" required>
-            </div>
-            <div class="col-md-3">
-                <select name="phase" class="form-select">
-                    <option value="Phase 1 — Research & Planning">Phase 1 — Research & Planning</option>
-                    <option value="Phase 2 — UI/UX Design">Phase 2 — UI/UX Design</option>
-                    <option value="Phase 3 — Development" selected>Phase 3 — Development</option>
-                    <option value="Phase 4 — Database">Phase 4 — Database</option>
-                    <option value="Phase 5 — Testing">Phase 5 — Testing</option>
-                    <option value="Phase 6 — Documentation & Deployment">Phase 6 — Documentation & Deployment</option>
-                </select>
-            </div>
-            <div class="col-md-2">
-                <input type="number" class="form-control" name="estimated_hours" value="4" min="1" max="50" placeholder="Hours">
-            </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-outline-primary w-100">
-                    <i class="fas fa-plus me-1"></i> Add Task
-                </button>
-            </div>
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="fas fa-check-circle me-1"></i> Approve Roadmap & Open Workspace
+            </button>
         </form>
     </div>
 
-    <!-- Final Confirmation Bar -->
-    <div class="text-center pt-3 pb-4">
-        <a href="{{ url_for('student.project_detail', project_id=project.id) }}" class="btn btn-primary btn-lg px-5 py-3 shadow fw-bold">
-            <i class="fas fa-check-circle me-2"></i> Everything Looks Good — Open Project Dashboard
-        </a>
-    </div>
 </div>
 
-<!-- ================= MODALS ================= -->
+<!-- ====================================================================
+     MODALS (CENTERED & PROPERLY SIZED)
+     ==================================================================== -->
 
 <!-- 1. EDIT TASK MODAL -->
-<div class="modal fade" id="editTaskModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
+<div class="modal fade" id="editTaskModal" tabindex="-1" aria-labelledby="editTaskModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title fw-bold"><i class="fas fa-edit text-primary me-2"></i> ✏️ Edit Task</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <h5 class="modal-title" id="editTaskModalLabel">Edit Task</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form method="POST" id="editTaskForm">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label fw-semibold small">Task Title <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="edit_title" name="title" required>
+                        <label class="form-label">Task Title</label>
+                        <input type="text" class="form-control" name="title" id="edit_title" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-semibold small">Description & Goals</label>
-                        <textarea class="form-control" id="edit_description" name="description" rows="3"></textarea>
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" name="description" id="edit_description" rows="2"></textarea>
                     </div>
-                    <div class="row g-3 mb-3">
+                    <div class="row g-2 mb-3">
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold small">Phase</label>
-                            <select class="form-select" id="edit_phase" name="phase">
-                                <option value="Phase 1 — Research & Planning">Phase 1 — Research & Planning</option>
-                                <option value="Phase 2 — UI/UX Design">Phase 2 — UI/UX Design</option>
-                                <option value="Phase 3 — Development">Phase 3 — Development</option>
-                                <option value="Phase 4 — Database">Phase 4 — Database</option>
-                                <option value="Phase 5 — Testing">Phase 5 — Testing</option>
-                                <option value="Phase 6 — Documentation & Deployment">Phase 6 — Documentation & Deployment</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold small">Category</label>
-                            <select class="form-select" id="edit_category" name="category">
-                                <option value="Research">Research</option>
+                            <label class="form-label">Category</label>
+                            <select class="form-select" name="category" id="edit_category">
                                 <option value="Frontend">Frontend</option>
                                 <option value="Backend">Backend</option>
                                 <option value="Database">Database</option>
                                 <option value="Machine Learning">Machine Learning</option>
                                 <option value="Testing">Testing</option>
+                                <option value="DevOps">DevOps</option>
                                 <option value="Documentation">Documentation</option>
-                                <option value="Deployment">Deployment</option>
-                                <option value="Presentation">Presentation</option>
                             </select>
                         </div>
-                    </div>
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <label class="form-label fw-semibold small">Priority</label>
-                            <select class="form-select" id="edit_priority" name="priority">
+                        <div class="col-md-6">
+                            <label class="form-label">Priority</label>
+                            <select class="form-select" name="priority" id="edit_priority">
                                 <option value="Critical">Critical</option>
                                 <option value="High">High</option>
                                 <option value="Medium">Medium</option>
                                 <option value="Low">Low</option>
-                                <option value="Optional">Optional</option>
                             </select>
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-semibold small">Difficulty</label>
-                            <select class="form-select" id="edit_difficulty" name="difficulty">
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <label class="form-label">Difficulty</label>
+                            <select class="form-select" name="difficulty" id="edit_difficulty">
                                 <option value="Easy">Easy</option>
                                 <option value="Medium">Medium</option>
                                 <option value="Hard">Hard</option>
                             </select>
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-semibold small">Estimated Hours</label>
-                            <input type="number" step="0.5" class="form-control" id="edit_hours" name="estimated_hours" min="0.5" max="100">
+                        <div class="col-md-6">
+                            <label class="form-label">Estimated Hours</label>
+                            <input type="number" step="0.5" class="form-control" name="estimated_hours" id="edit_hours" min="0.5" max="100">
                         </div>
                     </div>
+                    <input type="hidden" name="phase" id="edit_phase">
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary fw-semibold"><i class="fas fa-save me-1"></i> Save Changes</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
                 </div>
             </form>
         </div>
@@ -324,52 +310,52 @@
 </div>
 
 <!-- 2. ADD TASK MODAL -->
-<div class="modal fade" id="addTaskModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
+<div class="modal fade" id="addTaskModal" tabindex="-1" aria-labelledby="addTaskModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title fw-bold"><i class="fas fa-plus-circle text-success me-2"></i> ➕ Add New Task</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <h5 class="modal-title" id="addTaskModalLabel">Add New Milestone Task</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form method="POST" action="{{ url_for('student.add_task', project_id=project.id) }}">
+            <form method="POST" action="{{ url_for('student.add_task', project_id=project.id) }}" id="addTaskForm">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label fw-semibold small">Task Title <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="title" placeholder="e.g. Integrate Payment Gateway for Registration Fees" required>
+                        <label class="form-label">Task Title <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="title" placeholder="e.g. Integrate Redis Cache for session management" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-semibold small">Description</label>
-                        <textarea class="form-control" name="description" rows="3" placeholder="What needs to be implemented or tested for this task?"></textarea>
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" name="description" rows="2" placeholder="Task execution instructions..."></textarea>
                     </div>
-                    <div class="row g-3 mb-3">
+                    <div class="row g-2 mb-3">
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold small">Assign to Phase</label>
-                            <select class="form-select" id="add_modal_phase" name="phase">
-                                <option value="Phase 1 — Research & Planning">Phase 1 — Research & Planning</option>
-                                <option value="Phase 2 — UI/UX Design">Phase 2 — UI/UX Design</option>
-                                <option value="Phase 3 — Development" selected>Phase 3 — Development</option>
-                                <option value="Phase 4 — Database">Phase 4 — Database</option>
-                                <option value="Phase 5 — Testing">Phase 5 — Testing</option>
-                                <option value="Phase 6 — Documentation & Deployment">Phase 6 — Documentation & Deployment</option>
+                            <label class="form-label">Target Phase</label>
+                            <select class="form-select" name="phase" id="add_modal_phase">
+                                <option value="Phase 1: Research, Requirements & Feasibility">Phase 1: Research & Planning</option>
+                                <option value="Phase 2: System Design & Prototyping">Phase 2: UI/UX & Prototyping</option>
+                                <option value="Phase 3: Core Backend & API Development" selected>Phase 3: Core Backend & API</option>
+                                <option value="Phase 4: Database & State Management">Phase 4: Database & State</option>
+                                <option value="Phase 5: Automated Testing & Verification">Phase 5: Automated Testing</option>
+                                <option value="Phase 6: Deployment, Documentation & Viva Preparation">Phase 6: Deployment & Docs</option>
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold small">Category</label>
+                            <label class="form-label">Category</label>
                             <select class="form-select" name="category">
                                 <option value="Backend" selected>Backend</option>
                                 <option value="Frontend">Frontend</option>
                                 <option value="Database">Database</option>
+                                <option value="Machine Learning">Machine Learning</option>
                                 <option value="Testing">Testing</option>
-                                <option value="Research">Research</option>
+                                <option value="DevOps">DevOps</option>
                                 <option value="Documentation">Documentation</option>
-                                <option value="Deployment">Deployment</option>
                             </select>
                         </div>
                     </div>
-                    <div class="row g-3">
+                    <div class="row g-2">
                         <div class="col-md-4">
-                            <label class="form-label fw-semibold small">Priority</label>
+                            <label class="form-label">Priority</label>
                             <select class="form-select" name="priority">
                                 <option value="Critical">Critical</option>
                                 <option value="High" selected>High</option>
@@ -378,7 +364,7 @@
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label fw-semibold small">Difficulty</label>
+                            <label class="form-label">Difficulty</label>
                             <select class="form-select" name="difficulty">
                                 <option value="Easy">Easy</option>
                                 <option value="Medium" selected>Medium</option>
@@ -386,14 +372,14 @@
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label fw-semibold small">Estimated Hours</label>
+                            <label class="form-label">Hours</label>
                             <input type="number" step="0.5" class="form-control" name="estimated_hours" value="4.0" min="0.5" max="100">
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-success fw-semibold"><i class="fas fa-plus me-1"></i> Add Task</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Task</button>
                 </div>
             </form>
         </div>
@@ -401,26 +387,26 @@
 </div>
 
 <!-- 3. REGENERATE TASKS MODAL -->
-<div class="modal fade" id="regenerateModal" tabindex="-1">
-    <div class="modal-dialog">
+<div class="modal fade" id="regenerateModal" tabindex="-1" aria-labelledby="regenerateModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title fw-bold text-primary"><i class="fas fa-robot me-2"></i> 🤖 Regenerate Project Tasks</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <h5 class="modal-title" id="regenerateModalLabel">Regenerate Project Tasks</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form method="POST" action="{{ url_for('student.regenerate_tasks', project_id=project.id) }}" id="regenForm">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <div class="modal-body">
-                    <p class="small text-secondary">
-                        Ask Gemini to re-analyze your project requirements and recreate the 6-phase roadmap. Existing tasks will be replaced with the updated AI plan.
+                    <p class="small text-secondary mb-3">
+                        Re-analyze your requirements and generate a fresh 6-phase roadmap. Existing tasks will be replaced with the updated plan.
                     </p>
-                    <label class="form-label fw-semibold small">Custom Guidance or Modifications (Optional):</label>
+                    <label class="form-label">Custom Guidance or Refinements (Optional):</label>
                     <textarea class="form-control" name="instructions" rows="3" placeholder="e.g. Focus more on mobile responsive features and certificate generation, remove complex payment processing..."></textarea>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary fw-semibold" id="btnRegenSubmit">
-                        <i class="fas fa-sync-alt me-1"></i> Regenerate with Gemini
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="btnRegenSubmit">
+                        Regenerate Tasks
                     </button>
                 </div>
             </form>
@@ -445,13 +431,28 @@
     }
 
     function openAddTaskForPhase(phaseName, phaseNumber) {
-        document.getElementById("add_modal_phase").value = phaseName;
+        const select = document.getElementById("add_modal_phase");
+        for (let i = 0; i < select.options.length; i++) {
+            if (select.options[i].value.includes(String(phaseNumber)) || select.options[i].text.includes(String(phaseNumber))) {
+                select.selectedIndex = i;
+                break;
+            }
+        }
         new bootstrap.Modal(document.getElementById("addTaskModal")).show();
     }
 
-    document.getElementById("regenForm").addEventListener("submit", function() {
-        document.getElementById("btnRegenSubmit").disabled = true;
-        document.getElementById("btnRegenSubmit").innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Gemini Regenerating...';
+    function filterTasks() {
+        const query = document.getElementById("taskSearchInput").value.toLowerCase();
+        document.querySelectorAll(".task-item-card").forEach(card => {
+            const text = card.textContent.toLowerCase();
+            card.style.display = text.includes(query) ? "" : "none";
+        });
+    }
+
+    document.getElementById("regenForm").addEventListener("submit", function () {
+        const btn = document.getElementById("btnRegenSubmit");
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-circle-notch fa-spin me-1"></i> Regenerating...';
     });
 </script>
 {% endblock %}

@@ -4,28 +4,28 @@
 
 {% block content %}
 <!-- Hero Section -->
-<div class="hero-gradient py-5 mb-5">
-    <div class="container">
-        <div class="row align-items-center g-5">
+<div class="py-4 py-lg-5 mb-4 border-bottom bg-light">
+    <div class="container-xl">
+        <div class="row align-items-center g-4 g-lg-5">
             <div class="col-lg-7">
-                <div class="hero-badge mb-3">
-                    <i class="fas fa-robot text-primary"></i> Powered by Scikit-Learn & Machine Learning
+                <div class="badge badge-ai mb-3">
+                    <i class="fas fa-sparkles me-1"></i> AI & Machine Learning Project Safety Platform
                 </div>
-                <h1 class="display-4 fw-bold text-white mb-3">
+                <h1 class="display-6 fw-bold text-heading mb-3">
                     Know Your Project Risk <span class="text-primary">Before It's Too Late.</span>
                 </h1>
-                <p class="lead text-light text-opacity-75 mb-4">
-                    ProjectGuard continuously analyzes your academic project progress, task delays, testing coverage, and timeline pressure using trained Machine Learning models to detect risks early and provide clear, actionable steps to succeed.
+                <p class="lead text-secondary fs-6 mb-4">
+                    ProjectGuard continuously analyzes academic project progress, task pacing, testing coverage, and deadline pressure using predictive ML to detect failure risks early and provide clear, actionable milestone steps.
                 </p>
-                <div class="d-flex flex-wrap gap-3 mb-4">
-                    <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg px-4 py-2 shadow">
-                        <i class="fas fa-rocket me-2"></i> Get Started Free
+                <div class="d-flex flex-wrap gap-2 mb-4">
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-rocket me-1"></i> Get Started Free
                     </a>
-                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline-light btn-lg px-4 py-2">
-                        <i class="fas fa-sign-in-alt me-2"></i> Log In
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline-secondary btn-lg">
+                        <i class="fas fa-sign-in-alt me-1"></i> Log In
                     </a>
                 </div>
-                <div class="d-flex align-items-center gap-4 text-light text-opacity-75 small">
+                <div class="d-flex flex-wrap align-items-center gap-3 text-secondary small">
                     <div><i class="fas fa-check-circle text-success me-1"></i> Continuous Early Warning</div>
                     <div><i class="fas fa-check-circle text-success me-1"></i> Explainable AI (SHAP)</div>
                     <div><i class="fas fa-check-circle text-success me-1"></i> Interactive What-If Simulator</div>
@@ -34,41 +34,39 @@
             
             <div class="col-lg-5">
                 <!-- Interactive Preview Card -->
-                <div class="card card-modern border-0 shadow-lg p-3 bg-white text-dark">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="badge bg-light text-secondary border">AI Analysis Preview</span>
-                            <span class="badge badge-risk-moderate">MODERATE RISK</span>
+                <div class="card card-modern p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="badge badge-neutral">AI Analysis Preview</span>
+                        <span class="badge badge-risk-moderate">Moderate Risk</span>
+                    </div>
+                    <h2 class="h4 mb-1">Smart Attendance System</h2>
+                    <p class="text-secondary small mb-3">Domain: Machine Learning & IoT</p>
+                    
+                    <div class="p-3 bg-light rounded-3 mb-3 border">
+                        <div class="d-flex justify-content-between mb-1 small fw-semibold">
+                            <span class="text-success"><i class="fas fa-check me-1"></i> Success Chance: 72%</span>
+                            <span class="text-danger"><i class="fas fa-exclamation-triangle me-1"></i> Failure Risk: 28%</span>
                         </div>
-                        <h5 class="fw-bold mb-1">Smart Attendance System</h5>
-                        <p class="text-muted small mb-3">Domain: Machine Learning & IoT</p>
-                        
-                        <div class="p-3 bg-light rounded-3 mb-3">
-                            <div class="d-flex justify-content-between mb-1 small fw-semibold">
-                                <span class="text-success"><i class="fas fa-check me-1"></i> Success Chance: 72%</span>
-                                <span class="text-danger"><i class="fas fa-exclamation-triangle me-1"></i> Failure Risk: 28%</span>
-                            </div>
-                            <div class="risk-meter-container">
-                                <div class="risk-meter-success" style="width: 72%;"></div>
-                                <div class="risk-meter-failure" style="width: 28%;"></div>
-                            </div>
+                        <div class="risk-meter-container">
+                            <div class="risk-meter-success" style="width: 72%;"></div>
+                            <div class="risk-meter-failure" style="width: 28%;"></div>
                         </div>
+                    </div>
 
-                        <h6 class="fw-bold small text-uppercase text-muted mb-2">Top Risk Factors (SHAP)</h6>
-                        <div class="risk-factor-item py-1 px-2 small mb-1">
-                            <i class="fas fa-bug text-danger me-1"></i> Testing coverage is lagging behind progress
-                        </div>
-                        <div class="risk-factor-item py-1 px-2 small mb-3">
-                            <i class="fas fa-clock text-danger me-1"></i> 3 critical tasks currently delayed
-                        </div>
+                    <span class="stat-label d-block mb-1">Top Risk Factors (SHAP)</span>
+                    <div class="p-2 bg-light rounded-2 small text-secondary mb-1 border">
+                        <i class="fas fa-bug text-danger me-1"></i> Testing coverage is lagging behind progress
+                    </div>
+                    <div class="p-2 bg-light rounded-2 small text-secondary mb-3 border">
+                        <i class="fas fa-clock text-danger me-1"></i> 3 critical tasks currently delayed
+                    </div>
 
-                        <h6 class="fw-bold small text-uppercase text-muted mb-2">AI Recommended Next Steps</h6>
-                        <div class="d-flex align-items-center gap-2 text-success small mb-1">
-                            <i class="fas fa-arrow-circle-right"></i> Increase unit and integration testing to 50%+
-                        </div>
-                        <div class="d-flex align-items-center gap-2 text-success small">
-                            <i class="fas fa-arrow-circle-right"></i> Prioritize unblocking delayed database modules
-                        </div>
+                    <span class="stat-label d-block mb-1">AI Recommended Next Steps</span>
+                    <div class="small text-success mb-1">
+                        <i class="fas fa-arrow-circle-right me-1"></i> Increase unit and integration testing to 50%+
+                    </div>
+                    <div class="small text-success">
+                        <i class="fas fa-arrow-circle-right me-1"></i> Prioritize unblocking delayed database modules
                     </div>
                 </div>
             </div>
@@ -76,7 +74,7 @@
     </div>
 </div>
 
-<div class="container">
+<div class="container-xl">
     <!-- How It Works Section -->
     <div id="how-it-works" class="py-5">
         <div class="text-center max-w-3xl mx-auto mb-5">
@@ -87,28 +85,28 @@
 
         <div class="row g-4">
             <div class="col-md-3">
-                <div class="card card-modern card-3d h-100 p-3 text-center">
+                <div class="card card-modern h-100 p-3 text-center">
                     <div class="brand-shield mx-auto mb-3" style="width: 50px; height: 50px; font-size: 1.3rem;">1</div>
                     <h5 class="fw-bold">Create Project</h5>
                     <p class="text-muted small">Enter project name, domain, difficulty, tech stack, team size, and milestone timeline.</p>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card card-modern card-3d h-100 p-3 text-center">
+                <div class="card card-modern h-100 p-3 text-center">
                     <div class="brand-shield mx-auto mb-3" style="width: 50px; height: 50px; font-size: 1.3rem;">2</div>
                     <h5 class="fw-bold">Update Progress</h5>
                     <p class="text-muted small">Periodically log completed tasks, delayed items, testing percentage, bugs, and documentation status.</p>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card card-modern card-3d h-100 p-3 text-center">
+                <div class="card card-modern h-100 p-3 text-center">
                     <div class="brand-shield mx-auto mb-3" style="width: 50px; height: 50px; font-size: 1.3rem;">3</div>
                     <h5 class="fw-bold">ML Risk Evaluation</h5>
                     <p class="text-muted small">Trained machine learning models assess success/failure risk and compute contributing drivers using SHAP.</p>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="card card-modern card-3d h-100 p-3 text-center">
+                <div class="card card-modern h-100 p-3 text-center">
                     <div class="brand-shield mx-auto mb-3" style="width: 50px; height: 50px; font-size: 1.3rem;">4</div>
                     <h5 class="fw-bold">Simulate & Improve</h5>
                     <p class="text-muted small">Execute actionable advice, simulate outcomes in the What-If tool, and track your risk curve decline.</p>
