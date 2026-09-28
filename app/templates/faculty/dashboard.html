@@ -1,68 +1,80 @@
 {% extends "base.html" %}
 
-{% block title %}Faculty Project Monitoring Dashboard — ProjectGuard{% endblock %}
+{% block title %}Faculty Project Monitoring — ProjectGuard{% endblock %}
 
 {% block content %}
 <div class="container-xl py-3">
     <!-- Header -->
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 page-header mb-4">
         <div>
-            <h2 class="fw-bold mb-1">Faculty Project Monitoring Dashboard</h2>
-            <p class="text-muted small mb-0">Monitor student project risk distributions, review progress milestones, and submit faculty evaluations.</p>
+            <h1 class="page-title">Faculty Project Monitor</h1>
+            <p class="page-description">
+                Monitor student project risk distributions, review progress milestones, and submit faculty evaluations.
+            </p>
         </div>
-        <div class="badge bg-light text-dark border p-2">
-            <i class="fas fa-university me-1"></i> Department: <span class="fw-semibold">{{ current_user.department }}</span>
+        <div class="badge badge-neutral p-2">
+            <i class="fas fa-university me-1 text-gold"></i> Department: <span class="fw-semibold text-heading">{{ current_user.department or 'Engineering' }}</span>
         </div>
     </div>
 
-    <!-- Cohort Risk Statistics Summary -->
+    <!-- Cohort Risk Statistics Summary (Balanced 5-Card Grid) -->
     <div class="row g-3 mb-4">
         <div class="col-md col-6">
-            <div class="card card-modern card-stat p-3">
-                <div class="text-muted small fw-semibold text-uppercase">Total Monitored</div>
-                <div class="fs-3 fw-bold text-dark mt-1">{{ stats.total }}</div>
+            <div class="card-stat">
+                <div class="stat-label">Total Monitored</div>
+                <div class="stat-value">{{ stats.total }}</div>
+                <div class="stat-desc">Active student capstones</div>
             </div>
         </div>
         <div class="col-md col-6">
-            <div class="card card-modern card-stat stat-low p-3">
-                <div class="text-muted small fw-semibold text-uppercase">Low Risk</div>
-                <div class="fs-3 fw-bold text-success mt-1">{{ stats.low }}</div>
+            <div class="card-stat">
+                <div class="stat-label">Low Risk</div>
+                <div class="stat-value text-success">{{ stats.low }}</div>
+                <div class="stat-desc">Healthy velocity</div>
             </div>
         </div>
         <div class="col-md col-6">
-            <div class="card card-modern card-stat stat-mod p-3">
-                <div class="text-muted small fw-semibold text-uppercase">Moderate Risk</div>
-                <div class="fs-3 fw-bold text-warning mt-1">{{ stats.moderate }}</div>
+            <div class="card-stat">
+                <div class="stat-label">Moderate Risk</div>
+                <div class="stat-value text-warning">{{ stats.moderate }}</div>
+                <div class="stat-desc">Pacing warnings</div>
             </div>
         </div>
         <div class="col-md col-6">
-            <div class="card card-modern card-stat stat-high p-3">
-                <div class="text-muted small fw-semibold text-uppercase">High Risk</div>
-                <div class="fs-3 fw-bold" style="color: #ea580c;">{{ stats.high }}</div>
+            <div class="card-stat">
+                <div class="stat-label">High Risk</div>
+                <div class="stat-value" style="color: var(--risk-high);">{{ stats.high }}</div>
+                <div class="stat-desc">Delivery bottlenecks</div>
             </div>
         </div>
         <div class="col-md col-6">
-            <div class="card card-modern card-stat stat-crit p-3">
-                <div class="text-muted small fw-semibold text-uppercase">Critical Risk</div>
-                <div class="fs-3 fw-bold text-danger mt-1">{{ stats.critical }}</div>
+            <div class="card-stat">
+                <div class="stat-label">Critical Risk</div>
+                <div class="stat-value text-danger">{{ stats.critical }}</div>
+                <div class="stat-desc">Immediate triage required</div>
             </div>
         </div>
     </div>
 
     <!-- Early Warning Alerts Across Cohort -->
     {% if alerts %}
-        <div class="card card-modern border-warning border-2 p-3 mb-4 bg-warning bg-opacity-10">
-            <h6 class="fw-bold text-dark mb-2"><i class="fas fa-bell text-warning me-2"></i> Recent Cohort Early Warning Alerts</h6>
+        <div class="card card-modern p-3 mb-4 border-warning">
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <i class="fas fa-bell text-warning"></i>
+                <h3 class="h5 mb-0 text-heading">Recent Cohort Early Warning Alerts</h3>
+            </div>
             <div class="row g-2">
                 {% for alert in alerts[:3] %}
                     <div class="col-md-4">
-                        <div class="card p-2 bg-white border h-100 small">
-                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                <span class="fw-bold text-dark">{{ alert.project.project_name }}</span>
-                                <span class="badge bg-danger">+{{ alert.risk_jump }}% Risk</span>
+                        <div class="p-3 bg-light rounded-3 border h-100 d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <strong class="text-heading small">{{ alert.project.project_name }}</strong>
+                                    <span class="badge badge-risk-high">+{{ alert.risk_jump }}% Risk</span>
+                                </div>
+                                <p class="text-secondary small mb-2">{{ alert.message }}</p>
                             </div>
-                            <p class="text-muted mb-2" style="font-size: 0.8rem;">{{ alert.message }}</p>
-                            <a href="{{ url_for('faculty.project_view', project_id=alert.project.id) }}" class="btn btn-outline-danger btn-sm py-0 mt-auto">
+                            <a href="{{ url_for('faculty.project_view', project_id=alert.project.id) }}" class="btn btn-outline-secondary btn-sm mt-auto">
                                 Review Project
                             </a>
                         </div>
@@ -77,10 +89,7 @@
         <form method="GET" action="{{ url_for('faculty.dashboard') }}" class="row g-2 align-items-center">
             <!-- Search Query -->
             <div class="col-md-3">
-                <div class="input-group input-group-sm">
-                    <span class="input-group-text bg-light"><i class="fas fa-search text-muted"></i></span>
-                    <input type="text" class="form-control" name="q" value="{{ search_query }}" placeholder="Search project or tech...">
-                </div>
+                <input type="text" class="form-control form-control-sm" name="q" value="{{ search_query }}" placeholder="Search project or technology...">
             </div>
 
             <!-- Risk Filter -->
@@ -124,16 +133,16 @@
     </div>
 
     <!-- Monitored Projects Table -->
-    <div class="card card-modern border-0 shadow-sm overflow-hidden">
+    <div class="card card-modern p-0 overflow-hidden mb-4">
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                    <tr class="small text-uppercase text-muted">
+            <table class="table-modern">
+                <thead>
+                    <tr>
                         <th>Project & Student</th>
                         <th>Domain</th>
                         <th>Progress</th>
                         <th>Failure Risk</th>
-                        <th>Success %</th>
+                        <th>Success Likelihood</th>
                         <th>Risk Level</th>
                         <th>Deadline</th>
                         <th class="text-end">Actions</th>
@@ -147,29 +156,29 @@
                             {% set pred = item.prediction %}
                             <tr>
                                 <td>
-                                    <div class="fw-bold text-dark">{{ p.project_name }}</div>
-                                    <div class="small text-muted">
-                                        <i class="fas fa-user-graduate me-1"></i> {{ item.student_name }}
+                                    <div class="fw-semibold text-heading">{{ p.project_name }}</div>
+                                    <div class="small text-secondary">
+                                        <i class="fas fa-user-graduate me-1 text-gold"></i> {{ item.student_name }}
                                         {% if item.department %} • {{ item.department }}{% endif %}
                                     </div>
                                 </td>
                                 <td>
-                                    <span class="badge bg-light text-dark border">{{ p.domain }}</span>
-                                    <div class="small text-muted mt-1">Diff: {{ p.technology_difficulty }}</div>
+                                    <span class="badge badge-neutral">{{ p.domain }}</span>
+                                    <div class="small text-muted mt-1">Difficulty: {{ p.technology_difficulty }}</div>
                                 </td>
                                 <td style="min-width: 130px;">
-                                    <div class="d-flex justify-content-between small fw-semibold mb-1">
+                                    <div class="d-flex justify-content-between small fw-medium mb-1">
                                         <span>{{ item.progress_percentage }}%</span>
                                     </div>
                                     <div class="progress" style="height: 6px;">
-                                        <div class="progress-bar bg-primary" style="width: {{ item.progress_percentage }}%;"></div>
+                                        <div class="progress-bar" style="width: {{ item.progress_percentage }}%;"></div>
                                     </div>
                                 </td>
                                 <td>
-                                    <span class="fw-bold text-danger">{{ item.failure_probability }}%</span>
+                                    <span class="fw-semibold text-danger">{{ item.failure_probability }}%</span>
                                 </td>
                                 <td>
-                                    <span class="fw-bold text-success">{{ item.success_probability }}%</span>
+                                    <span class="fw-semibold text-success">{{ item.success_probability }}%</span>
                                 </td>
                                 <td>
                                     {% if item.risk_level == "LOW" %}
@@ -181,22 +190,22 @@
                                     {% elif item.risk_level == "CRITICAL" %}
                                         <span class="badge badge-risk-critical px-2 py-1">CRITICAL</span>
                                     {% else %}
-                                        <span class="badge bg-secondary px-2 py-1">UNASSESSED</span>
+                                        <span class="badge badge-neutral px-2 py-1">UNASSESSED</span>
                                     {% endif %}
                                 </td>
                                 <td>
-                                    <div class="small text-dark fw-semibold">{{ p.deadline.strftime('%b %d, %Y') }}</div>
+                                    <div class="small text-heading fw-medium">{{ p.deadline.strftime('%b %d, %Y') }}</div>
                                 </td>
                                 <td class="text-end">
-                                    <a href="{{ url_for('faculty.project_view', project_id=p.id) }}" class="btn btn-outline-primary btn-sm">
-                                        <i class="fas fa-search me-1"></i> Inspect & Review
+                                    <a href="{{ url_for('faculty.project_view', project_id=p.id) }}" class="btn btn-outline-secondary btn-sm">
+                                        Inspect & Review
                                     </a>
                                 </td>
                             </tr>
                         {% endfor %}
                     {% else %}
                         <tr>
-                            <td colspan="8" class="text-center py-4 text-muted">
+                            <td colspan="8" class="text-center py-4 text-secondary">
                                 No student projects match the specified filter criteria.
                             </td>
                         </tr>

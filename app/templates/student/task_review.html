@@ -1,28 +1,28 @@
 {% extends "base.html" %}
 
-{% block title %}Review Project Roadmap — {{ project.project_name }}{% endblock %}
+{% block title %}Tasks & Development Roadmap — {{ project.project_name }}{% endblock %}
 
 {% block content %}
 <div class="container-xl py-2">
 
     <!-- ====================================================================
-         1. PAGE HEADER & ACTIONS
+         1. PAGE HEADER (TITLE, ONE-LINE EXPLANATION, PRIMARY ACTION)
          ==================================================================== -->
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 page-header">
         <div>
             <div class="d-flex align-items-center gap-2 mb-1">
                 <span class="badge badge-ai"><i class="fas fa-sparkles me-1"></i> AI Roadmap Generated</span>
                 <span class="badge badge-neutral">{{ project.domain }}</span>
             </div>
-            <h1 class="h2 mb-1">Review Project Plan & Roadmap</h1>
-            <p class="text-secondary small mb-0">
-                Review the AI-decomposed requirements, architecture, and 6-phase development tasks before starting your project.
+            <h1 class="page-title">Tasks & Development Roadmap</h1>
+            <p class="page-description">
+                Track and manage the work required to complete your project.
             </p>
         </div>
 
         <div class="d-flex flex-wrap align-items-center gap-2">
             <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#regenerateModal">
-                <i class="fas fa-sync-alt me-1"></i> Regenerate
+                <i class="fas fa-sync-alt me-1"></i> Regenerate Plan
             </button>
             <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#addTaskModal">
                 <i class="fas fa-plus me-1"></i> Add Task
@@ -36,19 +36,19 @@
         </div>
     </div>
 
-    <!-- Meta Highlights Row -->
+    <!-- Meta Summary Stat Cards -->
     <div class="row g-3 mb-4">
         <div class="col-6 col-md-3">
             <div class="card-stat">
                 <div class="stat-label">Project</div>
                 <div class="h5 mb-0 text-heading text-truncate" title="{{ project.project_name }}">{{ project.project_name }}</div>
-                <div class="stat-desc">{{ project.team_size }} team member(s)</div>
+                <div class="stat-desc">{{ project.team_size }} collaborator(s)</div>
             </div>
         </div>
         <div class="col-6 col-md-3">
             <div class="card-stat">
                 <div class="stat-label">Total Workload</div>
-                <div class="h5 mb-0 text-primary">{{ total_tasks }} Tasks</div>
+                <div class="h5 mb-0 text-gold">{{ total_tasks }} Tasks</div>
                 <div class="stat-desc">~{{ total_hours|round(1) }} estimated hours</div>
             </div>
         </div>
@@ -56,12 +56,12 @@
             <div class="card-stat">
                 <div class="stat-label">Analysis Confidence</div>
                 <div class="h5 mb-0 text-success">{{ (project.confidence_score or 90)|round(0) }}%</div>
-                <div class="stat-desc">Requirements clarity score</div>
+                <div class="stat-desc">Requirement clarity index</div>
             </div>
         </div>
         <div class="col-6 col-md-3">
             <div class="card-stat">
-                <div class="stat-label">Technical Difficulty</div>
+                <div class="stat-label">Technical Complexity</div>
                 <div class="h5 mb-0 text-heading">{{ project.technology_difficulty or 'Medium' }}</div>
                 <div class="stat-desc">{{ project.project_type or 'Capstone' }}</div>
             </div>
@@ -69,18 +69,25 @@
     </div>
 
     <!-- ====================================================================
-         2. PROJECT ANALYSIS OVERVIEW (CLEAR STRUCTURED SECTIONS)
+         2. PROJECT ANALYSIS OVERVIEW (DISTINGUISHING CONFIRMED VS AI SUGGESTIONS)
          ==================================================================== -->
     <div class="card card-modern p-4 mb-4">
         <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
-            <h2 class="h4 mb-0">Project Architecture & Requirement Decomposition</h2>
-            <span class="badge badge-neutral">Automated Analysis</span>
+            <div>
+                <h2 class="h4 mb-0">Project Analysis & Requirements Breakdown</h2>
+                <span class="small text-secondary">Verified project scope and AI architectural inferences</span>
+            </div>
+            <span class="badge badge-ai"><i class="fas fa-sparkles me-1"></i> AI Analysis</span>
         </div>
 
         <div class="row g-4">
-            <!-- Left: Scope & Requirements -->
+            <!-- Left: CONFIRMED INFORMATION -->
             <div class="col-lg-6">
-                <!-- Project Overview -->
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="badge badge-confirmed"><i class="fas fa-check me-1"></i> CONFIRMED INFORMATION</span>
+                </div>
+
+                <!-- Project Summary -->
                 <div class="mb-3">
                     <span class="stat-label d-block mb-1">Project Summary</span>
                     <p class="small text-secondary mb-0">
@@ -88,10 +95,16 @@
                     </p>
                 </div>
 
-                <!-- Verified Requirements -->
+                <!-- Core Objective -->
+                <div class="mb-3">
+                    <span class="stat-label d-block mb-1">Core Objective</span>
+                    <p class="small text-secondary mb-0">{{ project.objective }}</p>
+                </div>
+
+                <!-- Confirmed Requirements -->
                 {% if understanding and understanding.get('required_features') %}
-                    <div class="mb-3">
-                        <span class="stat-label d-block mb-1">Confirmed Requirements</span>
+                    <div>
+                        <span class="stat-label d-block mb-1">Verified Requirements</span>
                         <div class="d-flex flex-wrap gap-1">
                             {% for feat in understanding.get('required_features') %}
                                 <span class="badge badge-neutral bg-light text-secondary">
@@ -101,29 +114,30 @@
                         </div>
                     </div>
                 {% endif %}
-
-                <!-- Core Objective -->
-                <div>
-                    <span class="stat-label d-block mb-1">Core Objective</span>
-                    <span class="small text-secondary">{{ project.objective }}</span>
-                </div>
             </div>
 
-            <!-- Right: System Architecture, Tech & Missing Gaps -->
+            <!-- Right: AI-GENERATED SUGGESTIONS -->
             <div class="col-lg-6">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="badge badge-ai"><i class="fas fa-lightbulb me-1"></i> AI SUGGESTIONS & INFERENCES</span>
+                </div>
+
                 <!-- Recommended Architecture -->
                 {% if project.architecture_recommendation %}
                     <div class="p-3 bg-light rounded-3 border mb-3">
-                        <span class="stat-label d-block mb-1 text-primary">Recommended System Architecture</span>
+                        <span class="stat-label d-block mb-1 text-gold">Recommended System Architecture</span>
                         <p class="small text-secondary mb-0">
                             {{ project.architecture_recommendation }}
                         </p>
+                        <div class="small text-muted mt-1" style="font-size: 0.72rem;">
+                            Review Recommended • Synthesized from domain patterns
+                        </div>
                     </div>
                 {% endif %}
 
-                <!-- Technologies & Dependencies -->
+                <!-- Technologies & Libraries -->
                 <div class="mb-3">
-                    <span class="stat-label d-block mb-1">Identified Technologies & Libraries</span>
+                    <span class="stat-label d-block mb-1">Identified Technologies</span>
                     <div class="d-flex flex-wrap gap-1">
                         {% for tech in project.technologies.split(',') %}
                             <span class="badge badge-neutral">{{ tech.strip() }}</span>
@@ -131,10 +145,10 @@
                     </div>
                 </div>
 
-                <!-- Assumptions or Gaps (If Any) -->
+                <!-- Missing Requirements / Edge Cases -->
                 {% if understanding and understanding.get('potential_missing_requirements') %}
                     <div class="p-3 bg-light rounded-3 border">
-                        <span class="stat-label d-block mb-1 text-warning">Potential Missing Requirements / Recommendations</span>
+                        <span class="stat-label d-block mb-1 text-warning">Potential Missing Requirements</span>
                         <ul class="mb-0 ps-3 small text-secondary">
                             {% for gap in understanding.get('potential_missing_requirements') %}
                                 <li>{{ gap }}</li>
@@ -147,16 +161,15 @@
     </div>
 
     <!-- ====================================================================
-         3. 6-PHASE TASK ROADMAP & TASK MANAGEMENT
+         3. 6-PHASE DEVELOPMENT ROADMAP & TASK MANAGEMENT
          ==================================================================== -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
         <div>
-            <h2 class="h4 mb-0">6-Phase Development Roadmap</h2>
-            <span class="small text-muted">Tasks mapped sequentially across the complete project lifecycle</span>
+            <h2 class="h4 mb-0">Development Roadmap</h2>
+            <span class="small text-secondary">Structured milestones across 6 lifecycle phases</span>
         </div>
-        <!-- Quick Search Filter -->
         <div class="d-flex align-items-center gap-2">
-            <input type="text" id="taskSearchInput" class="form-control form-control-sm" placeholder="Search tasks..." style="max-width: 220px;" onkeyup="filterTasks()">
+            <input type="text" id="taskSearchInput" class="form-control form-control-sm" placeholder="Filter tasks by name..." style="max-width: 220px;" onkeyup="filterTasks()">
         </div>
     </div>
 
@@ -166,7 +179,7 @@
                 <!-- Phase Header -->
                 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 pb-2 border-bottom">
                     <div class="d-flex align-items-center gap-2">
-                        <span class="badge badge-neutral fw-bold">Phase {{ phase.phase_number }}</span>
+                        <span class="step-number" style="width: 24px; height: 24px; font-size: 0.75rem;">{{ phase.phase_number }}</span>
                         <h3 class="h4 mb-0">{{ phase.name }}</h3>
                         <span class="badge badge-neutral text-muted">{{ phase.tasks|length }} tasks</span>
                     </div>
@@ -183,7 +196,7 @@
                                 <div>
                                     <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
                                         <span class="badge {% if task.priority == 'Critical' %}badge-risk-critical{% elif task.priority == 'High' %}badge-risk-moderate{% else %}badge-neutral{% endif %}">
-                                            {{ task.priority }}
+                                            {{ task.priority }} Priority
                                         </span>
                                         <span class="badge badge-neutral">{{ task.category }}</span>
                                         <span class="badge badge-neutral text-muted">{{ task.estimated_hours }} hrs</span>
@@ -197,7 +210,7 @@
                                     <p class="small text-secondary mb-1">{{ task.description }}</p>
                                     {% if task.requirement_source %}
                                         <span class="badge badge-neutral bg-white text-muted" style="font-size: 0.7rem;">
-                                            Requirement: {{ task.requirement_source }}
+                                            Source: {{ task.requirement_source }}
                                         </span>
                                     {% endif %}
                                 </div>
@@ -205,12 +218,13 @@
                                 <!-- Actions -->
                                 <div class="d-flex align-items-center gap-1">
                                     <button type="button" class="btn btn-outline-secondary btn-sm"
-                                            onclick="openEditModal({{ task.id }}, '{{ task.title|replace("'", "\\'") }}', '{{ (task.description or '')|replace("'", "\\'") }}', '{{ task.category }}', '{{ task.priority }}', '{{ task.difficulty }}', '{{ task.phase }}', {{ task.estimated_hours }})">
+                                            onclick="openEditModal({{ task.id }}, '{{ task.title|replace("'", "\\'") }}', '{{ (task.description or '')|replace("'", "\\'") }}', '{{ task.category }}', '{{ task.priority }}', '{{ task.difficulty }}', '{{ task.phase }}', {{ task.estimated_hours }})"
+                                            title="Edit Task">
                                         <i class="fas fa-pencil-alt"></i>
                                     </button>
                                     <form method="POST" action="{{ url_for('student.delete_task', project_id=project.id, task_id=task.id) }}" class="m-0" onsubmit="return confirm('Delete this task?');">
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                                        <button type="submit" class="btn btn-outline-secondary btn-sm text-danger" title="Delete Task">
                                             <i class="fas fa-trash-alt"></i>
                                         </button>
                                     </form>
@@ -239,7 +253,7 @@
 </div>
 
 <!-- ====================================================================
-     MODALS (CENTERED & PROPERLY SIZED)
+     MODALS (CENTERED, MINIMAL, ZERO JITTER)
      ==================================================================== -->
 
 <!-- 1. EDIT TASK MODAL -->
@@ -314,7 +328,7 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="addTaskModalLabel">Add New Milestone Task</h5>
+                <h5 class="modal-title" id="addTaskModalLabel">Add Milestone Task</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form method="POST" action="{{ url_for('student.add_task', project_id=project.id) }}" id="addTaskForm">

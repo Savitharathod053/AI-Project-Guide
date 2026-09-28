@@ -8,26 +8,26 @@
         <div class="col-lg-9 col-xl-8">
 
             <!-- Page Header -->
-            <div class="mb-4">
+            <div class="page-header mb-4">
                 <div class="d-flex align-items-center gap-2 mb-1">
-                    <span class="badge badge-risk-moderate">Clarification Required</span>
+                    <span class="badge badge-gold">Scope Refinement</span>
                     <span class="badge badge-neutral">{{ project.domain }}</span>
                 </div>
-                <h1 class="h2 mb-1">Refine Project Requirements</h1>
-                <p class="text-secondary small mb-0">
-                    To prevent generating generic milestones, answer the targeted questions below to customize your 6-phase roadmap.
+                <h1 class="page-title">Project Clarification</h1>
+                <p class="page-description">
+                    Answer a few brief questions so Project Guard can calibrate your project scope and generate precise tasks.
                 </p>
             </div>
 
-            <!-- Current Scope Summary -->
+            <!-- Current Scope Summary (Confirmed Information) -->
             <div class="card card-modern p-4 mb-4">
-                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2 pb-2 border-bottom">
                     <div>
-                        <span class="stat-label d-block">Project Title</span>
-                        <h2 class="h4 mb-1">{{ project.project_name }}</h2>
+                        <span class="stat-label d-block">Project Name</span>
+                        <h2 class="h4 mb-0">{{ project.project_name }}</h2>
                     </div>
                     <span class="badge badge-neutral">
-                        Confidence: {{ (project.confidence_score or 65)|round(0) }}%
+                        Clarity Score: {{ (project.confidence_score or 65)|round(0) }}%
                     </span>
                 </div>
                 <p class="small text-secondary mb-3">
@@ -44,10 +44,13 @@
 
             <!-- Clarification Questions Form -->
             <div class="card card-modern p-4 mb-4">
-                <h2 class="h4 mb-1">Clarification Questions</h2>
-                <p class="small text-secondary mb-4">
-                    Provide brief responses to ensure the roadmap addresses your core implementation details.
-                </p>
+                <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                    <div>
+                        <h2 class="h4 mb-0">Clarification Questions</h2>
+                        <span class="small text-secondary">Specific details needed to avoid generic development tasks</span>
+                    </div>
+                    <span class="badge badge-ai"><i class="fas fa-sparkles me-1"></i> AI Request</span>
+                </div>
 
                 <form method="POST" id="clarifyForm" action="{{ url_for('student.clarify_project', project_id=project.id) }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
@@ -55,10 +58,11 @@
                     {% for q in questions %}
                         <div class="p-3 bg-light rounded-3 border mb-3">
                             <label for="question_{{ loop.index0 }}" class="form-label d-flex align-items-start gap-2 mb-2">
-                                <span class="badge badge-neutral">{{ loop.index }}</span>
-                                <span class="text-heading">{{ q }}</span>
+                                <span class="step-number" style="width: 22px; height: 22px; font-size: 0.7rem;">{{ loop.index }}</span>
+                                <span class="text-heading fw-semibold">{{ q }}</span>
                             </label>
-                            <textarea class="form-control" id="question_{{ loop.index0 }}" name="question_{{ loop.index0 }}" rows="2" placeholder="Your response (key tools, algorithms, or expected user interactions)..." required></textarea>
+                            <textarea class="form-control" id="question_{{ loop.index0 }}" name="question_{{ loop.index0 }}" rows="2" placeholder="Your response (e.g. specific frameworks, dataset format, user roles)..." required></textarea>
+                            <div class="form-text">Your answer directly influences module breakdown and phase scheduling.</div>
                         </div>
                     {% else %}
                         <div class="p-3 bg-light rounded-3 border mb-3">
@@ -74,24 +78,24 @@
                         <label for="general_notes" class="form-label">
                             Additional Constraints (Optional)
                         </label>
-                        <textarea class="form-control" id="general_notes" name="general_notes" rows="2" placeholder="e.g. Must support offline operation, do not include complex external payment processors..."></textarea>
+                        <textarea class="form-control" id="general_notes" name="general_notes" rows="2" placeholder="e.g. Must support offline operation, no paid external cloud APIs..."></textarea>
                     </div>
 
-                    <div class="d-flex justify-content-end gap-2 pt-2 border-top">
+                    <div class="d-flex justify-content-between align-items-center pt-3 border-top">
                         <a href="{{ url_for('student.dashboard') }}" class="btn btn-outline-secondary">
                             Cancel
                         </a>
                         <button type="submit" class="btn btn-primary" id="submitBtn">
-                            <i class="fas fa-check me-1"></i> Submit Clarifications & Generate Roadmap
+                            <i class="fas fa-check me-1"></i> Submit Clarifications & Generate Tasks
                         </button>
                     </div>
                 </form>
 
                 <!-- Processing Overlay -->
                 <div id="loadingOverlay" class="d-none text-center py-4">
-                    <div class="spinner-border text-primary mb-3" role="status" style="width: 2.5rem; height: 2.5rem;"></div>
-                    <h3 class="h4 mb-1">Synthesizing Project Requirements...</h3>
-                    <p class="text-muted small mb-0">Applying your clarifications to generate customized milestone tasks.</p>
+                    <div class="spinner-border text-gold mb-3" role="status" style="width: 2.75rem; height: 2.75rem;"></div>
+                    <h3 class="h4 mb-1">Synthesizing Project Requirements</h3>
+                    <p class="text-secondary small mb-0">Applying your clarifications to generate customized milestone tasks.</p>
                 </div>
             </div>
 

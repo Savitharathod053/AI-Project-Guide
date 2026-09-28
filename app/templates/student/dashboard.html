@@ -6,16 +6,16 @@
 <div class="container-xl">
 
     <!-- ====================================================================
-         1. PAGE HEADER
+         1. PAGE HEADER (TITLE, ONE-LINE EXPLANATION, PRIMARY ACTION)
          ==================================================================== -->
     {% set primary_item = project_cards[0] if project_cards else none %}
     {% set primary_project = primary_item.project if primary_item else none %}
 
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 page-header">
         <div>
-            <h1 class="h2 mb-1">Project Dashboard</h1>
-            <p class="text-secondary small mb-0">
-                Track your active academic projects, monitor delivery risks, and execute structured milestones.
+            <h1 class="page-title">Project Dashboard</h1>
+            <p class="page-description">
+                Create, analyze, and track all your academic projects and execution milestones in one place.
             </p>
         </div>
         <div class="d-flex align-items-center gap-2">
@@ -25,7 +25,7 @@
                 </a>
             {% endif %}
             <a href="{{ url_for('student.create_project') }}" class="btn btn-primary">
-                <i class="fas fa-plus me-1"></i> New Project
+                <i class="fas fa-plus me-1"></i> + Create Project
             </a>
         </div>
     </div>
@@ -37,13 +37,13 @@
                 <div class="d-flex align-items-center gap-2">
                     <i class="fas fa-exclamation-triangle text-warning fs-5"></i>
                     <div>
-                        <strong class="d-block text-heading small">Risk Increase (+{{ alert.risk_jump }}%) — {{ alert.project.project_name }}</strong>
+                        <strong class="d-block text-heading small">Risk Escalation (+{{ alert.risk_jump }}%) — {{ alert.project.project_name }}</strong>
                         <span class="small text-secondary">{{ alert.message }}</span>
                     </div>
                 </div>
                 <div class="d-flex gap-2">
                     <a href="{{ url_for('student.project_detail', project_id=alert.project.id) }}" class="btn btn-sm btn-outline-secondary">
-                        Inspect
+                        Open Project
                     </a>
                     <form method="POST" action="{{ url_for('student.mark_alert_read', alert_id=alert.id) }}" class="m-0">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
@@ -55,7 +55,7 @@
     {% endif %}
 
     <!-- ====================================================================
-         2. IMPORTANT STATISTICS (4-CARD GRID)
+         2. KEY PROJECT STATISTICS (BALANCED 4-CARD GRID)
          ==================================================================== -->
     {% set total_completed = project_cards|sum(attribute='completed_tasks') if project_cards else 0 %}
     {% set total_tasks_count = project_cards|sum(attribute='total_tasks') if project_cards else 0 %}
@@ -70,7 +70,7 @@
                     <div class="stat-label">Total Projects</div>
                     <div class="stat-value">{{ stats.total }}</div>
                 </div>
-                <div class="stat-desc">Registered projects</div>
+                <div class="stat-desc">Registered workspaces</div>
             </div>
         </div>
 
@@ -79,7 +79,7 @@
             <div class="card-stat">
                 <div>
                     <div class="stat-label">Active Projects</div>
-                    <div class="stat-value text-primary">{{ active_projects_count }}</div>
+                    <div class="stat-value text-gold">{{ active_projects_count }}</div>
                 </div>
                 <div class="stat-desc">Currently tracked</div>
             </div>
@@ -101,37 +101,38 @@
             <div class="card-stat">
                 <div>
                     <div class="stat-label">Pending Tasks</div>
-                    <div class="stat-value text-warning">{{ total_pending }}</div>
+                    <div class="stat-value text-secondary">{{ total_pending }}</div>
                 </div>
-                <div class="stat-desc">Remaining backlog</div>
+                <div class="stat-desc">Awaiting execution</div>
             </div>
         </div>
     </div>
 
     {% if project_cards %}
         <!-- ================================================================
-             3. MAIN CONTENT: PRIMARY PROJECT OVERVIEW
+             3. ACTIVE PROJECTS & WORKSPACE SPOTLIGHT
              ================================================================ -->
         <div class="card card-modern p-4 mb-4">
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 pb-3 border-bottom">
                 <div>
                     <div class="d-flex align-items-center gap-2 mb-1">
-                        <span class="badge badge-neutral">Active Focus</span>
+                        <span class="badge badge-gold">Active Spotlight</span>
                         <span class="badge badge-neutral">{{ primary_project.domain }}</span>
                         {% if primary_project.project_category in ['hardware', 'hybrid'] %}
                             <a href="{{ url_for('student.hardware_feasibility', project_id=primary_project.id) }}" class="badge badge-neutral text-decoration-none">
-                                <i class="fas fa-microchip me-1"></i> Hardware BuildCheck
+                                <i class="fas fa-microchip me-1 text-gold"></i> Hardware Feasibility
                             </a>
                         {% endif %}
                     </div>
                     <h2 class="h3 mb-0">{{ primary_project.project_name }}</h2>
+                    <p class="small text-secondary mb-0 mt-1">{{ primary_project.objective or primary_project.description[:120] + '...' }}</p>
                 </div>
 
                 <div class="d-flex align-items-center gap-2">
                     {% if project_cards|length > 1 %}
                         <div class="dropdown">
                             <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                Switch Project
+                                Switch Focus
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end shadow-sm">
                                 {% for card_item in project_cards %}
@@ -145,21 +146,21 @@
                         </div>
                     {% endif %}
                     <a href="{{ url_for('student.project_detail', project_id=primary_project.id) }}" class="btn btn-primary btn-sm">
-                        View Workspace <i class="fas fa-arrow-right ms-1"></i>
+                        Open Project <i class="fas fa-arrow-right ms-1"></i>
                     </a>
                 </div>
             </div>
 
-            <!-- Two-Column Grid: Left Progress, Right Risk & Health -->
+            <!-- Two-Column Grid: Left Progress & Milestones, Right Health & Risk Assessment -->
             <div class="row g-4">
-                <!-- Left: Progress, Velocity, Phases -->
+                <!-- Left: Progress & Milestones -->
                 <div class="col-lg-6">
                     <h3 class="h4 mb-3">Task Progress & Milestones</h3>
 
                     {% set prog_pct = primary_project.calculated_progress_pct or 0 %}
                     <div class="p-3 bg-light rounded-3 mb-3 border">
                         <div class="d-flex align-items-center justify-content-between mb-2">
-                            <span class="small fw-semibold text-heading">Task Completion</span>
+                            <span class="small fw-semibold text-heading">Milestone Completion</span>
                             <span class="small text-secondary">{{ primary_item.completed_tasks }} of {{ primary_item.total_tasks }} tasks ({{ prog_pct }}%)</span>
                         </div>
                         <div class="progress mb-3">
@@ -183,15 +184,20 @@
 
                     <!-- 6-Phase Development Roadmap Tags -->
                     <div class="p-3 bg-light rounded-3 border">
-                        <span class="stat-label d-block mb-2">6-Phase Development Roadmap</span>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="stat-label">6-Phase Development Roadmap</span>
+                            <a href="{{ url_for('student.review_tasks', project_id=primary_project.id) }}" class="small text-decoration-none fw-semibold">
+                                View Tasks <i class="fas fa-arrow-right ms-1"></i>
+                            </a>
+                        </div>
                         <div class="d-flex flex-wrap gap-1">
                             {% set phases = [
-                                "1. Research",
-                                "2. UI/UX Design",
-                                "3. Core Dev",
-                                "4. Database",
-                                "5. Testing",
-                                "6. Deployment"
+                                "1. Research & Architecture",
+                                "2. UI/UX Interface",
+                                "3. Core Backend Development",
+                                "4. Database & Models",
+                                "5. Testing & Quality Assurance",
+                                "6. Deployment & Viva Prep"
                             ] %}
                             {% for ph in phases %}
                                 <span class="badge badge-neutral bg-white">{{ ph }}</span>
@@ -200,7 +206,7 @@
                     </div>
                 </div>
 
-                <!-- Right: Health, Risk Probability & Upcoming Tasks -->
+                <!-- Right: Health & Risk Assessment -->
                 <div class="col-lg-6">
                     <h3 class="h4 mb-3">Health & Risk Assessment</h3>
 
@@ -212,7 +218,7 @@
                             </div>
                             <div>
                                 {% if primary_item.risk_level == 'LOW' %}
-                                    <span class="badge badge-risk-low px-2 py-1">Low Risk</span>
+                                    <span class="badge badge-risk-low px-2 py-1">Low Delivery Risk</span>
                                 {% elif primary_item.risk_level == 'MODERATE' %}
                                     <span class="badge badge-risk-moderate px-2 py-1">Moderate Risk</span>
                                 {% elif primary_item.risk_level == 'HIGH' %}
@@ -225,19 +231,23 @@
 
                         <!-- Success vs Failure Probability Meter -->
                         <div class="d-flex justify-content-between small fw-medium mb-1">
-                            <span class="text-success">Success Chance: {{ primary_item.success_probability }}%</span>
-                            <span class="text-danger">Failure Risk: {{ primary_item.failure_probability }}%</span>
+                            <span class="text-success">Success Likelihood: {{ primary_item.success_probability }}%</span>
+                            <span class="text-danger">Delivery Risk: {{ primary_item.failure_probability }}%</span>
                         </div>
-                        <div class="risk-meter-container mb-2">
-                            <div class="risk-meter-success" style="width: {{ primary_item.success_probability }}%;"></div>
-                            <div class="risk-meter-failure" style="width: {{ primary_item.failure_probability }}%;"></div>
+                        <div class="progress mb-2" style="height: 6px;">
+                            <div class="progress-bar bg-success" style="width: {{ primary_item.success_probability }}%;"></div>
                         </div>
-                        <span class="small text-muted">Estimated through ML classification and activity timeline pacing.</span>
+                        <span class="small text-muted">Forecasted through ML classification model and timeline pacing analysis.</span>
                     </div>
 
                     <!-- Upcoming Pending Tasks -->
                     <div class="p-3 bg-light rounded-3 border">
-                        <span class="stat-label d-block mb-2">Upcoming Immediate Tasks</span>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="stat-label">Immediate Milestone Tasks</span>
+                            <a href="{{ url_for('student.project_detail', project_id=primary_project.id, _anchor='tasks-tab') }}" class="small text-decoration-none fw-semibold">
+                                Full Board <i class="fas fa-arrow-right ms-1"></i>
+                            </a>
+                        </div>
                         {% set pending_tasks = primary_item.pending_tasks if primary_item and primary_item.pending_tasks is defined else [] %}
                         {% if pending_tasks %}
                             <ul class="list-unstyled mb-0">
@@ -262,137 +272,155 @@
         </div>
 
         <!-- ================================================================
-             4. RECENT PROJECTS LIST
+             4. ALL PROJECTS LIST (SEARCH, FILTER & ACTIONS)
              ================================================================ -->
-        {% if project_cards|length > 1 %}
-            <div class="card card-modern p-4 mb-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h3 class="h4 mb-0">All Projects ({{ project_cards|length }})</h3>
-                    <span class="small text-muted">Complete list of registered workspaces</span>
+        <div class="card card-modern p-4 mb-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+                <div>
+                    <h3 class="h4 mb-0">All Projects</h3>
+                    <span class="small text-secondary">View and manage all your registered projects</span>
                 </div>
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Project Name</th>
-                                <th>Domain</th>
-                                <th>Health</th>
-                                <th>Risk Level</th>
-                                <th>Task Completion</th>
-                                <th>Deadline</th>
-                                <th class="text-end">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for c in project_cards %}
-                                <tr>
-                                    <td>
-                                        <a href="{{ url_for('student.project_detail', project_id=c.project.id) }}" class="fw-semibold text-heading text-decoration-none">
-                                            {{ c.project.project_name }}
-                                        </a>
-                                    </td>
-                                    <td><span class="badge badge-neutral">{{ c.project.domain }}</span></td>
-                                    <td><strong>{{ c.health_score }}%</strong></td>
-                                    <td>
-                                        {% if c.risk_level == 'LOW' %}
-                                            <span class="badge badge-risk-low">Low</span>
-                                        {% elif c.risk_level == 'MODERATE' %}
-                                            <span class="badge badge-risk-moderate">Moderate</span>
-                                        {% elif c.risk_level == 'HIGH' %}
-                                            <span class="badge badge-risk-high">High</span>
-                                        {% else %}
-                                            <span class="badge badge-risk-critical">Critical</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        <div class="d-flex align-items-center gap-2" style="min-width: 140px;">
-                                            <div class="progress flex-grow-1" style="height: 5px;">
-                                                <div class="progress-bar" style="width: {{ c.project.calculated_progress_pct }}%;"></div>
-                                            </div>
-                                            <span class="small text-muted">{{ c.completed_tasks }}/{{ c.total_tasks }}</span>
-                                        </div>
-                                    </td>
-                                    <td class="small text-muted">{{ c.project.deadline.strftime('%b %d, %Y') }}</td>
-                                    <td class="text-end">
-                                        <a href="{{ url_for('student.project_detail', project_id=c.project.id) }}" class="btn btn-outline-secondary btn-sm">
-                                            Workspace
-                                        </a>
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                <div class="d-flex align-items-center gap-2">
+                    <input type="text" id="projectSearchInput" class="form-control form-control-sm" placeholder="Search projects..." style="max-width: 200px;" onkeyup="filterProjectTable()">
                 </div>
             </div>
-        {% endif %}
+
+            <div class="table-responsive">
+                <table class="table-modern" id="projectsTable">
+                    <thead>
+                        <tr>
+                            <th>Project Name & Description</th>
+                            <th>Domain</th>
+                            <th>Status & Risk</th>
+                            <th>Progress</th>
+                            <th>Deadline</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in project_cards %}
+                            <tr class="project-row">
+                                <td style="max-width: 300px;">
+                                    <div class="fw-semibold text-heading project-name-text">{{ c.project.project_name }}</div>
+                                    <div class="small text-secondary text-truncate" title="{{ c.project.description }}">{{ c.project.description[:90] }}...</div>
+                                    <div class="small text-muted mt-1">Tech: {{ c.project.technologies or 'Standard Stack' }}</div>
+                                </td>
+                                <td><span class="badge badge-neutral">{{ c.project.domain }}</span></td>
+                                <td>
+                                    {% if c.risk_level == 'LOW' %}
+                                        <span class="badge badge-risk-low">Low Risk ({{ c.health_score }}%)</span>
+                                    {% elif c.risk_level == 'MODERATE' %}
+                                        <span class="badge badge-risk-moderate">Moderate Risk ({{ c.health_score }}%)</span>
+                                    {% elif c.risk_level == 'HIGH' %}
+                                        <span class="badge badge-risk-high">High Risk ({{ c.health_score }}%)</span>
+                                    {% else %}
+                                        <span class="badge badge-risk-critical">Critical Risk ({{ c.health_score }}%)</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2" style="min-width: 140px;">
+                                        <div class="progress flex-grow-1" style="height: 6px;">
+                                            <div class="progress-bar" style="width: {{ c.project.calculated_progress_pct }}%;"></div>
+                                        </div>
+                                        <span class="small text-secondary">{{ c.completed_tasks }}/{{ c.total_tasks }}</span>
+                                    </div>
+                                </td>
+                                <td class="small text-secondary">{{ c.project.deadline.strftime('%b %d, %Y') }}</td>
+                                <td class="text-end">
+                                    <div class="d-inline-flex gap-1">
+                                        <a href="{{ url_for('student.project_detail', project_id=c.project.id) }}" class="btn btn-outline-secondary btn-sm" title="Open Project Workspace">
+                                            Open Project
+                                        </a>
+                                        <a href="{{ url_for('student.review_tasks', project_id=c.project.id) }}" class="btn btn-secondary btn-sm" title="View Tasks">
+                                            View Tasks
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
         <!-- ================================================================
-             5. AI INSIGHTS & RECOMMENDATIONS
+             5. AI INSIGHTS & RECOMMENDATIONS (LABELED ACCURATELY)
              ================================================================ -->
         <div class="card card-modern p-4 mb-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div class="d-flex align-items-center gap-2">
-                    <span class="badge badge-ai"><i class="fas fa-sparkles me-1"></i> AI Insight</span>
-                    <h3 class="h4 mb-0">Automated Intelligence & Advisory</h3>
+                    <span class="badge badge-ai"><i class="fas fa-sparkles me-1"></i> AI Analysis</span>
+                    <h3 class="h4 mb-0">AI Insights & Recommendations</h3>
                 </div>
-                <span class="small text-muted">Heuristic & ML recommendations</span>
+                <span class="small text-muted">Advisory heuristics and machine learning insights</span>
             </div>
 
             <div class="row g-3">
-                <!-- AI Task Recommendation -->
+                <!-- 1. AI Recommendation: Pacing -->
                 <div class="col-md-4">
                     <div class="p-3 bg-light rounded-3 border h-100 d-flex flex-column justify-content-between">
                         <div>
-                            <div class="d-flex align-items-center gap-2 mb-2">
-                                <i class="fas fa-lightbulb text-warning"></i>
-                                <span class="fw-semibold small text-heading">Pacing Recommendation</span>
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span class="badge badge-ai">AI RECOMMENDATION</span>
+                                <span class="badge badge-neutral">Timeline</span>
                             </div>
-                            <p class="small text-secondary mb-3">
+                            <h4 class="h5 mb-1">Development Pacing Advisory</h4>
+                            <p class="small text-secondary mb-2">
                                 {% if primary_item.health_score < 70 %}
-                                    Velocity is lagging behind schedule. Prioritize unblocking pending critical tasks and write unit tests to stabilize delivery pacing.
+                                    Milestone velocity is tracking behind schedule for {{ primary_project.project_name }}. Focus on completing outstanding core tasks before expanding application features.
                                 {% else %}
-                                    Project trajectory is healthy. Continue focusing on milestone completion in accordance with your 6-phase roadmap.
+                                    Current progress is aligned with your delivery deadline. Continue testing modules iteratively to prevent pre-submission regressions.
                                 {% endif %}
                             </p>
+                            <div class="small text-muted">
+                                <strong>Why this was suggested:</strong> Derived from deadline days remaining vs. completed milestone ratios.
+                            </div>
                         </div>
-                        <span class="badge badge-neutral align-self-start">Continuous Mentor</span>
                     </div>
                 </div>
 
-                <!-- Missing Tasks Scanner -->
+                <!-- 2. AI Suggestion: Gap Scanner -->
                 <div class="col-md-4">
                     <div class="p-3 bg-light rounded-3 border h-100 d-flex flex-column justify-content-between">
                         <div>
-                            <div class="d-flex align-items-center gap-2 mb-2">
-                                <i class="fas fa-search-plus text-primary"></i>
-                                <span class="fw-semibold small text-heading">Roadmap Gaps Scanner</span>
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span class="badge badge-ai">AI SUGGESTION</span>
+                                <span class="badge badge-neutral">Quality</span>
                             </div>
-                            <p class="small text-secondary mb-3">
-                                Automatically scan for missing testing, security, and documentation tasks across your phases.
+                            <h4 class="h5 mb-1">Roadmap Gap Scanner</h4>
+                            <p class="small text-secondary mb-2">
+                                Automatically scan your project phases for overlooked edge cases, security validations, and test coverage requirements.
                             </p>
+                            <div class="small text-muted mb-3">
+                                <strong>Why this was suggested:</strong> Common capstone pitfalls frequently stem from omitted testing tasks.
+                            </div>
                         </div>
                         <form method="POST" action="{{ url_for('student.scan_missing_tasks', project_id=primary_project.id) }}" class="m-0">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                            <button type="submit" class="btn btn-outline-primary btn-sm w-100">
+                            <button type="submit" class="btn btn-outline-secondary btn-sm w-100">
                                 <i class="fas fa-search me-1"></i> Scan Missing Tasks
                             </button>
                         </form>
                     </div>
                 </div>
 
-                <!-- What-If Simulator -->
+                <!-- 3. What-If Risk Simulation -->
                 <div class="col-md-4">
                     <div class="p-3 bg-light rounded-3 border h-100 d-flex flex-column justify-content-between">
                         <div>
-                            <div class="d-flex align-items-center gap-2 mb-2">
-                                <i class="fas fa-sliders-h text-success"></i>
-                                <span class="fw-semibold small text-heading">What-If Risk Simulation</span>
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span class="badge badge-gold">SIMULATOR</span>
+                                <span class="badge badge-neutral">Predictive</span>
                             </div>
-                            <p class="small text-secondary mb-3">
-                                Simulate changes in team hours, task delays, and test coverage to forecast outcome risks before they happen.
+                            <h4 class="h5 mb-1">What-If Risk Simulator</h4>
+                            <p class="small text-secondary mb-2">
+                                Model changes in team hours, delayed milestones, or increased scope to observe risk score fluctuations in real time.
                             </p>
+                            <div class="small text-muted mb-3">
+                                <strong>Why this was suggested:</strong> Evaluate alternative project trajectories without modifying live data.
+                            </div>
                         </div>
-                        <a href="{{ url_for('student.what_if_simulator', project_id=primary_project.id) }}" class="btn btn-outline-secondary btn-sm w-100">
+                        <a href="{{ url_for('student.what_if_simulator', project_id=primary_project.id) }}" class="btn btn-primary btn-sm w-100">
                             <i class="fas fa-play me-1"></i> Launch Simulator
                         </a>
                     </div>
@@ -401,7 +429,7 @@
         </div>
 
         <!-- ================================================================
-             6. SECONDARY INFORMATION: SMART RESOURCES
+             6. SECONDARY INFORMATION: SMART RESOURCES & TOOLS
              ================================================================ -->
         {% set p_apis = primary_project.resources.filter_by(resource_type='API').all() if primary_project.resources else [] %}
         {% set p_datasets = primary_project.resources.filter_by(resource_type='Dataset').all() if primary_project.resources else [] %}
@@ -410,11 +438,11 @@
         <div class="card card-modern p-4 mb-4">
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
                 <div>
-                    <h3 class="h4 mb-0">Verified External Resources & Tools</h3>
+                    <h3 class="h4 mb-0">Verified Smart Resources & Tools</h3>
                     <span class="small text-secondary">Pre-screened APIs, datasets, and tool recommendations for {{ primary_project.project_name }}</span>
                 </div>
                 <a href="{{ url_for('student.project_detail', project_id=primary_project.id, _anchor='resources-tab') }}" class="btn btn-outline-secondary btn-sm">
-                    View All in Workspace <i class="fas fa-arrow-right ms-1"></i>
+                    Open in Workspace <i class="fas fa-arrow-right ms-1"></i>
                 </a>
             </div>
 
@@ -422,7 +450,7 @@
             <ul class="nav nav-pills gap-2 mb-3 border-bottom pb-2" id="resourceTabs" role="tablist">
                 <li class="nav-item" role="presentation">
                     <button class="nav-link active" id="tab-apis-btn" data-bs-toggle="tab" data-bs-target="#tab-apis-panel" type="button" role="tab">
-                        <i class="fas fa-network-wired me-1"></i> APIs ({{ p_apis|length }})
+                        <i class="fas fa-network-wired me-1"></i> Verified APIs ({{ p_apis|length }})
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
@@ -432,7 +460,7 @@
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link" id="tab-tools-btn" data-bs-toggle="tab" data-bs-target="#tab-tools-panel" type="button" role="tab">
-                        <i class="fas fa-robot me-1"></i> AI Tools ({{ p_tools|length }})
+                        <i class="fas fa-robot me-1"></i> AI Development Tools ({{ p_tools|length }})
                     </button>
                 </li>
             </ul>
@@ -527,7 +555,7 @@
                                             <p class="small text-secondary mb-2">{{ tool.reason }}</p>
                                         </div>
                                         <div class="d-flex gap-2 pt-2 border-top">
-                                            <button type="button" class="btn btn-outline-primary btn-sm"
+                                            <button type="button" class="btn btn-outline-secondary btn-sm"
                                                     onclick="copyPrompt(this, `{{ tool.generated_prompt|replace('`', '\\`') }}`)">
                                                 <i class="fas fa-copy me-1"></i> Copy Prompt
                                             </button>
@@ -552,21 +580,34 @@
 
     {% else %}
         <!-- ================================================================
-             EMPTY STATE (WHEN NO PROJECTS EXIST)
+             7. EMPTY STATE (EXPLICIT: WHAT HAPPENED, WHY EMPTY, NEXT ACTION)
              ================================================================ -->
         <div class="empty-state">
             <div class="empty-state-icon">
-                <i class="fas fa-folder-plus"></i>
+                <i class="fas fa-folder-plus text-muted"></i>
             </div>
             <h2 class="empty-state-title">No projects yet</h2>
-            <p class="empty-state-text">
-                Create your first project to start analyzing requirements, formulating 6-phase task roadmaps, and predicting delivery risks.
+            <p class="empty-state-desc">
+                You haven't registered or analyzed any academic projects in your workspace. Create your first project to let Project Guard analyze requirements, detect potential delivery risks, and generate your development roadmap.
             </p>
-            <a href="{{ url_for('student.create_project') }}" class="btn btn-primary">
-                <i class="fas fa-plus me-1"></i> Create Your First Project
+            <a href="{{ url_for('student.create_project') }}" class="btn btn-primary btn-lg">
+                <i class="fas fa-plus me-1"></i> Create Project
             </a>
         </div>
     {% endif %}
 
 </div>
+
+<script>
+function filterProjectTable() {
+    var input = document.getElementById("projectSearchInput");
+    var filter = input.value.toLowerCase();
+    var rows = document.querySelectorAll("#projectsTable tbody tr");
+
+    rows.forEach(function(row) {
+        var text = row.textContent.toLowerCase();
+        row.style.display = text.indexOf(filter) > -1 ? "" : "none";
+    });
+}
+</script>
 {% endblock %}

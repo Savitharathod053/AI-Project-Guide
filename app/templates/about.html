@@ -1,34 +1,46 @@
 {% extends "base.html" %}
 
-{% block title %}Methodology & AI Architecture — ProjectGuard{% endblock %}
+{% block title %}AI & Methodology — ProjectGuard{% endblock %}
 
 {% block content %}
-<div class="container-xl py-4">
+<div class="container-xl py-2">
+    <!-- Page Header -->
+    <div class="page-header mb-4">
+        <div class="d-flex align-items-center gap-2 mb-1">
+            <span class="badge badge-gold"><i class="fas fa-microchip me-1"></i> Technical Architecture</span>
+            <span class="badge badge-neutral">Explainable AI</span>
+        </div>
+        <h1 class="page-title">AI & Methodology</h1>
+        <p class="page-description">
+            Understand the data engineering, machine learning pipelines, and responsible AI principles powering Project Guard.
+        </p>
+    </div>
+
     <div class="card card-modern p-4 p-md-5 mb-4">
-        <h2 class="fw-bold mb-3"><i class="fas fa-microchip text-primary me-2"></i> ProjectGuard AI Architecture & Methodology</h2>
-        <p class="lead text-muted">
+        <h2 class="h3 mb-3 text-heading">Machine Learning Pipeline & Risk Prediction Engine</h2>
+        <p class="lead text-secondary fs-6">
             ProjectGuard is designed as an educational risk-mitigation tool. Below is an overview of the data engineering, machine learning pipelines, explainability mechanics, and ethical guidelines governing the platform.
         </p>
 
         <hr class="my-4">
 
-        <h4 class="fw-bold mb-3">1. Machine Learning Pipeline</h4>
-        <p class="text-secondary">
+        <h3 class="h4 mb-2 text-heading">1. Machine Learning Classification</h3>
+        <p class="text-secondary small">
             The prediction engine utilizes scikit-learn and gradient boosted decision trees. During model selection, multiple classifiers (Logistic Regression, Random Forest, XGBoost) are trained on standardized multi-dimensional feature sets. Models are evaluated using:
         </p>
-        <ul>
+        <ul class="text-secondary small mb-4">
             <li><strong>ROC-AUC Score:</strong> Measuring overall discrimination capability across all classification thresholds.</li>
-            <li><strong>High-Risk Recall:</strong> Ensuring that struggling projects (Class 0) are identified with minimum false negatives.</li>
+            <li><strong>High-Risk Recall:</strong> Ensuring that struggling projects are identified with minimum false negatives.</li>
             <li><strong>F1-Score & Accuracy:</strong> Balancing precision and recall across successful and at-risk cohorts.</li>
         </ul>
 
-        <h4 class="fw-bold mt-4 mb-3">2. Automatic Derived Feature Engineering</h4>
-        <p class="text-secondary">
+        <h3 class="h4 mb-2 text-heading">2. Automatic Derived Feature Engineering</h3>
+        <p class="text-secondary small">
             Students do not need to manually compute derived metrics. The system calculates:
         </p>
-        <div class="table-responsive">
-            <table class="table table-bordered table-sm">
-                <thead class="table-light">
+        <div class="table-responsive mb-4">
+            <table class="table-modern">
+                <thead>
                     <tr>
                         <th>Metric</th>
                         <th>Formula</th>
@@ -65,15 +77,15 @@
             </table>
         </div>
 
-        <h4 class="fw-bold mt-4 mb-3">3. Explainable AI (SHAP / Feature Attribution)</h4>
-        <p class="text-secondary">
+        <h3 class="h4 mb-2 text-heading">3. Explainable AI (SHAP / Feature Attribution)</h3>
+        <p class="text-secondary small mb-4">
             Rather than functioning as a black box, each risk evaluation computes specific feature attributions showing whether variables (e.g. testing coverage, delayed tasks, or schedule pressure) contributed towards increasing or decreasing project risk.
         </p>
 
-        <h4 class="fw-bold mt-4 mb-3">4. Ethical AI & Student Guidance Principles</h4>
-        <div class="alert alert-info">
-            <h6 class="fw-bold mb-1"><i class="fas fa-info-circle me-1"></i> Core Guiding Principle</h6>
-            <p class="mb-0 small">
+        <h3 class="h4 mb-2 text-heading">4. Ethical AI & Responsible Guidance</h3>
+        <div class="p-3 bg-light rounded-3 border">
+            <h4 class="h5 mb-1 text-heading"><i class="fas fa-shield-alt text-gold me-1"></i> Core Guiding Principle</h4>
+            <p class="mb-0 small text-secondary">
                 ProjectGuard never asserts that an academic project is doomed to fail. The platform communicates risk probabilistically, pairing every risk insight with concrete, actionable engineering steps to help students course-correct and achieve project completion.
             </p>
         </div>

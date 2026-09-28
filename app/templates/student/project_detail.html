@@ -14,32 +14,32 @@
                 </ol>
             </nav>
             <div class="d-flex align-items-center gap-2">
-                <h2 class="fw-bold mb-0">{{ project.project_name }}</h2>
-                <span class="badge bg-light text-dark border">{{ project.domain }}</span>
+                <h1 class="h2 mb-0 fw-bold">{{ project.project_name }}</h1>
+                <span class="badge badge-neutral">{{ project.domain }}</span>
             </div>
-            <div class="text-muted small mt-1">
-                Objective: <span class="fw-semibold text-dark">{{ project.objective or project.description[:80] + '...' }}</span>
-                • Deadline: <span class="fw-semibold text-dark">{{ project.deadline.strftime('%b %d, %Y') }}</span>
-                <span class="badge bg-primary bg-opacity-10 text-primary ms-1">{{ health_info.days_remaining }} days left</span>
+            <div class="text-secondary small mt-1">
+                Objective: <span class="fw-semibold text-heading">{{ project.objective or project.description[:80] + '...' }}</span>
+                • Deadline: <span class="fw-semibold text-heading">{{ project.deadline.strftime('%b %d, %Y') }}</span>
+                <span class="badge badge-gold ms-1">{{ health_info.days_remaining }} days remaining</span>
             </div>
         </div>
 
         <div class="d-flex flex-wrap gap-2">
             {% if project.project_category in ['hardware', 'hybrid'] %}
-                <a href="{{ url_for('student.hardware_feasibility', project_id=project.id) }}" class="btn btn-outline-info btn-sm px-3 fw-semibold">
-                    <i class="fas fa-microchip me-1"></i> Hardware Feasibility
+                <a href="{{ url_for('student.hardware_feasibility', project_id=project.id) }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-microchip me-1 text-gold"></i> Hardware Feasibility
                 </a>
             {% endif %}
             <form method="POST" action="{{ url_for('student.run_checkin', project_id=project.id) }}" class="d-inline">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                <button type="submit" class="btn btn-primary btn-sm px-3 shadow-sm fw-semibold">
-                    <i class="fas fa-robot me-1"></i> Check My Project
+                <button type="submit" class="btn btn-primary btn-sm">
+                    <i class="fas fa-robot me-1"></i> Check Project Health
                 </button>
             </form>
-            <a href="{{ url_for('student.what_if_simulator', project_id=project.id) }}" class="btn btn-outline-primary btn-sm px-3">
+            <a href="{{ url_for('student.what_if_simulator', project_id=project.id) }}" class="btn btn-outline-secondary btn-sm">
                 <i class="fas fa-sliders-h me-1"></i> What-If
             </a>
-            <a href="{{ url_for('student.edit_project', project_id=project.id) }}" class="btn btn-outline-secondary btn-sm">
+            <a href="{{ url_for('student.edit_project', project_id=project.id) }}" class="btn btn-outline-secondary btn-sm" title="Project Settings">
                 <i class="fas fa-cog"></i>
             </a>
         </div>
@@ -108,76 +108,76 @@
         <div class="col-xl-3 col-lg-4 col-md-5">
             <div class="card workspace-sidebar p-3 border-0 sticky-top">
                 <div class="d-flex align-items-center justify-content-between mb-3 px-2 border-bottom pb-2">
-                    <span class="small fw-bold text-uppercase text-muted" style="letter-spacing: 0.5px;">
-                        <i class="fas fa-compass text-primary me-1"></i> Navigation
+                    <span class="small fw-bold text-uppercase text-secondary" style="letter-spacing: 0.5px;">
+                        <i class="fas fa-compass text-gold me-1"></i> Navigation
                     </span>
-                    <span class="badge bg-light text-secondary border small">Workspace</span>
+                    <span class="badge badge-neutral small">Workspace</span>
                 </div>
 
                 <!-- Back to Dashboard Quick Action -->
                 <div class="mb-2 pb-2 border-bottom">
-                    <a href="{{ url_for('student.dashboard') }}" class="btn btn-outline-secondary btn-sm w-100 text-start py-2 px-3 fw-semibold">
-                        <i class="fas fa-home text-primary me-2"></i> Dashboard
+                    <a href="{{ url_for('student.dashboard') }}" class="btn btn-outline-secondary btn-sm w-100 text-start py-2 px-3">
+                        <i class="fas fa-th-large text-gold me-2"></i> Dashboard
                     </a>
                 </div>
 
                 <ul class="nav nav-pills flex-column gap-1 workspace-nav" id="projectTab" role="tablist">
                     {% if project.project_category in ['hardware', 'hybrid'] %}
                     <li class="nav-item">
-                        <a href="{{ url_for('student.hardware_feasibility', project_id=project.id) }}" class="nav-link text-start py-2 px-3 fw-semibold d-flex align-items-center justify-content-between w-100 text-info bg-light border border-info mb-1">
-                            <span><i class="fas fa-microchip text-info me-2 fa-fw"></i> BuildCheck AI</span>
-                            <span class="badge bg-info text-dark small">Hardware</span>
+                        <a href="{{ url_for('student.hardware_feasibility', project_id=project.id) }}" class="nav-link text-start py-2 px-3 d-flex align-items-center justify-content-between w-100 mb-1 border">
+                            <span><i class="fas fa-microchip text-gold me-2 fa-fw"></i> BuildCheck AI</span>
+                            <span class="badge badge-gold small">Hardware</span>
                         </a>
                     </li>
                     {% endif %}
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link active text-start py-2 px-3 fw-semibold d-flex align-items-center justify-content-between w-100" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab">
-                            <span><i class="fas fa-folder text-primary me-2 fa-fw"></i> Overview & Roadmap</span>
-                            <span class="badge bg-light text-dark border small">{{ health_info.health_score }}%</span>
+                        <button class="nav-link active text-start py-2 px-3 d-flex align-items-center justify-content-between w-100" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab">
+                            <span><i class="fas fa-folder text-gold me-2 fa-fw"></i> Overview & Roadmap</span>
+                            <span class="badge badge-neutral small">{{ health_info.health_score }}%</span>
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link text-start py-2 px-3 fw-semibold d-flex align-items-center justify-content-between w-100" id="tasks-tab" data-bs-toggle="tab" data-bs-target="#tasks" type="button" role="tab">
-                            <span><i class="fas fa-clipboard-list text-success me-2 fa-fw"></i> Tasks Board</span>
-                            <span class="badge bg-secondary small">{{ tasks|length }}</span>
+                        <button class="nav-link text-start py-2 px-3 d-flex align-items-center justify-content-between w-100" id="tasks-tab" data-bs-toggle="tab" data-bs-target="#tasks" type="button" role="tab">
+                            <span><i class="fas fa-clipboard-list text-secondary me-2 fa-fw"></i> Tasks Board</span>
+                            <span class="badge badge-neutral small">{{ tasks|length }}</span>
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link text-start py-2 px-3 fw-semibold d-flex align-items-center justify-content-between w-100" id="guidance-tab" data-bs-toggle="tab" data-bs-target="#guidance" type="button" role="tab">
-                            <span><i class="fas fa-robot text-danger me-2 fa-fw"></i> AI Project Analysis</span>
-                            <span class="badge bg-danger bg-opacity-10 text-danger small">Guidance</span>
+                        <button class="nav-link text-start py-2 px-3 d-flex align-items-center justify-content-between w-100" id="guidance-tab" data-bs-toggle="tab" data-bs-target="#guidance" type="button" role="tab">
+                            <span><i class="fas fa-robot text-gold me-2 fa-fw"></i> AI Project Analysis</span>
+                            <span class="badge badge-ai small">Guidance</span>
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link text-start py-2 px-3 fw-semibold d-flex align-items-center justify-content-between w-100" id="resources-tab" data-bs-toggle="tab" data-bs-target="#resources" type="button" role="tab">
-                            <span><i class="fas fa-link text-info me-2 fa-fw"></i> Smart Resources</span>
-                            <span class="badge bg-primary small">{{ resources|length }}</span>
+                        <button class="nav-link text-start py-2 px-3 d-flex align-items-center justify-content-between w-100" id="resources-tab" data-bs-toggle="tab" data-bs-target="#resources" type="button" role="tab">
+                            <span><i class="fas fa-link text-secondary me-2 fa-fw"></i> Smart Resources</span>
+                            <span class="badge badge-neutral small">{{ resources|length }}</span>
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link text-start py-2 px-3 fw-semibold d-flex align-items-center justify-content-between w-100" id="tools-tab" data-bs-toggle="tab" data-bs-target="#tools" type="button" role="tab">
-                            <span><i class="fas fa-brain text-warning me-2 fa-fw"></i> AI Tool Advisor</span>
-                            <span class="badge bg-light text-dark border small">{{ ai_recommendations|length }}</span>
+                        <button class="nav-link text-start py-2 px-3 d-flex align-items-center justify-content-between w-100" id="tools-tab" data-bs-toggle="tab" data-bs-target="#tools" type="button" role="tab">
+                            <span><i class="fas fa-brain text-gold me-2 fa-fw"></i> AI Tool Advisor</span>
+                            <span class="badge badge-neutral small">{{ ai_recommendations|length }}</span>
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link text-start py-2 px-3 fw-semibold d-flex align-items-center justify-content-between w-100" id="mentor-tab" data-bs-toggle="tab" data-bs-target="#mentor" type="button" role="tab">
-                            <span><i class="fas fa-comments text-purple me-2 fa-fw" style="color: #6f42c1;"></i> AI Mentor</span>
-                            <span class="badge bg-light text-dark border small">Chat</span>
+                        <button class="nav-link text-start py-2 px-3 d-flex align-items-center justify-content-between w-100" id="mentor-tab" data-bs-toggle="tab" data-bs-target="#mentor" type="button" role="tab">
+                            <span><i class="fas fa-comments text-secondary me-2 fa-fw"></i> AI Mentor</span>
+                            <span class="badge badge-neutral small">Chat</span>
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link text-start py-2 px-3 fw-semibold d-flex align-items-center justify-content-between w-100" id="risk-tab" data-bs-toggle="tab" data-bs-target="#risk" type="button" role="tab">
-                            <span><i class="fas fa-chart-line text-danger me-2 fa-fw"></i> Health / Risk</span>
-                            <span class="badge {% if prediction and prediction.risk_level == 'LOW' %}bg-success{% elif prediction and prediction.risk_level == 'MODERATE' %}bg-warning text-dark{% else %}bg-danger{% endif %} small">
+                        <button class="nav-link text-start py-2 px-3 d-flex align-items-center justify-content-between w-100" id="risk-tab" data-bs-toggle="tab" data-bs-target="#risk" type="button" role="tab">
+                            <span><i class="fas fa-chart-line text-secondary me-2 fa-fw"></i> Health & Risk</span>
+                            <span class="badge {% if prediction and prediction.risk_level == 'LOW' %}badge-risk-low{% elif prediction and prediction.risk_level == 'MODERATE' %}badge-risk-moderate{% else %}badge-risk-critical{% endif %} small">
                                 {{ prediction.risk_level if prediction else 'LOW' }}
                             </span>
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link text-start py-2 px-3 fw-semibold d-flex align-items-center justify-content-between w-100" id="timeline-tab" data-bs-toggle="tab" data-bs-target="#timeline" type="button" role="tab">
+                        <button class="nav-link text-start py-2 px-3 d-flex align-items-center justify-content-between w-100" id="timeline-tab" data-bs-toggle="tab" data-bs-target="#timeline" type="button" role="tab">
                             <span><i class="fas fa-clock text-secondary me-2 fa-fw"></i> Timeline</span>
-                            <span class="badge bg-light text-dark border small">{{ health_info.days_remaining }}d</span>
+                            <span class="badge badge-neutral small">{{ health_info.days_remaining }}d</span>
                         </button>
                     </li>
                 </ul>

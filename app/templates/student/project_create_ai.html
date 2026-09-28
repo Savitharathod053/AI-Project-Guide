@@ -8,15 +8,15 @@
         <div class="col-lg-9 col-xl-8">
 
             <!-- Page Header -->
-            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 page-header">
                 <div>
-                    <h1 class="h2 mb-1">Create New Project</h1>
-                    <p class="text-secondary small mb-0">
-                        Define your academic project parameters to generate an automated 6-phase roadmap and risk assessment.
+                    <h1 class="page-title">Create Project</h1>
+                    <p class="page-description">
+                        Define your project parameters to let Project Guard analyze requirements and generate an execution plan.
                     </p>
                 </div>
                 <button type="button" class="btn btn-outline-secondary btn-sm" onclick="fillExampleProject()">
-                    <i class="fas fa-lightbulb text-warning me-1"></i> Try Example Idea
+                    <i class="fas fa-lightbulb text-gold me-1"></i> Try Example Idea
                 </button>
             </div>
 
@@ -25,13 +25,16 @@
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
                 <!-- ============================================================
-                     SECTION 1: PROJECT INFORMATION
+                     STEP 1: PROJECT INFORMATION
                      ============================================================ -->
                 <div class="card card-modern p-4 mb-4">
                     <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
-                        <div>
-                            <h2 class="h4 mb-0">1. Project Information</h2>
-                            <span class="small text-muted">Core details describing the application scope</span>
+                        <div class="d-flex align-items-center">
+                            <span class="step-number">1</span>
+                            <div>
+                                <h2 class="h4 mb-0">Project Information</h2>
+                                <span class="small text-secondary">General scope and domain classification</span>
+                            </div>
                         </div>
                         <span class="badge badge-neutral">Required</span>
                     </div>
@@ -43,132 +46,158 @@
                         </label>
                         <input type="text" class="form-control" id="project_name" name="project_name"
                                placeholder="e.g. AI-Based Campus Event Management System" required autofocus>
-                        <div class="form-text">Provide a concise, descriptive title for your academic capstone or mini-project.</div>
+                        <div class="form-text">Enter the official title for your academic capstone, mini-project, or research system.</div>
                     </div>
 
                     <!-- Project Description -->
                     <div class="mb-3">
                         <label for="description" class="form-label">
-                            Project Description & Scope <span class="text-danger">*</span>
+                            Project Description <span class="text-danger">*</span>
                         </label>
                         <textarea class="form-control" id="description" name="description" rows="4"
                                   placeholder="Describe the application, target users, core features, and technical goals..." required></textarea>
-                        <div class="form-text">The AI model analyzes your description to extract required modules and formulate milestone tasks.</div>
+                        <div class="form-text">Project Guard analyzes this description to understand requirements, identify modules, and detect risks.</div>
                     </div>
 
-                    <!-- Domain & Team Size -->
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-6">
-                            <label for="domain" class="form-label">
-                                Domain <span class="text-danger">*</span>
-                            </label>
-                            <select class="form-select" id="domain" name="domain" required>
-                                <option value="Web Development" selected>Web Development</option>
-                                <option value="Machine Learning & AI">Machine Learning & AI</option>
-                                <option value="Mobile Applications">Mobile Applications</option>
-                                <option value="Cloud & DevOps">Cloud & DevOps</option>
-                                <option value="Internet of Things (IoT)">Internet of Things (IoT)</option>
-                                <option value="Cybersecurity">Cybersecurity</option>
-                                <option value="Blockchain">Blockchain</option>
-                            </select>
+                    <!-- Domain -->
+                    <div class="mb-3">
+                        <label for="domain" class="form-label">
+                            Domain <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select" id="domain" name="domain" required>
+                            <option value="Web Development" selected>Web Development</option>
+                            <option value="Machine Learning & AI">Machine Learning & AI</option>
+                            <option value="Mobile Applications">Mobile Applications</option>
+                            <option value="Cloud & DevOps">Cloud & DevOps</option>
+                            <option value="Internet of Things (IoT)">Internet of Things (IoT)</option>
+                            <option value="Cybersecurity">Cybersecurity</option>
+                            <option value="Blockchain">Blockchain</option>
+                        </select>
+                        <div class="form-text">Select the core engineering area best matching your project architecture.</div>
+                    </div>
+                </div>
+
+                <!-- ============================================================
+                     STEP 2: TECHNICAL INFORMATION
+                     ============================================================ -->
+                <div class="card card-modern p-4 mb-4">
+                    <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                        <div class="d-flex align-items-center">
+                            <span class="step-number">2</span>
+                            <div>
+                                <h2 class="h4 mb-0">Technical Information</h2>
+                                <span class="small text-secondary">Technologies, team structure, and target timeline</span>
+                            </div>
                         </div>
+                        <span class="badge badge-neutral">Parameters</span>
+                    </div>
+
+                    <!-- Technologies Known -->
+                    <div class="mb-3">
+                        <label for="technologies_known" class="form-label">
+                            Technologies & Tools
+                        </label>
+                        <input type="text" class="form-control" id="technologies_known" name="technologies_known"
+                               placeholder="e.g. Python, Flask, React, PostgreSQL">
+                        <div class="form-text">Languages, frameworks, or databases your team plans to use or knows currently.</div>
+                    </div>
+
+                    <div class="row g-3">
+                        <!-- Team Size -->
                         <div class="col-md-6">
                             <label for="team_size" class="form-label">
                                 Team Size <span class="text-danger">*</span>
                             </label>
                             <input type="number" class="form-control" id="team_size" name="team_size" min="1" max="10" value="3" required>
-                            <div class="form-text">Number of team members executing parallel tasks.</div>
+                            <div class="form-text">Number of students collaborating to execute tasks in parallel.</div>
                         </div>
-                    </div>
 
-                    <!-- Technologies & Deadline -->
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label for="technologies_known" class="form-label">
-                                Technologies
-                            </label>
-                            <input type="text" class="form-control" id="technologies_known" name="technologies_known"
-                                   placeholder="e.g. Python, Flask, React, PostgreSQL">
-                            <div class="form-text">Tools or languages your team intends to utilize.</div>
-                        </div>
+                        <!-- Viva / Deadline -->
                         <div class="col-md-6">
                             <label for="deadline" class="form-label">
-                                Expected Outcome / Viva Deadline <span class="text-danger">*</span>
+                                Viva / Submission Deadline <span class="text-danger">*</span>
                             </label>
                             <input type="date" class="form-control" id="deadline" name="deadline" required>
-                            <div class="form-text">Target completion date for timeline pacing analysis.</div>
+                            <div class="form-text">Target completion date used by the AI model to calculate schedule velocity.</div>
                         </div>
                     </div>
                 </div>
 
                 <!-- ============================================================
-                     SECTION 2: AI ANALYSIS & ACTION
+                     STEP 3: AI ANALYSIS
                      ============================================================ -->
                 <div class="card card-modern p-4 mb-4">
                     <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
-                        <div>
-                            <h2 class="h4 mb-0">2. AI Analysis & Roadmap Generation</h2>
-                            <span class="small text-muted">Requirement decomposition and 6-phase scheduling</span>
+                        <div class="d-flex align-items-center">
+                            <span class="step-number">3</span>
+                            <div>
+                                <h2 class="h4 mb-0">AI Analysis</h2>
+                                <span class="small text-secondary">Requirement extraction and 6-phase task decomposition</span>
+                            </div>
                         </div>
-                        <span class="badge badge-ai"><i class="fas fa-sparkles me-1"></i> AI Assisted</span>
+                        <span class="badge badge-ai"><i class="fas fa-sparkles me-1"></i> AI Powered</span>
                     </div>
 
                     <div class="p-3 bg-light rounded-3 border mb-3">
                         <div class="d-flex gap-2">
-                            <i class="fas fa-info-circle text-primary mt-1"></i>
-                            <div class="small text-secondary">
-                                Clicking <strong>Analyze Project</strong> will review your submission, verify requirements, recommend system architecture, and generate tasks structured across Research, UI/UX, Core Development, Database, Testing, and Deployment. You can edit or regenerate all tasks on the review screen.
+                            <i class="fas fa-info-circle text-gold mt-1 fs-5"></i>
+                            <div>
+                                <strong class="d-block text-heading small mb-1">How AI Analysis Works</strong>
+                                <span class="small text-secondary">
+                                    Project Guard will analyze your project description and identify requirements, modules, technologies, and possible tasks.
+                                    You will be able to review, edit, add, or regenerate all tasks before confirming your project roadmap.
+                                </span>
                             </div>
                         </div>
                     </div>
 
-                    <div class="d-flex justify-content-end gap-2">
+                    <div class="d-flex justify-content-between align-items-center pt-2">
                         <a href="{{ url_for('student.dashboard') }}" class="btn btn-outline-secondary">
                             Cancel
                         </a>
-                        <button type="submit" class="btn btn-primary" id="btnAnalyze">
-                            <i class="fas fa-magic me-1"></i> Analyze Project & Generate Roadmap
+                        <button type="submit" class="btn btn-primary btn-lg" id="btnAnalyze">
+                            <i class="fas fa-bolt me-1"></i> Analyze Project
                         </button>
                     </div>
                 </div>
             </form>
 
             <!-- ============================================================
-                 LOADING STATE (CLEAN PROGRESS MESSAGES & SKELETON)
+                 LOADING STATE (EXPLICIT STEP-BY-STEP PROGRESS SEQUENCER)
                  ============================================================ -->
             <div id="loadingOverlay" class="card card-modern p-4 text-center d-none">
-                <div class="py-3">
-                    <div class="spinner-border text-primary mb-3" role="status" style="width: 2.5rem; height: 2.5rem;">
+                <div class="py-4">
+                    <div class="spinner-border text-gold mb-3" role="status" style="width: 2.75rem; height: 2.75rem;">
                         <span class="visually-hidden">Analyzing...</span>
                     </div>
-                    <h3 class="h4 mb-1">Analyzing project requirements...</h3>
-                    <p class="text-muted small mb-4">Synthesizing architecture, milestone phases, and risk prediction models.</p>
+                    <h3 class="h4 mb-1">Analyzing Project</h3>
+                    <p class="text-secondary small mb-4">Please wait while Project Guard processes your submission.</p>
 
-                    <div class="text-start mx-auto p-3 bg-light rounded-3 border" id="geminiLoadingSteps" style="max-width: 480px;">
-                        <div class="gemini-step-item d-flex align-items-center gap-2 py-1 small text-secondary">
+                    <div class="text-start mx-auto p-3 bg-light rounded-3 border" id="geminiLoadingSteps" style="max-width: 460px;">
+                        <div class="gemini-step-item d-flex align-items-center gap-2 py-2 small text-secondary">
                             <span class="step-icon"><i class="far fa-circle text-muted"></i></span>
-                            <span>Analyzing project requirements and scope...</span>
+                            <span>Understanding requirements</span>
                         </div>
-                        <div class="gemini-step-item d-flex align-items-center gap-2 py-1 small text-secondary">
+                        <div class="gemini-step-item d-flex align-items-center gap-2 py-2 small text-secondary">
                             <span class="step-icon"><i class="far fa-circle text-muted"></i></span>
-                            <span>Identifying technical modules and system architecture...</span>
+                            <span>Identifying modules</span>
                         </div>
-                        <div class="gemini-step-item d-flex align-items-center gap-2 py-1 small text-secondary">
+                        <div class="gemini-step-item d-flex align-items-center gap-2 py-2 small text-secondary">
                             <span class="step-icon"><i class="far fa-circle text-muted"></i></span>
-                            <span>Formulating 6-phase development roadmap and tasks...</span>
+                            <span>Identifying technologies</span>
                         </div>
-                        <div class="gemini-step-item d-flex align-items-center gap-2 py-1 small text-secondary">
+                        <div class="gemini-step-item d-flex align-items-center gap-2 py-2 small text-secondary">
                             <span class="step-icon"><i class="far fa-circle text-muted"></i></span>
-                            <span>Matching verified APIs, datasets, and resources...</span>
+                            <span>Generating tasks</span>
                         </div>
-                        <div class="gemini-step-item d-flex align-items-center gap-2 py-1 small text-secondary">
+                        <div class="gemini-step-item d-flex align-items-center gap-2 py-2 small text-secondary">
                             <span class="step-icon"><i class="far fa-circle text-muted"></i></span>
-                            <span>Validating generated tasks and timeline constraints...</span>
+                            <span>Validating results</span>
                         </div>
                     </div>
 
                     <div class="mt-3">
-                        <span class="badge badge-neutral">Please wait a few seconds</span>
+                        <span class="badge badge-neutral">Analysis completes in a few seconds</span>
                     </div>
                 </div>
             </div>
