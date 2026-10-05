@@ -1,6 +1,6 @@
 """
-CLI PREDICTION UTILITY FOR PROJECTGUARD
-=======================================
+CLI PREDICTION UTILITY FOR PROJEXA
+==================================
 Allows running quick risk predictions on sample project states directly from CLI.
 """
 
@@ -15,7 +15,7 @@ from app.services.ml_service import get_ml_service
 
 
 def demo_cli_predict():
-    print("\n--- Running ProjectGuard CLI Risk Prediction Demo ---\n")
+    print("\n--- Running Projexa CLI Risk Prediction Demo ---\n")
     ml_service = get_ml_service()
 
     sample_project = {

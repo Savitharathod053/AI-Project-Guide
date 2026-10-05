@@ -1,6 +1,6 @@
 """
-FACULTY MONITORING ROUTES FOR PROJECTGUARD
-==========================================
+FACULTY MONITORING ROUTES FOR PROJEXA
+=====================================
 Faculty dashboard, multi-criteria project filtering, detailed risk review,
 and faculty feedback & scoring submission.
 """

@@ -1,6 +1,6 @@
 """
-RECOMMENDATION ENGINE FOR PROJECTGUARD
-======================================
+RECOMMENDATION ENGINE FOR PROJEXA
+=================================
 Derives supportive, actionable, and practical recommendations based on project state,
 derived metrics, and ML prediction risk profiles.
 """

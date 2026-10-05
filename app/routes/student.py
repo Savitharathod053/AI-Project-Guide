@@ -1,6 +1,6 @@
 """
-STUDENT & AI MENTOR ROUTES FOR PROJECTGUARD
-===========================================
+STUDENT & AI MENTOR ROUTES FOR PROJEXA
+======================================
 Handles simple title+description project creation, AI task generation,
 task review, interactive task board, AI mentor chat, smart check-ins,
 and risk analytics.
@@ -14,7 +14,7 @@ from flask_login import login_required, current_user
 from app.models import (
     db, Project, Task, ProjectProgress, Prediction, Recommendation,
     ProjectCheckin, AIMentorMessage, FacultyFeedback, EarlyWarningAlert,
-    ProjectResource, AIRecommendation, HardwareAnalysis
+    ProjectResource, AIRecommendation, HardwareAnalysis, ProjectAnalysis
 )
 from app.services.ai_service import get_ai_service
 from app.services.health_service import calculate_project_health_score
@@ -633,9 +633,10 @@ def project_detail(project_id: int):
         for p in predictions_history
     ]
 
-    # AI Guidance & Pacing
+    # AI Guidance & Pacing & 9-Dimension Analysis
     ai_service = get_ai_service()
     guidance = ai_service.analyze_progress_and_guidance(project, tasks)
+    structured_analysis = ai_service.get_project_structured_analysis(project, tasks)
     ai_tools = project.get_ai_tools()
     pacing = project.get_timeline_pacing()
 
@@ -683,6 +684,7 @@ def project_detail(project_id: int):
         prediction=latest_prediction,
         health_info=health_info,
         guidance=guidance,
+        structured_analysis=structured_analysis,
         pacing=pacing,
         ai_tools=ai_tools,
         derived=derived,
@@ -1110,6 +1112,57 @@ def mark_alert_read(alert_id: int):
     return redirect(url_for("student.dashboard"))
 
 
+@student_bp.route("/projects/<int:project_id>/documentation/generate", methods=["POST"])
+@student_required
+def generate_documentation(project_id: int):
+    """
+    Generates or refreshes academic project documentation sections using AI and project metadata.
+    """
+    project = get_student_project_or_404(project_id)
+    tasks = project.tasks.all()
+    ai_service = get_ai_service()
+    
+    analysis = ai_service.get_project_structured_analysis(project, tasks)
+    overview = analysis.get("overview", {})
+    what_to_build = analysis.get("what_to_build", {})
+    tools_list = analysis.get("tools_to_use", [])
+    how_it_works = analysis.get("how_it_works", {})
+    db_info = analysis.get("database", {})
+
+    tech_summary = " | ".join([f"{t.get('category', 'Tool')}: {t.get('name', '')}" for t in tools_list])
+    features_list = [f"{f.get('name', '')}: {f.get('description', '')}" for f in what_to_build.get("features", [])]
+    if isinstance(db_info, list):
+        tables_list = ", ".join([t.get("name", "") for t in db_info if isinstance(t, dict)])
+        db_explanation = "Relational SQL database structure designed for project records and activity logs"
+    else:
+        tables_list = ", ".join([t.get("name", "") for t in db_info.get("tables", [])]) if isinstance(db_info, dict) else ""
+        db_explanation = db_info.get("simple_explanation", "") if isinstance(db_info, dict) else ""
+
+    doc_data = {
+        "project_description": project.description or overview.get("description", ""),
+        "problem_statement": overview.get("problem", ""),
+        "objectives": overview.get("goal", ""),
+        "features": features_list,
+        "technology_used": tech_summary,
+        "system_architecture": how_it_works.get("diagram_summary", "Client-Server architecture with REST API endpoints."),
+        "database_design": f"{db_explanation}. Primary tables include: {tables_list}.",
+        "implementation": "Built using standard modular design, starting with database models, RESTful routing, and responsive templates.",
+        "testing": "Comprehensive functional testing covering user authentication, form inputs, and core workflow verification.",
+        "future_improvements": "Future roadmap includes native mobile application, offline support, and advanced analytical dashboarding."
+    }
+
+    if request.is_json or request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.headers.get("Accept") == "application/json":
+        return jsonify({
+            "status": "success",
+            "message": "Documentation generated successfully",
+            "documentation": doc_data
+        })
+
+    flash(f"Documentation generated successfully for {project.project_name}!", "success")
+    return redirect(url_for("student.project_detail", project_id=project.id, _anchor="docs-tab"))
+
+
+
 def _sync_project_metrics_and_predict(project: Project) -> Prediction:
     """
     Synchronizes Task Board stats into a ProjectProgress snapshot and executes ML risk inference.
@@ -1195,3 +1248,21 @@ def _sync_project_metrics_and_predict(project: Project) -> Prediction:
     check_and_create_early_warning(project, prediction)
 
     return prediction
+
+
+# =============================================================================
+# PROJECT INNOVATION & UNIQUENESS ANALYZER
+# =============================================================================
+
+@student_bp.route("/project-analyzer")
+@student_required
+def project_analyzer():
+    """Renders the student Project Innovation & Uniqueness Analyzer interface."""
+    recent_analyses = ProjectAnalysis.query.filter_by(
+        student_id=current_user.id
+    ).order_by(ProjectAnalysis.created_at.desc()).limit(10).all()
+    return render_template(
+        "student/project_analyzer.html",
+        recent_analyses=recent_analyses
+    )
+

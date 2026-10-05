@@ -1,6 +1,6 @@
 """
-PROJECTGUARD FLASK APPLICATION FACTORY
-======================================
+PROJEXA FLASK APPLICATION FACTORY
+=================================
 Initializes Flask extensions, registers Student, Faculty, Auth, Main, and API blueprints,
 and configures error handlers and security settings.
 """
@@ -73,10 +73,19 @@ def create_app(config_name: str = None) -> Flask:
 
     @app.context_processor
     def inject_globals():
+        from flask_login import current_user
+        from app.models import Project
+        recent_sidebar_projects = []
+        if current_user.is_authenticated and hasattr(current_user, 'is_student') and current_user.is_student:
+            try:
+                recent_sidebar_projects = Project.query.filter_by(owner_id=current_user.id).order_by(Project.updated_at.desc()).limit(6).all()
+            except Exception:
+                recent_sidebar_projects = []
         return {
-            "app_name": "ProjectGuard",
+            "app_name": "Projexa",
             "current_year": 2026,
-            "disclaimer_text": "ProjectGuard provides statistical risk estimates based on historical project patterns. It does not guarantee evaluation outcomes."
+            "disclaimer_text": "Projexa provides statistical risk estimates based on historical project patterns. It does not guarantee evaluation outcomes.",
+            "recent_sidebar_projects": recent_sidebar_projects
         }
 
     return app

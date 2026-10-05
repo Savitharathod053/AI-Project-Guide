@@ -12,7 +12,7 @@ import re
 import logging
 from typing import Dict, List, Any
 
-logger = logging.getLogger("projectguard.ai_service")
+logger = logging.getLogger("projexa.ai_service")
 
 
 class AIService:
@@ -631,7 +631,7 @@ Return ONLY valid JSON matching this schema:
         blocked = [t.title if hasattr(t, 'title') else t.get('title') for t in tasks if (t.status if hasattr(t, 'status') else t.get('status')) == "Blocked"]
         pending = [t.title if hasattr(t, 'title') else t.get('title') for t in tasks if (t.status if hasattr(t, 'status') else t.get('status')) in ["Not Started", "In Progress"]]
 
-        prompt = f"""You are ProjectGuard's intelligent AI Project Mentor.
+        prompt = f"""You are Projexa's intelligent AI Project Mentor.
 Answer the student's question accurately using their specific project context.
 
 PROJECT TITLE: {project.project_name}
@@ -805,6 +805,296 @@ Provide a supportive, concise, practical, and direct engineering response. (Max 
             "missing_tasks": missing,
             "architecture": project.architecture_recommendation or "Modern modular three-tier client-server architecture with REST API integration."
         }
+
+    def get_project_structured_analysis(self, project, tasks: List[Any] = None) -> Dict[str, Any]:
+        """
+        Synthesizes the complete 9-section structured AI Project Analysis for the student:
+        1. Overview
+        2. What to Build
+        3. Tools to Use
+        4. How It Works
+        5. Database
+        6. Development Plan
+        7. Tasks
+        8. Testing
+        9. Security
+        All written in simple, clear, student-friendly English without technical jargon.
+        """
+        if tasks is None:
+            tasks = project.tasks.all()
+
+        req = project.get_requirements()
+        title = project.project_name
+        desc = project.description or ""
+        domain = project.domain or "Web Development"
+        summary = project.project_summary or req.get("project_summary", "") or f"A helpful {domain} project that solves problems for students and teachers."
+        objective = project.objective or req.get("core_objective", "") or f"Build a working system for {title}."
+        tech_known = project.technologies_known or "Python, Web basics"
+        diff = project.technology_difficulty or req.get("technology_difficulty", "Medium")
+
+        # 1. Overview data
+        est_effort_weeks = max(4, round(len(tasks) * 0.8)) if tasks else 6
+        overview_data = {
+            "title": title,
+            "simple_description": desc or f"This is an academic project called {title} built to help users manage their work easily.",
+            "problem": f"Before this project, users had to do these steps manually or use slow, complicated tools that take a lot of time.",
+            "goal": objective,
+            "ai_summary": summary,
+            "difficulty_level": diff,
+            "estimated_effort": f"Around {est_effort_weeks} weeks ({len(tasks) * 4 if tasks else 40} total study and coding hours)"
+        }
+
+        # 2. What to Build (Features with simple labels)
+        raw_req_features = req.get("required_features", [])
+        raw_opt_features = req.get("optional_features", [])
+        expected_users = req.get("expected_users", ["Students", "Teachers / Admins"])
+
+        features_list = []
+        if raw_req_features:
+            for i, feat in enumerate(raw_req_features):
+                priority_label = "Must Have" if i < 3 else "Good to Have"
+                badge_class = "danger" if priority_label == "Must Have" else "warning text-dark"
+                features_list.append({
+                    "name": feat,
+                    "description": f"Core function that lets users complete their main task smoothly.",
+                    "priority": priority_label,
+                    "badge_class": badge_class,
+                    "module": "Main Features"
+                })
+        else:
+            features_list.append({
+                "name": "User Sign-in and Account Management",
+                "description": "Lets students and teachers log in safely with their own accounts.",
+                "priority": "Must Have",
+                "badge_class": "danger",
+                "module": "User Accounts"
+            })
+            features_list.append({
+                "name": f"Core Work Area for {title}",
+                "description": "The main screen where users see their daily information, enter data, and view updates.",
+                "priority": "Must Have",
+                "badge_class": "danger",
+                "module": "Main Work Area"
+            })
+            features_list.append({
+                "name": "Reports and Information Summary",
+                "description": "Shows quick counts, charts, and downloadable summaries for college evaluation.",
+                "priority": "Good to Have",
+                "badge_class": "warning text-dark",
+                "module": "Reporting"
+            })
+
+        if raw_opt_features:
+            for feat in raw_opt_features:
+                features_list.append({
+                    "name": feat,
+                    "description": "Helpful extra feature you can add after your main features work properly.",
+                    "priority": "Optional",
+                    "badge_class": "secondary",
+                    "module": "Extra Features"
+                })
+
+        modules_list = [
+            {"name": "User Account Module", "purpose": "Handles user registration, login checks, and user roles."},
+            {"name": "Core Work Module", "purpose": "Manages the primary activity and data records of the project."},
+            {"name": "Reports & Dashboard Module", "purpose": "Presents summary cards, progress bars, and clean tables."}
+        ]
+
+        what_to_build_data = {
+            "features": features_list,
+            "modules": modules_list,
+            "user_roles": expected_users,
+            "total_features_count": len(features_list)
+        }
+
+        # 3. Tools to Use (with simple why explanations)
+        tools_list = []
+        # Frontend
+        tools_list.append({
+            "category": "Frontend (Screen Design)",
+            "name": "HTML5, CSS3 & Bootstrap",
+            "why": "It gives you clean buttons, boxes, and mobile-friendly screens without writing thousands of lines of style code from scratch."
+        })
+        # Backend
+        backend_name = "Python (Flask)" if "flask" in (project.technologies or "").lower() or "python" in (project.technologies or "").lower() else "Python / Node.js"
+        tools_list.append({
+            "category": "Backend (Server Logic)",
+            "name": backend_name,
+            "why": "It runs your website logic, checks inputs, and talks safely to your database using easy-to-read code."
+        })
+        # Database
+        tools_list.append({
+            "category": "Database (Data Storage)",
+            "name": "SQLite / PostgreSQL",
+            "why": "It safely remembers your project records in organized tables so information stays saved even when your laptop restarts."
+        })
+        # APIs / Libraries
+        tools_list.append({
+            "category": "Libraries & Helper Tools",
+            "name": "Chart.js & FontAwesome",
+            "why": "They create beautiful interactive graphs for your teachers and add friendly icons to your buttons."
+        })
+        # Other tools
+        tools_list.append({
+            "category": "Project Helpers",
+            "name": "Git & GitHub",
+            "why": "Keeps a safe backup history of your project code so you can undo mistakes anytime."
+        })
+
+        # 4. How It Works (Simple flows and system architecture)
+        how_it_works_data = {
+            "system_flow": [
+                {"step": 1, "title": "User Opens Website", "detail": "The student or teacher opens the app in any modern browser."},
+                {"step": 2, "title": "Checks Who Is Logged In", "detail": "The system checks if the user is a student, teacher, or admin to show the right screen."},
+                {"step": 3, "title": "Runs Project Action", "detail": "The user submits a form (e.g. marks attendance, adds a project task, or updates a record)."},
+                {"step": 4, "title": "Saves in Database", "detail": "The backend server checks for errors and saves the record permanently into the database."},
+                {"step": 5, "title": "Shows Updated Result", "detail": "The screen updates immediately with green success messages and new summary numbers."}
+            ],
+            "user_flow": f"User opens the app → Logs in → Views personal dashboard → Completes tasks → Views simple summary reports.",
+            "data_flow": "Browser Screen → Backend Server Routes → Database Tables → Immediate Screen Feedback.",
+            "simple_architecture": project.architecture_recommendation or "Three-tier architecture: 1) Easy web screen, 2) Python backend logic, 3) Safe relational database tables."
+        }
+
+        # 5. Database (Suggested tables, important fields, simple explanation)
+        db_tables = [
+            {
+                "name": "users",
+                "explanation": "Stores who is registered in the system.",
+                "fields": [
+                    {"name": "id", "type": "Number (Primary Key)", "desc": "Unique number for each person"},
+                    {"name": "name", "type": "Text", "desc": "Full name of the student or teacher"},
+                    {"name": "email", "type": "Text", "desc": "Login email address"},
+                    {"name": "password_hash", "type": "Secret Text", "desc": "Encrypted password for safety"},
+                    {"name": "role", "type": "Text", "desc": "Either student, teacher, or admin"}
+                ],
+                "relationships": "One user can create multiple project records."
+            },
+            {
+                "name": "items / records",
+                "explanation": f"Stores the main records for {title} (e.g. tasks, entries, attendance).",
+                "fields": [
+                    {"name": "id", "type": "Number (Primary Key)", "desc": "Unique ID of this item"},
+                    {"name": "user_id", "type": "Number (Foreign Key)", "desc": "Points to the user who owns this record"},
+                    {"name": "title", "type": "Text", "desc": "Main title or name of the record"},
+                    {"name": "status", "type": "Text", "desc": "Current state (e.g. Not Started, In Progress, Done)"},
+                    {"name": "created_at", "type": "Date/Time", "desc": "When this record was added"}
+                ],
+                "relationships": "Linked to the users table so only the right person can edit it."
+            },
+            {
+                "name": "activity_logs",
+                "explanation": "Keeps a history of important updates for evaluations.",
+                "fields": [
+                    {"name": "id", "type": "Number (Primary Key)", "desc": "Unique log entry ID"},
+                    {"name": "item_id", "type": "Number", "desc": "Which record was updated"},
+                    {"name": "notes", "type": "Text", "desc": "What changed or advice given by AI"},
+                    {"name": "updated_at", "type": "Date/Time", "desc": "Date and time of change"}
+                ],
+                "relationships": "Belongs to the main records table."
+            }
+        ]
+
+        # 6. Development Plan (Step-by-step roadmap with 8 steps)
+        dev_plan_steps = [
+            {"step": 1, "title": "Plan the project", "desc": "Decide what your project does, who will use it, and list your must-have features.", "status": "Done"},
+            {"step": 2, "title": "Create the UI", "desc": "Design simple, friendly web pages with forms, buttons, and summary cards.", "status": "In Progress" if tasks else "Not Started"},
+            {"step": 3, "title": "Build the backend", "desc": "Write server routes in Python to accept data from your forms safely.", "status": "In Progress" if any(t.status == 'In Progress' for t in tasks) else "Not Started"},
+            {"step": 4, "title": "Create the database", "desc": "Set up database tables so your information is saved cleanly.", "status": "In Progress" if any(t.category == 'Database' and t.status == 'Completed' for t in tasks) else "Not Started"},
+            {"step": 5, "title": "Connect everything", "desc": "Link your web buttons to your backend routes and database.", "status": "Not Started"},
+            {"step": 6, "title": "Add important features", "desc": "Build the main unique features described in your project proposal.", "status": "Not Started"},
+            {"step": 7, "title": "Test the application", "desc": "Try logging in, entering wrong passwords, and clicking every button to make sure it never crashes.", "status": "Not Started"},
+            {"step": 8, "title": "Deploy the application", "desc": "Put your working website on a free cloud host so your college guide can view it live.", "status": "Not Started"}
+        ]
+
+        # 7. Tasks list (Directly from project tasks)
+        tasks_data = []
+        for t in tasks:
+            tasks_data.append({
+                "id": t.id,
+                "title": t.title,
+                "description": t.description or "Complete this step to advance your project score.",
+                "priority": t.priority,
+                "status": t.status,
+                "category": t.category,
+                "phase": t.phase,
+                "estimated_hours": t.estimated_hours
+            })
+
+        # 8. Testing (Simple test cases)
+        test_cases = [
+            {
+                "test_name": "New User Account Creation",
+                "what_to_test": "Register a new student account with valid name, email, and password.",
+                "expected_result": "Account is created safely, password is encrypted, and user is redirected to the dashboard.",
+                "status": "Ready to Test"
+            },
+            {
+                "test_name": "Wrong Password Defense",
+                "what_to_test": "Try logging in using an incorrect password.",
+                "expected_result": "App shows a polite error message: 'Invalid email or password' and blocks entry.",
+                "status": "Ready to Test"
+            },
+            {
+                "test_name": "Empty Form Field Check",
+                "what_to_test": "Try submitting a blank form without entering required title or details.",
+                "expected_result": "System stops the form submission and highlights the missing fields in red.",
+                "status": "Ready to Test"
+            },
+            {
+                "test_name": "Main Feature Execution",
+                "what_to_test": f"Add, view, and update a core item in {title}.",
+                "expected_result": "Record appears immediately on the screen and stays visible after refreshing the page.",
+                "status": "Ready to Test"
+            },
+            {
+                "test_name": "Mobile Screen Check",
+                "what_to_test": "Open the project on a smartphone or shrink your browser window.",
+                "expected_result": "Buttons and text fit neatly on the screen without horizontal scrolling.",
+                "status": "Ready to Test"
+            }
+        ]
+
+        # 9. Security (Relevant practical tips for students)
+        security_tips = [
+            {
+                "title": "Secure Login & Password Protection",
+                "explanation": "Never save plain text passwords in your database. Always use password hashing like `generate_password_hash()` so nobody can read user passwords.",
+                "icon": "fas fa-key text-warning"
+            },
+            {
+                "title": "Input Validation & Clean Data",
+                "explanation": "Always verify what users type into forms. Check that email addresses have '@' and remove dangerous script tags before saving.",
+                "icon": "fas fa-shield-alt text-primary"
+            },
+            {
+                "title": "Access Control (Who Can See What)",
+                "explanation": "Make sure regular students cannot open teacher or admin pages simply by guessing the URL in the address bar.",
+                "icon": "fas fa-user-lock text-danger"
+            },
+            {
+                "title": "Database Safety (SQL Injection Prevention)",
+                "explanation": "Use an ORM like SQLAlchemy rather than putting user text directly into raw SQL strings. This stops hackers from damaging your database.",
+                "icon": "fas fa-database text-success"
+            },
+            {
+                "title": "Safe API Usage & Secret Keys",
+                "explanation": "Store API tokens and secret keys in a `.env` file instead of writing them directly inside your public GitHub code.",
+                "icon": "fas fa-lock text-info"
+            }
+        ]
+
+        return {
+            "overview": overview_data,
+            "what_to_build": what_to_build_data,
+            "tools_to_use": tools_list,
+            "how_it_works": how_it_works_data,
+            "database": db_tables,
+            "development_plan": dev_plan_steps,
+            "tasks": tasks_data,
+            "testing": test_cases,
+            "security": security_tips
+        }
+
 
     def _enrich_plan_response(self, parsed: Dict[str, Any], title: str, domain: str) -> Dict[str, Any]:
         """Ensures both structured phases and flattened core_tasks/optional_tasks exist with requirement_source."""
@@ -1535,7 +1825,7 @@ Provide a supportive, concise, practical, and direct engineering response. (Max 
         data = {
             "model": self.model,
             "messages": [
-                {"role": "system", "content": "You are ProjectGuard's expert AI Academic Project Mentor. Output only valid JSON when requested."},
+                {"role": "system", "content": "You are Projexa's expert AI Academic Project Mentor. Output only valid JSON when requested."},
                 {"role": "user", "content": prompt}
             ],
             "temperature": 0.3

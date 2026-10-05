@@ -1,6 +1,6 @@
 """
-EARLY WARNING ALERT SERVICE FOR PROJECTGUARD
-============================================
+EARLY WARNING ALERT SERVICE FOR PROJEXA
+=======================================
 Monitors changes in project risk between consecutive progress milestones and
 triggers early warning alerts when risk increases significantly (e.g. >= 15%).
 """

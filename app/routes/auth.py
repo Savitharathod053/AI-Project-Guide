@@ -56,7 +56,7 @@ def register():
         db.session.commit()
 
         login_user(user)
-        flash(f"Welcome to ProjectGuard, {user.name}! Your account has been created.", "success")
+        flash(f"Welcome to Projexa, {user.name}! Your account has been created.", "success")
         
         if user.is_student:
             return redirect(url_for("student.dashboard"))

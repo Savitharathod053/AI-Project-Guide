@@ -1,6 +1,6 @@
 """
-REST API ENDPOINTS FOR PROJECTGUARD
-==================================
+REST API ENDPOINTS FOR PROJEXA
+==============================
 JSON API for programmatic integration, mobile client access, and dynamic AJAX widgets.
 """
 
@@ -10,13 +10,14 @@ from flask_login import login_required, current_user
 from app.models import (
     db, Project, Task, ProjectProgress, Prediction, Recommendation,
     FacultyFeedback, EarlyWarningAlert, ProjectResource, AIRecommendation,
-    HardwareAnalysis
+    HardwareAnalysis, ProjectAnalysis
 )
 from app.services.feature_engineering import prepare_feature_row, prepare_raw_dict_feature_row, compute_derived_features
 from app.services.ml_service import get_ml_service
 from app.services.recommendation_engine import generate_recommendations
 from app.services.resource_finder_service import get_resource_finder_service
 from app.services.hardware_feasibility_service import get_hardware_feasibility_service
+from app.services.uniqueness_analyzer_service import get_uniqueness_analyzer_service
 
 api_bp = Blueprint("api", __name__)
 
@@ -451,4 +452,93 @@ def api_get_component_purchase_options(project_id: int, component_name: str):
         "component_name": component_name,
         "data": options_data
     })
+
+
+# =============================================================================
+# PROJECT INNOVATION & UNIQUENESS ANALYZER ENDPOINTS
+# =============================================================================
+
+@api_bp.route("/project-analyzer/analyze", methods=["POST"])
+@login_required
+def api_analyze_project_uniqueness():
+    """
+    Submits student project details for novelty and uniqueness analysis.
+    Executes real prior-art search (GitHub & arXiv), internal DB matching,
+    and Gemini AI evaluation.
+    """
+    if not request.is_json:
+        return jsonify({
+            "status": "error",
+            "message": "Invalid request: Expected application/json content type."
+        }), 400
+
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        return jsonify({
+            "status": "error",
+            "message": "Invalid request body: Expected JSON object."
+        }), 400
+
+    project_title = str(payload.get("project_title") or "").strip()
+    if not project_title:
+        return jsonify({
+            "status": "error",
+            "message": "Project title is required."
+        }), 400
+
+    # Optional flag to bypass cache
+    use_cache = bool(payload.get("use_cache", True))
+
+    try:
+        service = get_uniqueness_analyzer_service()
+        analysis = service.execute_analysis_pipeline(
+            student_id=current_user.id,
+            project_data=payload,
+            use_cache=use_cache
+        )
+        return jsonify({
+            "status": "success",
+            "message": "Project uniqueness and innovation analysis completed successfully.",
+            "data": analysis.to_dict(include_full_report=True)
+        }), 200
+    except Exception as e:
+        # Secure error handling: do not expose API keys or internal trace
+        return jsonify({
+            "status": "error",
+            "message": "Unable to complete project analysis at this time. Please check your inputs and try again."
+        }), 500
+
+
+@api_bp.route("/project-analyzer/history", methods=["GET"])
+@login_required
+def api_get_project_analyzer_history():
+    """Returns past innovation analyses for the authenticated student."""
+    analyses = ProjectAnalysis.query.filter_by(
+        student_id=current_user.id
+    ).order_by(ProjectAnalysis.created_at.desc()).all()
+
+    data = [a.to_dict(include_full_report=False) for a in analyses]
+    return jsonify({
+        "status": "success",
+        "count": len(data),
+        "data": data
+    }), 200
+
+
+@api_bp.route("/project-analyzer/<int:analysis_id>", methods=["GET"])
+@login_required
+def api_get_project_analysis_detail(analysis_id: int):
+    """Returns single innovation analysis record with access control."""
+    analysis = ProjectAnalysis.query.get_or_404(analysis_id)
+    if current_user.is_student and analysis.student_id != current_user.id:
+        return jsonify({
+            "status": "error",
+            "message": "Unauthorized: You do not have permission to view this project analysis."
+        }), 403
+
+    return jsonify({
+        "status": "success",
+        "data": analysis.to_dict(include_full_report=True)
+    }), 200
+
 

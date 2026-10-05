@@ -1,6 +1,6 @@
 """
-MAIN / PUBLIC ROUTES FOR PROJECTGUARD
-=====================================
+MAIN / PUBLIC ROUTES FOR PROJEXA
+================================
 Landing page, feature showcase, FAQ, and methodology disclaimers.
 """
 
@@ -23,3 +23,13 @@ def index():
 @main_bp.route("/about")
 def about():
     return render_template("about.html")
+
+
+@main_bp.route("/project-analyzer")
+def project_analyzer():
+    if current_user.is_authenticated:
+        if current_user.is_student:
+            return redirect(url_for("student.project_analyzer"))
+        return redirect(url_for("faculty.dashboard"))
+    return redirect(url_for("auth.login", next="/project-analyzer"))
+

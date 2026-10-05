@@ -22,6 +22,7 @@ class User(UserMixin, db.Model):
     # Relationships
     projects = db.relationship("Project", backref="owner", lazy="dynamic", foreign_keys="Project.owner_id")
     feedback_given = db.relationship("FacultyFeedback", backref="faculty", lazy="dynamic", foreign_keys="FacultyFeedback.faculty_id")
+    analyses = db.relationship("ProjectAnalysis", backref="student", lazy="dynamic", cascade="all, delete-orphan", order_by="desc(ProjectAnalysis.created_at)")
 
     def set_password(self, password: str):
         self.password_hash = generate_password_hash(password)
@@ -850,6 +851,64 @@ class HardwareAnalysis(db.Model):
 
     def __repr__(self):
         return f"<HardwareAnalysis Project {self.project_id}: Score {self.overall_score} [{self.verdict}]>"
+
+
+class ProjectAnalysis(db.Model):
+    """Stores AI Project Innovation & Uniqueness Analysis reports."""
+    __tablename__ = "project_analyses"
+
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+
+    project_title = db.Column(db.String(255), nullable=False)
+    problem_statement = db.Column(db.Text, nullable=True, default="")
+    project_description = db.Column(db.Text, nullable=True, default="")
+    proposed_solution = db.Column(db.Text, nullable=True, default="")
+    main_features = db.Column(db.Text, nullable=True, default="")
+    technologies_used = db.Column(db.String(255), nullable=True, default="")
+    target_users = db.Column(db.String(255), nullable=True, default="")
+    github_url = db.Column(db.String(255), nullable=True, default="")
+    additional_notes = db.Column(db.Text, nullable=True, default="")
+
+    input_hash = db.Column(db.String(64), nullable=False, index=True)
+    differentiation_score = db.Column(db.Integer, default=50)  # 0-100
+    innovation_level = db.Column(db.String(50), default="Moderate")  # Low, Moderate, Good, High
+
+    report_json = db.Column(db.Text, nullable=False)
+
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+    def get_report(self) -> dict:
+        try:
+            return json.loads(self.report_json)
+        except Exception:
+            return {}
+
+    def to_dict(self, include_full_report: bool = True) -> dict:
+        data = {
+            "id": self.id,
+            "student_id": self.student_id,
+            "project_title": self.project_title,
+            "problem_statement": self.problem_statement,
+            "project_description": self.project_description,
+            "proposed_solution": self.proposed_solution,
+            "main_features": self.main_features,
+            "technologies_used": self.technologies_used,
+            "target_users": self.target_users,
+            "github_url": self.github_url,
+            "additional_notes": self.additional_notes,
+            "differentiation_score": self.differentiation_score,
+            "innovation_level": self.innovation_level,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None
+        }
+        if include_full_report:
+            data["report"] = self.get_report()
+        return data
+
+    def __repr__(self):
+        return f"<ProjectAnalysis {self.id} for Student {self.student_id}: '{self.project_title}' (Score {self.differentiation_score})>"
 
 
 def upgrade_database_schema(app):

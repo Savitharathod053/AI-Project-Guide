@@ -107,85 +107,72 @@
         <!-- Left Vertical Navigation Sidebar -->
         <div class="col-xl-3 col-lg-4 col-md-5">
             <div class="card workspace-sidebar p-3 border-0 sticky-top">
-                <div class="d-flex align-items-center justify-content-between mb-3 px-2 border-bottom pb-2">
-                    <span class="small fw-bold text-uppercase text-secondary" style="letter-spacing: 0.5px;">
-                        <i class="fas fa-compass text-gold me-1"></i> Navigation
-                    </span>
-                    <span class="badge badge-neutral small">Workspace</span>
+                <div class="sidebar-brand-title">
+                    <span class="brand-shield" style="width: 24px; height: 24px; font-size: 0.75rem;"><i class="fas fa-shield-alt"></i></span>
+                    <span>PROJEXA</span>
                 </div>
 
-                <!-- Back to Dashboard Quick Action -->
+                <!-- Global Links -->
                 <div class="mb-2 pb-2 border-bottom">
-                    <a href="{{ url_for('student.dashboard') }}" class="btn btn-outline-secondary btn-sm w-100 text-start py-2 px-3">
+                    <a href="{{ url_for('student.dashboard') }}" class="btn btn-outline-secondary btn-sm w-100 text-start py-2 px-3 mb-1">
                         <i class="fas fa-th-large text-gold me-2"></i> Dashboard
+                    </a>
+                    <a href="{{ url_for('student.dashboard') }}" class="btn btn-outline-secondary btn-sm w-100 text-start py-2 px-3">
+                        <i class="fas fa-folder-open text-primary me-2"></i> My Projects
                     </a>
                 </div>
 
-                <ul class="nav nav-pills flex-column gap-1 workspace-nav" id="projectTab" role="tablist">
+                <div class="sidebar-section-header">Current Project</div>
+
+                <ul class="nav nav-pills flex-column gap-1 workspace-nav sidebar-nav-clean" id="projectTab" role="tablist">
                     {% if project.project_category in ['hardware', 'hybrid'] %}
                     <li class="nav-item">
-                        <a href="{{ url_for('student.hardware_feasibility', project_id=project.id) }}" class="nav-link text-start py-2 px-3 d-flex align-items-center justify-content-between w-100 mb-1 border">
-                            <span><i class="fas fa-microchip text-gold me-2 fa-fw"></i> BuildCheck AI</span>
-                            <span class="badge badge-gold small">Hardware</span>
+                        <a href="{{ url_for('student.hardware_feasibility', project_id=project.id) }}" class="nav-link text-start py-2 px-3 d-flex align-items-center w-100 mb-1 border">
+                            <i class="fas fa-microchip text-gold me-2 fa-fw"></i> BuildCheck AI
                         </a>
                     </li>
                     {% endif %}
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link active text-start py-2 px-3 d-flex align-items-center justify-content-between w-100" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab">
-                            <span><i class="fas fa-folder text-gold me-2 fa-fw"></i> Overview & Roadmap</span>
-                            <span class="badge badge-neutral small">{{ health_info.health_score }}%</span>
+                        <button class="nav-link active text-start py-2 px-3 d-flex align-items-center w-100" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab">
+                            <i class="fas fa-compass text-gold me-2 fa-fw"></i> Overview
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link text-start py-2 px-3 d-flex align-items-center justify-content-between w-100" id="tasks-tab" data-bs-toggle="tab" data-bs-target="#tasks" type="button" role="tab">
-                            <span><i class="fas fa-clipboard-list text-secondary me-2 fa-fw"></i> Tasks Board</span>
-                            <span class="badge badge-neutral small">{{ tasks|length }}</span>
+                        <button class="nav-link text-start py-2 px-3 d-flex align-items-center w-100" id="guidance-tab" data-bs-toggle="tab" data-bs-target="#guidance" type="button" role="tab" onclick="switchAiSubNav('overview')">
+                            <i class="fas fa-brain text-primary me-2 fa-fw"></i> AI Analysis
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link text-start py-2 px-3 d-flex align-items-center justify-content-between w-100" id="guidance-tab" data-bs-toggle="tab" data-bs-target="#guidance" type="button" role="tab">
-                            <span><i class="fas fa-robot text-gold me-2 fa-fw"></i> AI Project Analysis</span>
-                            <span class="badge badge-ai small">Guidance</span>
+                        <button class="nav-link text-start py-2 px-3 d-flex align-items-center w-100" id="resources-tab" data-bs-toggle="tab" data-bs-target="#resources" type="button" role="tab" onclick="switchResourceCategory('all')">
+                            <i class="fas fa-cubes text-success me-2 fa-fw"></i> Smart Resources
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link text-start py-2 px-3 d-flex align-items-center justify-content-between w-100" id="resources-tab" data-bs-toggle="tab" data-bs-target="#resources" type="button" role="tab">
-                            <span><i class="fas fa-link text-secondary me-2 fa-fw"></i> Smart Resources</span>
-                            <span class="badge badge-neutral small">{{ resources|length }}</span>
+                        <button class="nav-link text-start py-2 px-3 d-flex align-items-center w-100" id="progress-tab" data-bs-toggle="tab" data-bs-target="#progress" type="button" role="tab">
+                            <i class="fas fa-chart-line text-info me-2 fa-fw"></i> Progress
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link text-start py-2 px-3 d-flex align-items-center justify-content-between w-100" id="tools-tab" data-bs-toggle="tab" data-bs-target="#tools" type="button" role="tab">
-                            <span><i class="fas fa-brain text-gold me-2 fa-fw"></i> AI Tool Advisor</span>
-                            <span class="badge badge-neutral small">{{ ai_recommendations|length }}</span>
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link text-start py-2 px-3 d-flex align-items-center justify-content-between w-100" id="mentor-tab" data-bs-toggle="tab" data-bs-target="#mentor" type="button" role="tab">
-                            <span><i class="fas fa-comments text-secondary me-2 fa-fw"></i> AI Mentor</span>
-                            <span class="badge badge-neutral small">Chat</span>
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link text-start py-2 px-3 d-flex align-items-center justify-content-between w-100" id="risk-tab" data-bs-toggle="tab" data-bs-target="#risk" type="button" role="tab">
-                            <span><i class="fas fa-chart-line text-secondary me-2 fa-fw"></i> Health & Risk</span>
-                            <span class="badge {% if prediction and prediction.risk_level == 'LOW' %}badge-risk-low{% elif prediction and prediction.risk_level == 'MODERATE' %}badge-risk-moderate{% else %}badge-risk-critical{% endif %} small">
-                                {{ prediction.risk_level if prediction else 'LOW' }}
-                            </span>
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link text-start py-2 px-3 d-flex align-items-center justify-content-between w-100" id="timeline-tab" data-bs-toggle="tab" data-bs-target="#timeline" type="button" role="tab">
-                            <span><i class="fas fa-clock text-secondary me-2 fa-fw"></i> Timeline</span>
-                            <span class="badge badge-neutral small">{{ health_info.days_remaining }}d</span>
+                        <button class="nav-link text-start py-2 px-3 d-flex align-items-center w-100" id="docs-tab" data-bs-toggle="tab" data-bs-target="#docs" type="button" role="tab">
+                            <i class="fas fa-file-alt text-warning me-2 fa-fw"></i> Documentation
                         </button>
                     </li>
                 </ul>
 
+                <div class="sidebar-section-header mt-3">Account & Tools</div>
+                <div class="d-flex flex-column gap-1">
+                    <a href="{{ url_for('student.edit_project', project_id=project.id) }}" class="nav-link text-start py-2 px-3 d-flex align-items-center w-100 text-secondary">
+                        <i class="fas fa-cog text-muted me-2 fa-fw"></i> Settings
+                    </a>
+                    <button class="nav-link text-start py-2 px-3 d-flex align-items-center w-100 text-secondary bg-transparent border-0" id="mentor-shortcut-btn" onclick="openMentorTab()">
+                        <i class="fas fa-comments text-gold me-2 fa-fw"></i> AI Mentor Chat
+                    </button>
+                </div>
+
                 <!-- Quick Progress Summary in Sidebar -->
-                <div class="mt-4 pt-3 border-top">
+                <div class="mt-3 pt-3 border-top">
                     <div class="d-flex justify-content-between small text-muted mb-1">
-                        <span>Milestone Progress</span>
+                        <span>Project Completed</span>
                         <span class="fw-bold text-success">{{ project.calculated_progress_pct }}%</span>
                     </div>
                     <div class="progress mb-2" style="height: 6px;">
@@ -618,277 +605,450 @@
             </div>
         </div>
 
-        <!-- TAB 3: 🎯 AI GUIDANCE & PRIORITIES -->
+        <!-- TAB 3: 🎯 AI ANALYSIS (9 DEDICATED SECTIONS WITH TOP SUB-NAVIGATION) -->
+        <!-- TAB 3: 🎯 AI ANALYSIS (9 DEDICATED SECTIONS WITH TOP SUB-NAVIGATION) -->
         <div class="tab-pane fade" id="guidance">
-            <!-- Pacing & Risk Banner -->
-            {% if pacing and pacing.is_risk_detected %}
-                <div class="alert alert-danger border-2 p-3 mb-4 rounded-3 shadow-sm">
-                    <div class="d-flex align-items-start gap-3">
-                        <i class="fas fa-exclamation-triangle fs-3 text-danger mt-1"></i>
+            <!-- Secondary Navigation System at the Top of AI Analysis -->
+            <div class="ai-analysis-subnav shadow-xs sticky-top mb-4" style="top: 10px; z-index: 10;">
+                <button type="button" class="ai-subnav-btn active" data-ai-sub="overview" onclick="switchAiSubNav('overview')">
+                    <i class="fas fa-info-circle text-primary"></i> 1. Overview
+                </button>
+                <button type="button" class="ai-subnav-btn" data-ai-sub="what-to-build" onclick="switchAiSubNav('what-to-build')">
+                    <i class="fas fa-cubes text-success"></i> 2. What to Build
+                </button>
+                <button type="button" class="ai-subnav-btn" data-ai-sub="tools-to-use" onclick="switchAiSubNav('tools-to-use')">
+                    <i class="fas fa-wrench text-warning"></i> 3. Tools to Use
+                </button>
+                <button type="button" class="ai-subnav-btn" data-ai-sub="how-it-works" onclick="switchAiSubNav('how-it-works')">
+                    <i class="fas fa-sitemap text-info"></i> 4. How It Works
+                </button>
+                <button type="button" class="ai-subnav-btn" data-ai-sub="database" onclick="switchAiSubNav('database')">
+                    <i class="fas fa-database text-purple" style="color: #8b5cf6;"></i> 5. Database
+                </button>
+                <button type="button" class="ai-subnav-btn" data-ai-sub="plan" onclick="switchAiSubNav('plan')">
+                    <i class="fas fa-tasks text-primary"></i> 6. Development Plan
+                </button>
+                <button type="button" class="ai-subnav-btn" data-ai-sub="tasks" onclick="switchAiSubNav('tasks')">
+                    <i class="fas fa-clipboard-check text-success"></i> 7. Tasks
+                </button>
+                <button type="button" class="ai-subnav-btn" data-ai-sub="testing" onclick="switchAiSubNav('testing')">
+                    <i class="fas fa-vial text-danger"></i> 8. Testing
+                </button>
+                <button type="button" class="ai-subnav-btn" data-ai-sub="security" onclick="switchAiSubNav('security')">
+                    <i class="fas fa-shield-alt text-gold"></i> 9. Security
+                </button>
+            </div>
+
+            <!-- SECTION 1: OVERVIEW -->
+            <div id="ai-sub-overview" class="ai-sub-section">
+                <div class="card card-modern p-4 mb-4 border-0 shadow-sm">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
                         <div>
-                            <strong class="d-block text-danger fs-6">⚠️ Project Risk Detected: Schedule Pacing Alert</strong>
-                            <p class="mb-2 text-dark">{{ pacing.risk_message }}</p>
-                            <div class="d-flex flex-wrap gap-2">
-                                <span class="badge bg-danger text-white"><i class="fas fa-tasks me-1"></i> {{ pacing.progress_percentage }}% Tasks Completed</span>
-                                <span class="badge bg-dark text-white"><i class="fas fa-clock me-1"></i> {{ pacing.time_percentage }}% Timeline Elapsed</span>
-                                <span class="badge bg-warning text-dark"><i class="fas fa-hourglass-half me-1"></i> {{ pacing.days_remaining }} days remaining</span>
-                            </div>
+                            <span class="badge bg-primary bg-opacity-10 text-primary fw-bold text-uppercase small">Project Summary</span>
+                            <h4 class="fw-bold text-dark mt-1 mb-0">{{ structured_analysis.overview.title }}</h4>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <span class="badge bg-info bg-opacity-10 text-info fw-semibold px-3 py-2 rounded-pill">
+                                <i class="fas fa-layer-group me-1"></i> Difficulty: {{ structured_analysis.overview.difficulty_level }}
+                            </span>
+                            <span class="badge bg-warning bg-opacity-10 text-warning fw-semibold px-3 py-2 rounded-pill">
+                                <i class="fas fa-clock me-1"></i> Effort: {{ structured_analysis.overview.estimated_effort }}
+                            </span>
                         </div>
                     </div>
-                </div>
-            {% endif %}
+                    <p class="text-secondary mb-4 fs-6">{{ structured_analysis.overview.description }}</p>
 
-            <!-- Schedule Pacing Deep Dive Card -->
-            <div class="card card-modern p-4 mb-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold mb-0 text-dark">
-                        <i class="fas fa-tachometer-alt text-primary me-2"></i> Schedule Pacing & Timeline Health
-                    </h5>
-                    <span class="badge {% if pacing.is_risk_detected %}bg-danger{% else %}bg-success{% endif %} fs-6 px-3 py-2">
-                        {{ pacing.status_color|capitalize if pacing.status_color else 'Healthy' }} Pacing
-                    </span>
-                </div>
-                <div class="row g-4 mb-3">
-                    <div class="col-md-6 border-end">
-                        <div class="d-flex justify-content-between small mb-1">
-                            <span class="fw-semibold text-muted">Completed Tasks Velocity</span>
-                            <span class="fw-bold text-success">{{ pacing.progress_percentage }}%</span>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded-3 border-start border-danger border-4 h-100">
+                                <h6 class="fw-bold text-danger mb-2"><i class="fas fa-exclamation-circle me-1"></i> The Problem</h6>
+                                <p class="text-secondary small mb-0">{{ structured_analysis.overview.problem }}</p>
+                            </div>
                         </div>
-                        <div class="progress mb-2" style="height: 12px;">
-                            <div class="progress-bar bg-success progress-bar-striped" style="width: {{ pacing.progress_percentage }}%;"></div>
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded-3 border-start border-success border-4 h-100">
+                                <h6 class="fw-bold text-success mb-2"><i class="fas fa-bullseye me-1"></i> The Goal</h6>
+                                <p class="text-secondary small mb-0">{{ structured_analysis.overview.goal }}</p>
+                            </div>
                         </div>
-                        <small class="text-muted">{{ project.completed_tasks_count }} of {{ tasks|length }} tasks completed.</small>
                     </div>
-                    <div class="col-md-6">
-                        <div class="d-flex justify-content-between small mb-1">
-                            <span class="fw-semibold text-muted">Timeline Elapsed (Deadline vs Creation)</span>
-                            <span class="fw-bold {% if pacing.time_percentage > pacing.progress_percentage + 15 %}text-danger{% else %}text-primary{% endif %}">{{ pacing.time_percentage }}%</span>
-                        </div>
-                        <div class="progress mb-2" style="height: 12px;">
-                            <div class="progress-bar {% if pacing.time_percentage > pacing.progress_percentage + 15 %}bg-danger{% else %}bg-primary{% endif %}" style="width: {{ pacing.time_percentage }}%;"></div>
-                        </div>
-                        <small class="text-muted">{{ pacing.days_remaining }} days remaining until {{ project.deadline.strftime('%b %d, %Y') if project.deadline else 'deadline' }}.</small>
-                    </div>
-                </div>
-                {% if guidance and guidance.summary_advice %}
-                    <div class="p-3 bg-light rounded-3 border-start border-4 border-primary">
-                        <strong class="text-dark small"><i class="fas fa-lightbulb text-warning me-1"></i> Gemini Project Advisor:</strong>
-                        <p class="text-secondary small mb-0 mt-1">{{ guidance.summary_advice }}</p>
-                    </div>
-                {% endif %}
-            </div>
 
-            <div class="row g-4 mb-4">
-                <!-- Prioritized Next Tasks -->
-                <div class="col-lg-6">
-                    <div class="card card-modern p-4 h-100">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="fw-bold mb-0 text-dark">
-                                <i class="fas fa-bullseye text-danger me-2"></i> 🎯 Focus Next: Prioritized Tasks
-                            </h5>
-                            <span class="badge bg-danger bg-opacity-10 text-danger small">Highest ROI</span>
-                        </div>
-                        <p class="text-muted small mb-3">
-                            Gemini has ranked these tasks as the most urgent to advance your milestone without hitting blockers.
-                        </p>
-                        {% if guidance and guidance.prioritized_tasks %}
-                            <div class="d-flex flex-column gap-3">
-                                {% for item in guidance.prioritized_tasks %}
-                                    <div class="p-3 rounded-3 border bg-light bg-opacity-50">
-                                        <div class="d-flex justify-content-between align-items-start mb-1">
-                                            <h6 class="fw-bold mb-0 text-dark">
-                                                <span class="badge bg-dark me-1">#{{ loop.index }}</span>
-                                                {{ item.title }}
-                                            </h6>
-                                            <span class="badge bg-danger">{{ item.priority or 'High' }}</span>
-                                        </div>
-                                        <div class="d-flex flex-wrap gap-2 small text-muted my-2">
-                                            <span><i class="fas fa-layer-group me-1"></i>{{ item.phase or 'Phase 3' }}</span>
-                                            <span><i class="fas fa-clock me-1"></i>~{{ item.estimated_hours or 4 }} hrs</span>
-                                            <span><i class="fas fa-tachometer-alt me-1"></i>{{ item.difficulty or 'Medium' }}</span>
-                                        </div>
-                                        <div class="small text-secondary mb-2 fst-italic">
-                                            <i class="fas fa-info-circle text-primary me-1"></i> {{ item.reason or 'Critical path item to unlock subsequent development deliverables.' }}
-                                        </div>
-                                        {% if item.id %}
-                                            <form method="POST" action="{{ url_for('student.update_task_status', project_id=project.id, task_id=item.id) }}" class="d-flex gap-2">
-                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                                                <input type="hidden" name="status" value="In Progress">
-                                                <button type="submit" class="btn btn-outline-primary btn-sm py-0 px-2">
-                                                    <i class="fas fa-play me-1"></i> Start Task
-                                                </button>
-                                            </form>
-                                        {% endif %}
-                                    </div>
-                                {% endfor %}
-                            </div>
-                        {% else %}
-                            <div class="text-center py-4 text-muted">
-                                <i class="fas fa-check-double text-success fs-3 mb-2"></i>
-                                <p class="small mb-0">All high priority tasks are currently completed or underway!</p>
-                            </div>
-                        {% endif %}
-                    </div>
-                </div>
-
-                <!-- Parallel Tasks for Team -->
-                <div class="col-lg-6">
-                    <div class="card card-modern p-4 h-100">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="fw-bold mb-0 text-dark">
-                                <i class="fas fa-users-cog text-primary me-2"></i> ⚡ Work in Parallel
-                            </h5>
-                            <span class="badge bg-primary bg-opacity-10 text-primary small">Team Size: {{ project.team_size or 1 }}</span>
-                        </div>
-                        <p class="text-muted small mb-3">
-                            These independent tasks have no dependencies and can be worked on simultaneously by different team members:
-                        </p>
-                        {% if guidance and guidance.parallel_tasks %}
-                            <div class="d-flex flex-column gap-3">
-                                {% for item in guidance.parallel_tasks %}
-                                    <div class="p-3 rounded-3 border bg-light bg-opacity-50">
-                                        <div class="d-flex justify-content-between align-items-start mb-1">
-                                            <strong class="text-dark">{{ item.title }}</strong>
-                                            <span class="badge bg-info text-dark">Parallelizable</span>
-                                        </div>
-                                        <div class="small text-muted my-1">
-                                            <span class="me-2"><i class="fas fa-layer-group me-1"></i>{{ item.phase or 'Phase 2/3' }}</span>
-                                            <span><i class="fas fa-clock me-1"></i>~{{ item.estimated_hours or 3 }} hrs</span>
-                                        </div>
-                                        <div class="small text-secondary">
-                                            {{ item.reason or 'Independent sub-module can be assigned to a teammate without waiting for backend approval.' }}
-                                        </div>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                        {% else %}
-                            <div class="text-center py-4 text-muted">
-                                <i class="fas fa-info-circle text-primary fs-3 mb-2"></i>
-                                <p class="small mb-0">Assign tasks across different phases (e.g. UI mockups alongside DB schema) to accelerate progress.</p>
-                            </div>
-                        {% endif %}
+                    <div class="p-3 bg-primary bg-opacity-10 rounded-3 border border-primary border-opacity-25">
+                        <h6 class="fw-bold text-primary mb-2"><i class="fas fa-sparkles me-1"></i> AI-Generated Summary</h6>
+                        <p class="text-dark small mb-0">{{ structured_analysis.overview.ai_summary }}</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Blocked Tasks Section & Troubleshooting -->
-            <div class="card card-modern p-4 mb-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold mb-0 text-dark">
-                        <i class="fas fa-exclamation-circle text-danger me-2"></i> 🚨 Blocked Tasks & Troubleshooting
-                    </h5>
-                    <span class="badge {% if project.blocked_tasks_count > 0 %}bg-danger{% else %}bg-success{% endif %}">
-                        {{ project.blocked_tasks_count }} Blocked
-                    </span>
-                </div>
+            <!-- SECTION 2: WHAT TO BUILD -->
+            <div id="ai-sub-what-to-build" class="ai-sub-section" style="display: none;">
+                <div class="card card-modern p-4 mb-4 border-0 shadow-sm">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <span class="badge bg-success bg-opacity-10 text-success fw-bold text-uppercase small">Requirements in Simple Words</span>
+                            <h4 class="fw-bold text-dark mt-1 mb-0">What to Build</h4>
+                        </div>
+                        <span class="badge bg-light text-secondary border px-3 py-2">
+                            {{ structured_analysis.what_to_build.features|length }} Features Planned
+                        </span>
+                    </div>
+                    <p class="text-secondary small mb-4">
+                        Here is everything your application needs to do. We prioritized each feature so you know what to build first.
+                    </p>
 
-                {% if guidance and guidance.blocked_tasks and guidance.blocked_tasks|length > 0 %}
+                    <!-- User Roles & Modules -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded-3 h-100">
+                                <h6 class="fw-bold text-dark mb-2"><i class="fas fa-users text-primary me-2"></i> Who Uses This (User Roles)</h6>
+                                <div class="d-flex flex-wrap gap-2">
+                                    {% for role in structured_analysis.what_to_build.user_roles %}
+                                        <span class="badge bg-white text-dark border px-3 py-2 shadow-xs">{{ role }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded-3 h-100">
+                                <h6 class="fw-bold text-dark mb-2"><i class="fas fa-boxes text-info me-2"></i> Main Parts (Modules)</h6>
+                                <div class="d-flex flex-wrap gap-2">
+                                    {% for mod in structured_analysis.what_to_build.main_modules %}
+                                        <span class="badge bg-white text-dark border px-3 py-2 shadow-xs">{{ mod }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Features with Priorities -->
+                    <h6 class="fw-bold text-dark mb-3">Feature Checklist & Priorities</h6>
                     <div class="d-flex flex-column gap-3">
-                        {% for b in guidance.blocked_tasks %}
-                            <div class="p-3 rounded-3 border border-danger border-opacity-25 bg-danger bg-opacity-10">
-                                <div class="d-flex justify-content-between align-items-start mb-2">
-                                    <h6 class="fw-bold text-danger mb-0">{{ b.title }}</h6>
-                                    <span class="badge bg-danger">Blocked</span>
+                        {% for f in structured_analysis.what_to_build.features %}
+                            <div class="p-3 bg-light rounded-3 border-start border-4 {% if f.priority == 'Must Have' %}border-danger{% elif f.priority == 'Good to Have' %}border-primary{% else %}border-secondary{% endif %} bg-white shadow-xs">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <h6 class="fw-bold text-dark mb-0">{{ f.name }}</h6>
+                                    <span class="badge {% if f.priority == 'Must Have' %}bg-danger{% elif f.priority == 'Good to Have' %}bg-primary{% else %}bg-secondary{% endif %}">
+                                        {{ f.priority }}
+                                    </span>
                                 </div>
-                                <div class="small mb-2 text-dark">
-                                    <strong>Student Blocker Note:</strong> {{ b.blocker_reason or 'Stuck on technical implementation' }}
-                                </div>
-                                <div class="p-3 bg-white rounded-2 border small">
-                                    <strong class="text-primary"><i class="fas fa-robot me-1"></i> Gemini AI Troubleshooting Advice:</strong>
-                                    <p class="mb-0 text-dark mt-1">{{ b.troubleshooting_tip or 'Check dependency versions, ensure API keys are exported as environment variables, and inspect console network response tabs for error codes.' }}</p>
+                                <p class="text-secondary small mb-0">{{ f.description }}</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 3: TOOLS TO USE -->
+            <div id="ai-sub-tools-to-use" class="ai-sub-section" style="display: none;">
+                <div class="card card-modern p-4 mb-4 border-0 shadow-sm">
+                    <div class="mb-3">
+                        <span class="badge bg-warning bg-opacity-10 text-warning fw-bold text-uppercase small">Technologies & Libraries</span>
+                        <h4 class="fw-bold text-dark mt-1 mb-0">Tools to Use</h4>
+                        <p class="text-secondary small mb-0">
+                            Recommended tools and software for your project. Every tool has an easy explanation of why it is good for you.
+                        </p>
+                    </div>
+
+                    <div class="row g-4 mt-1">
+                        {% for tool in structured_analysis.tools_to_use %}
+                            <div class="col-md-6">
+                                <div class="card p-3 h-100 border shadow-xs">
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <i class="fas fa-wrench text-primary fs-5"></i>
+                                        <h6 class="fw-bold text-dark mb-0">{{ tool.category }}</h6>
+                                    </div>
+                                    <div class="fw-semibold text-primary mb-1">{{ tool.name }}</div>
+                                    <p class="small text-muted mb-0"><strong>Why recommended:</strong> {{ tool.why }}</p>
                                 </div>
                             </div>
                         {% endfor %}
                     </div>
-                {% else %}
-                    <div class="p-4 text-center bg-light rounded-3">
-                        <i class="fas fa-check-circle text-success fs-2 mb-2"></i>
-                        <h6 class="fw-bold text-success mb-1">No Blocked Tasks!</h6>
-                        <p class="text-muted small mb-0">None of your tasks are currently marked as blocked. Keep the momentum going!</p>
-                    </div>
-                {% endif %}
+                </div>
             </div>
 
-            <div class="row g-4 mb-4">
-                <!-- Missing Tasks Detector -->
-                <div class="col-lg-6">
-                    <div class="card card-modern p-4 h-100">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="fw-bold mb-0 text-dark">
-                                <i class="fas fa-search-plus text-warning me-2"></i> 🔍 Missing Tasks Detector
-                            </h5>
-                            <span class="badge bg-warning text-dark small">AI Detection</span>
-                        </div>
-                        <p class="text-muted small mb-3">
-                            Based on your domain (<strong>{{ project.domain }}</strong>), Gemini detected common deliverables students often forget:
+            <!-- SECTION 4: HOW IT WORKS -->
+            <div id="ai-sub-how-it-works" class="ai-sub-section" style="display: none;">
+                <div class="card card-modern p-4 mb-4 border-0 shadow-sm">
+                    <div class="mb-3">
+                        <span class="badge bg-info bg-opacity-10 text-info fw-bold text-uppercase small">Simple Architecture & Flows</span>
+                        <h4 class="fw-bold text-dark mt-1 mb-0">How It Works</h4>
+                        <p class="text-secondary small mb-0">
+                            See how users interact with your app and how data flows through the system.
                         </p>
-                        {% if guidance and guidance.missing_tasks %}
-                            <div class="d-flex flex-column gap-3">
-                                {% for m in guidance.missing_tasks %}
-                                    <div class="p-3 rounded-3 border bg-light bg-opacity-50">
-                                        <div class="d-flex justify-content-between align-items-start mb-1">
-                                            <strong class="text-dark">{{ m.title }}</strong>
-                                            <span class="badge bg-secondary">{{ m.phase or 'Phase 5 — Testing' }}</span>
-                                        </div>
-                                        <p class="small text-muted mb-2">{{ m.explanation or 'Vital for grading rubric completeness and viva defense.' }}</p>
-                                        <form method="POST" action="{{ url_for('student.add_task', project_id=project.id) }}">
-                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                                            <input type="hidden" name="title" value="{{ m.title }}">
-                                            <input type="hidden" name="phase" value="{{ m.phase or 'Phase 5 — Testing' }}">
-                                            <input type="hidden" name="estimated_hours" value="{{ m.estimated_hours or 3 }}">
-                                            <input type="hidden" name="description" value="{{ m.explanation or 'Task suggested by AI guidance' }}">
-                                            <button type="submit" class="btn btn-outline-success btn-sm py-0 px-2">
-                                                <i class="fas fa-plus me-1"></i> Add This Task to Project
-                                            </button>
-                                        </form>
+                    </div>
+
+                    <!-- Flow Steps -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold text-dark mb-3"><i class="fas fa-route text-primary me-2"></i> System Flow (Step by Step)</h6>
+                        <div class="d-flex flex-column gap-3">
+                            {% for flow in structured_analysis.how_it_works.system_flow %}
+                                <div class="flow-step-card p-3 bg-light rounded-3 border d-flex align-items-start gap-3">
+                                    <div class="step-badge rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold" style="min-width: 32px; height: 32px;">
+                                        {{ flow.step }}
                                     </div>
-                                {% endfor %}
+                                    <div>
+                                        <h6 class="fw-bold text-dark mb-1">{{ flow.title }}</h6>
+                                        <p class="text-secondary small mb-0">{{ flow.description }}</p>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- User Flow & Data Flow Cards -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded-3 h-100 border">
+                                <h6 class="fw-bold text-dark mb-2"><i class="fas fa-user-check text-success me-2"></i> User Flow (What the User Does)</h6>
+                                <p class="text-secondary small mb-0">{{ structured_analysis.how_it_works.user_flow }}</p>
                             </div>
-                        {% else %}
-                            <p class="text-muted small">Your current roadmap comprehensively covers standard university deliverables.</p>
-                        {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 bg-light rounded-3 h-100 border">
+                                <h6 class="fw-bold text-dark mb-2"><i class="fas fa-exchange-alt text-info me-2"></i> Data Flow (How Information Moves)</h6>
+                                <p class="text-secondary small mb-0">{{ structured_analysis.how_it_works.data_flow }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Visual Diagram -->
+                    <div class="p-3 bg-white rounded-3 border">
+                        <h6 class="fw-bold text-dark mb-2"><i class="fas fa-project-diagram text-warning me-2"></i> Simple System Diagram</h6>
+                        <p class="text-muted small mb-3">{{ structured_analysis.how_it_works.diagram_summary }}</p>
+                        <div class="d-flex flex-wrap align-items-center justify-content-center gap-3 p-3 bg-light rounded-3 text-center">
+                            <div class="p-3 bg-white border rounded-3 shadow-xs">
+                                <i class="fas fa-user text-primary fs-4 mb-1"></i>
+                                <div class="fw-bold small">User</div>
+                                <span class="text-muted" style="font-size: 0.75rem;">Web Browser</span>
+                            </div>
+                            <i class="fas fa-arrow-right text-muted"></i>
+                            <div class="p-3 bg-white border rounded-3 shadow-xs">
+                                <i class="fas fa-desktop text-success fs-4 mb-1"></i>
+                                <div class="fw-bold small">Frontend</div>
+                                <span class="text-muted" style="font-size: 0.75rem;">User Interface</span>
+                            </div>
+                            <i class="fas fa-arrow-right text-muted"></i>
+                            <div class="p-3 bg-white border rounded-3 shadow-xs">
+                                <i class="fas fa-server text-info fs-4 mb-1"></i>
+                                <div class="fw-bold small">Backend Server</div>
+                                <span class="text-muted" style="font-size: 0.75rem;">Handles Logic</span>
+                            </div>
+                            <i class="fas fa-arrow-right text-muted"></i>
+                            <div class="p-3 bg-white border rounded-3 shadow-xs">
+                                <i class="fas fa-database text-purple fs-4 mb-1" style="color: #8b5cf6;"></i>
+                                <div class="fw-bold small">Database</div>
+                                <span class="text-muted" style="font-size: 0.75rem;">Stores Records</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Recommended System Architecture -->
-                <div class="col-lg-6">
-                    <div class="card card-modern p-4 h-100">
-                        <h5 class="fw-bold mb-3 text-dark">
-                            <i class="fas fa-sitemap text-primary me-2"></i> 🏗️ System Architecture
-                        </h5>
-                        {% set arch = guidance.architecture if (guidance and guidance.architecture) else project.get_architecture() %}
-                        {% if arch is mapping %}
-                            <div class="d-flex flex-column gap-2 small">
-                                <div class="p-2 bg-light rounded-2">
-                                    <strong class="text-primary d-block">Frontend:</strong>
-                                    <span class="text-secondary">{{ arch.frontend or 'HTML5 / Bootstrap 5 / Vanilla JS' }}</span>
-                                </div>
-                                <div class="p-2 bg-light rounded-2">
-                                    <strong class="text-primary d-block">Backend:</strong>
-                                    <span class="text-secondary">{{ arch.backend or 'Python Flask REST API' }}</span>
-                                </div>
-                                <div class="p-2 bg-light rounded-2">
-                                    <strong class="text-primary d-block">Database:</strong>
-                                    <span class="text-secondary">{{ arch.database or 'SQLite / PostgreSQL' }}</span>
-                                </div>
-                                <div class="p-2 bg-light rounded-2">
-                                    <strong class="text-primary d-block">Security & Authentication:</strong>
-                                    <span class="text-secondary">{{ arch.security or 'Session-based Auth, CSRF Protection, Password Hashing' }}</span>
-                                </div>
-                                <div class="p-2 bg-light rounded-2">
-                                    <strong class="text-primary d-block">Deployment:</strong>
-                                    <span class="text-secondary">{{ arch.deployment or 'Render / Railway / Gunicorn' }}</span>
+            <!-- SECTION 5: DATABASE -->
+            <div id="ai-sub-database" class="ai-sub-section" style="display: none;">
+                <div class="card card-modern p-4 mb-4 border-0 shadow-sm">
+                    <div class="mb-3">
+                        <span class="badge bg-purple bg-opacity-10 fw-bold text-uppercase small" style="color: #8b5cf6;">Data Structure</span>
+                        <h4 class="fw-bold text-dark mt-1 mb-0">Database Tables & Fields</h4>
+                        <p class="text-secondary small mb-0">
+                            Simple tables and columns needed to store your project data safely.
+                        </p>
+                    </div>
+
+                    <!-- Tables -->
+                    <div class="row g-4 mb-4">
+                        {% for table in structured_analysis.database %}
+                            <div class="col-md-6">
+                                <div class="card p-3 h-100 border shadow-xs">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h6 class="fw-bold text-dark mb-0">
+                                            <i class="fas fa-table text-primary me-2"></i>{{ table.name }}
+                                        </h6>
+                                        <span class="badge bg-light text-secondary border small">{{ table.explanation }}</span>
+                                    </div>
+                                    <div class="mb-2">
+                                        <strong class="text-muted small">Fields:</strong>
+                                        <div class="d-flex flex-wrap gap-1 mt-1">
+                                            {% for field in table.fields %}
+                                                <span class="badge bg-light text-dark border font-monospace" title="{{ field.desc }}">
+                                                    {{ field.name }} ({{ field.type }})
+                                                </span>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    <div class="small text-muted mt-auto pt-2 border-top">
+                                        <i class="fas fa-link text-primary me-1"></i> <strong>Connection:</strong> {{ table.relationships }}
+                                    </div>
                                 </div>
                             </div>
-                        {% else %}
-                            <div class="p-3 bg-light rounded-3 small text-secondary">
-                                {{ arch or 'Standard Client-Server 3-Tier Architecture with relational database storage and REST API endpoints.' }}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 6: DEVELOPMENT PLAN -->
+            <div id="ai-sub-plan" class="ai-sub-section" style="display: none;">
+                <div class="card card-modern p-4 mb-4 border-0 shadow-sm">
+                    <div class="mb-3">
+                        <span class="badge bg-primary bg-opacity-10 text-primary fw-bold text-uppercase small">Step-by-Step Roadmap</span>
+                        <h4 class="fw-bold text-dark mt-1 mb-0">Development Plan</h4>
+                        <p class="text-secondary small mb-0">
+                            Follow this 8-step roadmap to build your project from scratch without feeling stuck.
+                        </p>
+                    </div>
+
+                    <div class="d-flex flex-column gap-3 mt-3">
+                        {% for step in structured_analysis.development_plan %}
+                            <div class="roadmap-step-item p-3 bg-light rounded-3 border d-flex align-items-start gap-3">
+                                <div class="step-num rounded-circle bg-dark text-white d-flex align-items-center justify-content-center fw-bold" style="min-width: 36px; height: 36px;">
+                                    {{ step.step }}
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <h6 class="fw-bold text-dark mb-0">{{ step.title }}</h6>
+                                        <span class="badge {% if step.status == 'Done' %}bg-success{% elif step.status == 'In Progress' %}bg-primary{% else %}bg-secondary{% endif %} small">
+                                            {{ step.status }}
+                                        </span>
+                                    </div>
+                                    <p class="text-secondary small mb-0">{{ step.desc }}</p>
+                                </div>
                             </div>
-                        {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 7: TASKS -->
+            <div id="ai-sub-tasks" class="ai-sub-section" style="display: none;">
+                <div class="card card-modern p-4 mb-4 border-0 shadow-sm">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <span class="badge bg-success bg-opacity-10 text-success fw-bold text-uppercase small">Project Task List</span>
+                            <h4 class="fw-bold text-dark mt-1 mb-0">Development Tasks</h4>
+                            <p class="text-secondary small mb-0">
+                                Mark tasks as you finish them. Click a status button to update.
+                            </p>
+                        </div>
+                        <button class="btn btn-outline-primary btn-sm fw-semibold" onclick="document.querySelector('#nav-tasks').click()">
+                            <i class="fas fa-external-link-alt me-1"></i> Open Full Task Board
+                        </button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Task</th>
+                                    <th>Phase</th>
+                                    <th>Priority</th>
+                                    <th>Estimated Effort</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for t in structured_analysis.tasks %}
+                                    <tr>
+                                        <td class="fw-semibold text-dark">{{ t.title }}</td>
+                                        <td class="small text-secondary">{{ t.phase }}</td>
+                                        <td>
+                                            <span class="badge {% if t.priority == 'High' %}bg-danger{% elif t.priority == 'Medium' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                                                {{ t.priority }}
+                                            </span>
+                                        </td>
+                                        <td class="small text-muted">{{ t.estimated_hours }} hrs</td>
+                                        <td>
+                                            <span class="badge {% if t.status == 'Completed' %}bg-success{% elif t.status == 'In Progress' %}bg-primary{% else %}bg-light text-dark border{% endif %}">
+                                                {{ t.status }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                {% else %}
+                                    {% for t in tasks %}
+                                        <tr>
+                                            <td class="fw-semibold text-dark">{{ t.title }}</td>
+                                            <td class="small text-secondary">{{ t.phase }}</td>
+                                            <td>
+                                                <span class="badge {% if t.priority == 'High' %}bg-danger{% elif t.priority == 'Medium' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                                                    {{ t.priority }}
+                                                </span>
+                                            </td>
+                                            <td class="small text-muted">{{ t.estimated_hours }} hrs</td>
+                                            <td>
+                                                <span class="badge {% if t.status == 'Completed' %}bg-success{% elif t.status == 'In Progress' %}bg-primary{% else %}bg-light text-dark border{% endif %}">
+                                                    {{ t.status }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    {% else %}
+                                        <tr>
+                                            <td colspan="5" class="text-center py-3 text-muted">No tasks created yet. Generate tasks to get started.</td>
+                                        </tr>
+                                    {% endfor %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 8: TESTING -->
+            <div id="ai-sub-testing" class="ai-sub-section" style="display: none;">
+                <div class="card card-modern p-4 mb-4 border-0 shadow-sm">
+                    <div class="mb-3">
+                        <span class="badge bg-danger bg-opacity-10 text-danger fw-bold text-uppercase small">Quality & Reliability</span>
+                        <h4 class="fw-bold text-dark mt-1 mb-0">What to Test</h4>
+                        <p class="text-secondary small mb-0">
+                            Make sure your project works smoothly by testing these important actions before submission.
+                        </p>
+                    </div>
+
+                    <div class="d-flex flex-column gap-3 mt-3">
+                        {% for test in structured_analysis.testing %}
+                            <div class="p-3 bg-light rounded-3 border">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <h6 class="fw-bold text-dark mb-0"><i class="fas fa-check-circle text-success me-2"></i>{{ test.test_name }}</h6>
+                                    <span class="badge {% if test.status == 'Passed' %}bg-success{% else %}bg-secondary{% endif %}">{{ test.status }}</span>
+                                </div>
+                                <div class="small text-secondary mt-1">
+                                    <strong>What to test:</strong> {{ test.what_to_test }}
+                                </div>
+                                <div class="small text-muted mt-1">
+                                    <strong>Expected Result:</strong> {{ test.expected_result }}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 9: SECURITY -->
+            <div id="ai-sub-security" class="ai-sub-section" style="display: none;">
+                <div class="card card-modern p-4 mb-4 border-0 shadow-sm">
+                    <div class="mb-3">
+                        <span class="badge bg-warning bg-opacity-10 text-dark fw-bold text-uppercase small">Protect Your App</span>
+                        <h4 class="fw-bold text-dark mt-1 mb-0">Important Security Suggestions</h4>
+                        <p class="text-secondary small mb-0">
+                            Keep user data safe by following these simple security practices in your code.
+                        </p>
+                    </div>
+
+                    <div class="row g-4 mt-1">
+                        {% for sec in structured_analysis.security %}
+                            <div class="col-md-6">
+                                <div class="card p-3 h-100 border shadow-xs">
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <i class="{{ sec.icon }} fs-5"></i>
+                                        <h6 class="fw-bold text-dark mb-0">{{ sec.title }}</h6>
+                                    </div>
+                                    <p class="small text-secondary mb-0">{{ sec.explanation }}</p>
+                                </div>
+                            </div>
+                        {% endfor %}
                     </div>
                 </div>
             </div>
         </div>
+
 
         <!-- TAB 4: 🤖 AI TOOL ADVISOR & 💡 PROMPTS -->
         <div class="tab-pane fade" id="tools">
@@ -1096,9 +1256,28 @@
 
         <!-- TAB 4: RISK ANALYSIS -->
         <div class="tab-pane fade" id="risk">
+            <!-- Sub-Navigation Toolbar for Health & Risk -->
+            <div class="subnav-toolbar shadow-xs">
+                <button type="button" class="subnav-pill-btn active" data-sub-target="all" onclick="switchSubSection('risk', 'all')">
+                    <i class="fas fa-heartbeat"></i> All Risk Sections
+                </button>
+                <button type="button" class="subnav-pill-btn" data-sub-target="factors" onclick="switchSubSection('risk', 'factors')">
+                    <i class="fas fa-brain text-primary"></i> Risk Factors
+                </button>
+                <button type="button" class="subnav-pill-btn" data-sub-target="actions" onclick="switchSubSection('risk', 'actions')">
+                    <i class="fas fa-lightbulb text-warning"></i> Actionable Steps
+                </button>
+                <button type="button" class="subnav-pill-btn" data-sub-target="history" onclick="switchSubSection('risk', 'history')">
+                    <i class="fas fa-chart-line text-info"></i> Risk Timeline
+                </button>
+                <button type="button" class="subnav-pill-btn" data-sub-target="simulator" onclick="switchSubSection('risk', 'simulator')">
+                    <i class="fas fa-sliders-h text-success"></i> What-If Simulator
+                </button>
+            </div>
+
             <div class="row g-4 mb-4">
                 <div class="col-lg-6">
-                    <div class="card card-modern p-4 h-100">
+                    <div data-risk-section="factors" class="card card-modern p-4 mb-4">
                         <h5 class="fw-bold mb-3"><i class="fas fa-brain text-primary me-2"></i> Key Risk Factors Identified</h5>
                         {% set factors = prediction.get_risk_factors() if prediction else [] %}
                         {% if factors %}
@@ -1110,9 +1289,13 @@
                                     </div>
                                 {% endfor %}
                             </div>
+                        {% else %}
+                            <p class="text-muted small mb-0">No adverse risk factors identified currently.</p>
                         {% endif %}
+                    </div>
 
-                        <h5 class="fw-bold mb-3 mt-3"><i class="fas fa-lightbulb text-warning me-2"></i> Actionable Next Steps</h5>
+                    <div data-risk-section="actions" class="card card-modern p-4 mb-4">
+                        <h5 class="fw-bold mb-3"><i class="fas fa-lightbulb text-warning me-2"></i> Actionable Next Steps</h5>
                         <div class="d-flex flex-column gap-2">
                             {% for rec in recommendations %}
                                 <div class="card border p-2 rec-card-{{ rec.priority.lower() }} bg-light bg-opacity-50 small">
@@ -1122,20 +1305,22 @@
                                     </div>
                                     <span class="text-secondary">{{ rec.recommendation }}</span>
                                 </div>
+                            {% else %}
+                                <p class="text-muted small mb-0">No urgent interventions required. Keep completing tasks on schedule.</p>
                             {% endfor %}
                         </div>
                     </div>
                 </div>
 
                 <div class="col-lg-6">
-                    <div class="card card-modern p-4 mb-4">
+                    <div data-risk-section="history" class="card card-modern p-4 mb-4">
                         <h5 class="fw-bold mb-3"><i class="fas fa-chart-line text-primary me-2"></i> Risk History Timeline</h5>
                         <div style="height: 240px;">
                             <canvas id="riskHistoryChart"></canvas>
                         </div>
                     </div>
 
-                    <div class="card card-modern p-4 text-center">
+                    <div data-risk-section="simulator" class="card card-modern p-4 text-center">
                         <h5 class="fw-bold mb-2">Test Hypothetical Scenarios</h5>
                         <p class="text-muted small mb-3">See how completing tasks or extending timelines reduces failure risk.</p>
                         <a href="{{ url_for('student.what_if_simulator', project_id=project.id) }}" class="btn btn-outline-primary py-2 fw-semibold">
@@ -1148,7 +1333,20 @@
 
         <!-- TAB 5: TIMELINE & ACTIVITY -->
         <div class="tab-pane fade" id="timeline">
-            <div class="card card-modern p-4 mb-4">
+            <!-- Sub-Navigation Toolbar for Timeline -->
+            <div class="subnav-toolbar shadow-xs">
+                <button type="button" class="subnav-pill-btn active" data-sub-target="all" onclick="switchSubSection('timeline', 'all')">
+                    <i class="fas fa-history"></i> Full Timeline
+                </button>
+                <button type="button" class="subnav-pill-btn" data-sub-target="checkins" onclick="switchSubSection('timeline', 'checkins')">
+                    <i class="fas fa-stethoscope text-primary"></i> AI Check-In History ({{ checkins|length }})
+                </button>
+                <button type="button" class="subnav-pill-btn" data-sub-target="feedback" onclick="switchSubSection('timeline', 'feedback')">
+                    <i class="fas fa-comment-dots text-success"></i> Faculty Feedback ({{ feedback_list|length }})
+                </button>
+            </div>
+
+            <div data-timeline-section="checkins" class="card card-modern p-4 mb-4">
                 <h5 class="fw-bold mb-3"><i class="fas fa-history text-primary me-2"></i> Project Activity & Check-In History</h5>
                 {% if checkins %}
                     <div class="d-flex flex-column gap-3">
@@ -1163,12 +1361,12 @@
                         {% endfor %}
                     </div>
                 {% else %}
-                    <p class="text-muted small">No check-ins logged yet. Click 'Check My Project' to record milestone snapshots.</p>
+                    <p class="text-muted small mb-0">No check-ins logged yet. Click 'Check My Project' to record milestone snapshots.</p>
                 {% endif %}
             </div>
 
             <!-- Faculty Feedback Log -->
-            <div class="card card-modern p-4">
+            <div data-timeline-section="feedback" class="card card-modern p-4">
                 <h5 class="fw-bold mb-3"><i class="fas fa-comment-dots text-primary me-2"></i> Faculty Advisor Feedback</h5>
                 {% if feedback_list %}
                     <div class="d-flex flex-column gap-3">
@@ -1188,270 +1386,483 @@
             </div>
         </div>
 
-        <!-- TAB: ⚡ SMART RESOURCE FINDER -->
+                <!-- TAB 6: ⚡ SMART RESOURCES (4 STUDENT-FRIENDLY CATEGORIES: LEARN, BUILD, EXAMPLES, REFERENCES) -->
         <div class="tab-pane fade" id="resources">
+            <!-- Smart Resources Sub-Navigation -->
+            <div class="subnav-toolbar shadow-xs mb-3">
+                <button type="button" class="subnav-pill-btn active" data-res-cat="learn" onclick="switchResourceCategory('learn')">
+                    <i class="fas fa-graduation-cap text-primary"></i> 1. Learn (Tutorials & Guides)
+                </button>
+                <button type="button" class="subnav-pill-btn" data-res-cat="build" onclick="switchResourceCategory('build')">
+                    <i class="fas fa-cubes text-success"></i> 2. Build (APIs & Libraries)
+                </button>
+                <button type="button" class="subnav-pill-btn" data-res-cat="examples" onclick="switchResourceCategory('examples')">
+                    <i class="fas fa-code-branch text-info"></i> 3. Examples (Repos & Sample Code)
+                </button>
+                <button type="button" class="subnav-pill-btn" data-res-cat="references" onclick="switchResourceCategory('references')">
+                    <i class="fas fa-book-open text-warning"></i> 4. References (Official Docs)
+                </button>
+            </div>
+
             <!-- Header Card -->
             <div class="card card-modern p-4 mb-4 border-0 shadow-sm">
                 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
                     <div>
-                        <h4 class="fw-bold mb-1 text-dark">
-                            <i class="fas fa-cubes text-primary me-2"></i> ⚡ Smart Resources & Verified Developer Hub
+                        <span class="badge bg-primary bg-opacity-10 text-primary fw-bold text-uppercase small">Curated Developer Hub</span>
+                        <h4 class="fw-bold mb-1 text-dark mt-1">
+                            <i class="fas fa-lightbulb text-warning me-2"></i> Smart Resources for {{ project.project_name }}
                         </h4>
                         <p class="text-secondary small mb-0">
-                            Gemini AI has analyzed <strong>{{ project.project_name }}</strong> to discover essential external APIs, downloadable datasets, and specialized AI tools with official documentation and direct links.
+                            Helpful tutorials, tools, sample code, and official references hand-picked for your project stack.
                         </p>
                     </div>
                     <form method="POST" action="{{ url_for('student.refresh_project_resources', project_id=project.id) }}" class="d-inline">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                         <button type="submit" class="btn btn-primary btn-sm fw-semibold shadow-sm">
-                            <i class="fas fa-sync-alt me-1"></i> Refresh / Re-analyze Resources
+                            <i class="fas fa-sync-alt me-1"></i> Refresh Resources
                         </button>
                     </form>
                 </div>
+            </div>
 
-                <!-- Resource Quick Metrics -->
-                <div class="row g-3 mt-3 text-center">
-                    <div class="col-6 col-md-3">
-                        <div class="p-3 bg-light rounded-3 border">
-                            <div class="text-muted small">Total Resources</div>
-                            <div class="fs-4 fw-bold text-dark">{{ resources|length }}</div>
-                        </div>
+            <!-- CATEGORY 1: LEARN -->
+            <div id="res-cat-learn" class="res-category-content">
+                <div class="card card-modern p-4 mb-4 border-0 shadow-sm">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold mb-0 text-dark">
+                            <i class="fas fa-graduation-cap text-primary me-2"></i> 📚 Learn: Beginner Tutorials, Guides & Courses
+                        </h5>
+                        <span class="badge bg-primary bg-opacity-10 text-primary">Student Friendly</span>
                     </div>
-                    <div class="col-6 col-md-3">
-                        <div class="p-3 bg-light rounded-3 border">
-                            <div class="text-muted small">Recommended APIs</div>
-                            <div class="fs-4 fw-bold text-primary">{{ api_resources|length }}</div>
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-3">
-                        <div class="p-3 bg-light rounded-3 border">
-                            <div class="text-muted small">Datasets & CSVs</div>
-                            <div class="fs-4 fw-bold text-success">{{ dataset_resources|length }}</div>
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-3">
-                        <div class="p-3 bg-light rounded-3 border">
-                            <div class="text-muted small">AI Tools & Prompts</div>
-                            <div class="fs-4 fw-bold text-info">{{ ai_recommendations|length }}</div>
-                        </div>
+                    <p class="text-muted small mb-4">
+                        Step-by-step guides and beginner crash courses to help you master the tools used in this project.
+                    </p>
+
+                    <div class="row g-4">
+                        {% for tool in ai_recommendations %}
+                            <div class="col-lg-6">
+                                <div class="card card-modern resource-card h-100 p-3 shadow-xs d-flex flex-column">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="fw-bold text-dark mb-0 fs-6">{{ tool.tool_name }} Guide</h6>
+                                        <span class="badge bg-primary bg-opacity-10 text-primary small">Tutorial</span>
+                                    </div>
+                                    <p class="small text-secondary mb-2"><strong>What it teaches:</strong> {{ tool.reason }}</p>
+                                    <p class="small text-muted mb-3 fst-italic"><strong>Why it is useful:</strong> Gives you ready-to-run prompts and workflow guidance.</p>
+                                    <div class="mt-auto pt-2 border-top d-flex gap-2">
+                                        {% if tool.documentation_url %}
+                                            <a href="{{ tool.documentation_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-sm fw-semibold">
+                                                <i class="fas fa-external-link-alt me-1"></i> Open Guide
+                                            </a>
+                                        {% elif tool.official_url %}
+                                            <a href="{{ tool.official_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-sm fw-semibold">
+                                                <i class="fas fa-external-link-alt me-1"></i> View Resource
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="col-12">
+                                <div class="p-3 bg-light rounded-3 text-secondary small">
+                                    Recommended beginner tutorial: Explore the official Flask and Python web development getting-started tutorials.
+                                </div>
+                            </div>
+                        {% endfor %}
                     </div>
                 </div>
             </div>
 
-            <!-- SECTION 1: RECOMMENDED APIS -->
-            <div class="card card-modern p-4 mb-4 border-0 shadow-sm">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold mb-0 text-dark">
-                        <i class="fas fa-network-wired text-primary me-2"></i> 🌐 Recommended APIs
-                    </h5>
-                    <span class="badge bg-primary bg-opacity-10 text-primary">{{ api_resources|length }} Identified</span>
-                </div>
-                <p class="text-muted small mb-4">
-                    Official verified cloud APIs required to integrate real-time feeds, data processing, user authentication, or payment functionality into your project.
-                </p>
+            <!-- CATEGORY 2: BUILD -->
+            <div id="res-cat-build" class="res-category-content" style="display: none;">
+                <div class="card card-modern p-4 mb-4 border-0 shadow-sm">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold mb-0 text-dark">
+                            <i class="fas fa-cubes text-success me-2"></i> 🛠️ Build: Libraries, APIs & Developer Tools
+                        </h5>
+                        <span class="badge bg-success bg-opacity-10 text-success">{{ api_resources|length }} Building Blocks</span>
+                    </div>
+                    <p class="text-muted small mb-4">
+                        APIs and libraries to connect backend features, databases, user authentication, and third-party integrations.
+                    </p>
 
-                {% if api_resources %}
                     <div class="row g-4">
                         {% for api in api_resources %}
                             <div class="col-lg-6">
                                 <div class="card card-modern resource-card h-100 p-3 shadow-xs d-flex flex-column">
                                     <div class="d-flex justify-content-between align-items-start mb-2">
                                         <h6 class="fw-bold text-dark mb-0 fs-6">{{ api.resource_name }}</h6>
-                                        <div class="d-flex gap-1 flex-wrap justify-content-end">
-                                            <!-- Verification Status Badge -->
-                                            <span class="badge {% if api.verification_status == 'Verified' %}bg-success{% elif api.verification_status == 'Official Source' %}bg-primary{% else %}bg-secondary{% endif %} small">
-                                                <i class="fas fa-check-circle me-1"></i>{{ api.verification_status }}
-                                            </span>
-                                            <!-- Auth Key Requirement Badge -->
-                                            {% if api.authentication_required %}
-                                                <span class="badge bg-warning text-dark small"><i class="fas fa-key me-1"></i> Requires API Key</span>
-                                            {% else %}
-                                                <span class="badge bg-success bg-opacity-10 text-success border small"><i class="fas fa-unlock me-1"></i> No Key Required</span>
-                                            {% endif %}
-                                        </div>
+                                        <span class="badge bg-primary small"><i class="fas fa-plug me-1"></i>{{ api.category }}</span>
                                     </div>
-
-                                    <!-- Purpose & Description -->
-                                    <div class="mb-2">
-                                        <span class="badge bg-light text-primary border me-1">{{ api.pricing_information or 'Free Tier Available' }}</span>
-                                        {% if api.task %}
-                                            <span class="badge bg-light text-secondary border"><i class="fas fa-tasks me-1"></i> Task: {{ api.task.title|truncate(35) }}</span>
-                                        {% endif %}
-                                    </div>
-
-                                    <p class="small text-secondary mb-2">
-                                        <strong>Purpose:</strong> {{ api.purpose }}
-                                    </p>
+                                    <p class="small text-secondary mb-2"><strong>Purpose:</strong> {{ api.purpose }}</p>
                                     <p class="small text-muted mb-3 fst-italic">
-                                        <i class="fas fa-info-circle text-primary me-1"></i> <strong>Why you need this:</strong> {{ api.why_needed or api.description }}
+                                        <i class="fas fa-check-circle text-success me-1"></i> <strong>Why it is useful:</strong> {{ api.why_needed or api.description }}
                                     </p>
-
-                                    <!-- Direct Student Actions (Only render if verified URL exists) -->
                                     <div class="mt-auto pt-2 border-top d-flex flex-wrap gap-2">
-                                        {% if api.api_key_url %}
-                                            <a href="{{ api.api_key_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-warning btn-sm fw-semibold text-dark">
-                                                <i class="fas fa-key me-1"></i> Get API Key
+                                        {% if api.documentation_url %}
+                                            <a href="{{ api.documentation_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-sm fw-semibold">
+                                                <i class="fas fa-book me-1"></i> View Documentation
                                             </a>
                                         {% endif %}
                                         {% if api.official_url %}
-                                            <a href="{{ api.official_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-sm">
-                                                <i class="fas fa-globe me-1"></i> Open Official Website
-                                            </a>
-                                        {% endif %}
-                                        {% if api.documentation_url %}
-                                            <a href="{{ api.documentation_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-secondary btn-sm">
-                                                <i class="fas fa-book me-1"></i> View API Documentation
+                                            <a href="{{ api.official_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-secondary btn-sm">
+                                                <i class="fas fa-external-link-alt me-1"></i> Open / View
                                             </a>
                                         {% endif %}
                                     </div>
                                 </div>
                             </div>
+                        {% else %}
+                            <div class="col-12">
+                                <div class="text-center py-4 bg-light rounded-3 text-muted">
+                                    <i class="fas fa-info-circle text-primary fs-3 mb-2"></i>
+                                    <p class="small mb-0">No external APIs required for this project scope. Standard built-in libraries are sufficient.</p>
+                                </div>
+                            </div>
                         {% endfor %}
                     </div>
-                {% else %}
-                    <div class="text-center py-4 bg-light rounded-3 text-muted">
-                        <i class="fas fa-check-circle text-success fs-3 mb-2"></i>
-                        <p class="small mb-0">No external third-party APIs strictly required for this project's initial core scope.</p>
-                    </div>
-                {% endif %}
+                </div>
             </div>
 
-            <!-- SECTION 2: RECOMMENDED DATASETS -->
-            <div class="card card-modern p-4 mb-4 border-0 shadow-sm">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold mb-0 text-dark">
-                        <i class="fas fa-database text-success me-2"></i> 📊 Recommended Datasets & CSV Downloads
-                    </h5>
-                    <span class="badge bg-success bg-opacity-10 text-success">{{ dataset_resources|length }} Available</span>
-                </div>
-                <p class="text-muted small mb-4">
-                    Verified open academic and machine learning datasets (CSV, Excel, JSON) to train predictive models, seed databases, or benchmark algorithms.
-                </p>
+            <!-- CATEGORY 3: EXAMPLES -->
+            <div id="res-cat-examples" class="res-category-content" style="display: none;">
+                <div class="card card-modern p-4 mb-4 border-0 shadow-sm">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold mb-0 text-dark">
+                            <i class="fas fa-code-branch text-info me-2"></i> 💻 Examples: Sample Projects & Repositories
+                        </h5>
+                        <span class="badge bg-info bg-opacity-10 text-dark">Starter Code</span>
+                    </div>
+                    <p class="text-muted small mb-4">
+                        Real-world example code and sample datasets to inspire your database schema and project layout.
+                    </p>
 
-                {% if dataset_resources %}
                     <div class="row g-4">
                         {% for ds in dataset_resources %}
                             <div class="col-lg-6">
                                 <div class="card card-modern resource-card h-100 p-3 shadow-xs d-flex flex-column">
                                     <div class="d-flex justify-content-between align-items-start mb-2">
                                         <h6 class="fw-bold text-dark mb-0 fs-6">{{ ds.resource_name }}</h6>
-                                        <span class="badge {% if ds.verification_status == 'Official Source' %}bg-primary{% else %}bg-success{% endif %} small">
-                                            <i class="fas fa-shield-alt me-1"></i>{{ ds.verification_status }}
-                                        </span>
+                                        <span class="badge bg-info text-dark small"><i class="fas fa-database me-1"></i>Dataset</span>
                                     </div>
-
-                                    <div class="mb-2">
-                                        <span class="badge bg-light text-success border me-1"><i class="fas fa-file-csv me-1"></i>{{ ds.pricing_information or 'Free Open Dataset' }}</span>
-                                        {% if ds.task %}
-                                            <span class="badge bg-light text-secondary border"><i class="fas fa-tasks me-1"></i> Task: {{ ds.task.title|truncate(35) }}</span>
-                                        {% endif %}
-                                    </div>
-
-                                    <p class="small text-secondary mb-2">
-                                        <strong>Purpose:</strong> {{ ds.purpose }}
-                                    </p>
+                                    <p class="small text-secondary mb-2"><strong>Purpose:</strong> {{ ds.purpose }}</p>
                                     <p class="small text-muted mb-3 fst-italic">
-                                        <i class="fas fa-info-circle text-success me-1"></i> <strong>Why you need this:</strong> {{ ds.why_needed or ds.description }}
+                                        <strong>Why it is useful:</strong> {{ ds.why_needed or ds.description }}
                                     </p>
-
-                                    <!-- Direct Student Actions for Datasets -->
                                     <div class="mt-auto pt-2 border-top d-flex flex-wrap gap-2">
                                         {% if ds.download_url %}
                                             <a href="{{ ds.download_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-success btn-sm fw-semibold">
-                                                <i class="fas fa-download me-1"></i> Download Dataset
+                                                <i class="fas fa-download me-1"></i> Download
                                             </a>
                                         {% endif %}
                                         {% if ds.official_url %}
                                             <a href="{{ ds.official_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-sm">
-                                                <i class="fas fa-external-link-alt me-1"></i> Open Dataset Page
-                                            </a>
-                                        {% endif %}
-                                        {% if ds.documentation_url %}
-                                            <a href="{{ ds.documentation_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-secondary btn-sm">
-                                                <i class="fas fa-book me-1"></i> View Dataset Documentation
+                                                <i class="fas fa-external-link-alt me-1"></i> Open / View
                                             </a>
                                         {% endif %}
                                     </div>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="col-12">
+                                <div class="p-3 bg-light rounded-3 text-secondary small">
+                                    No sample datasets required. Refer to standard MVC web starter templates on GitHub for project structuring.
                                 </div>
                             </div>
                         {% endfor %}
                     </div>
-                {% else %}
-                    <div class="text-center py-4 bg-light rounded-3 text-muted">
-                        <i class="fas fa-info-circle text-primary fs-3 mb-2"></i>
-                        <p class="small mb-0">This project does not require external datasets. Application data is generated by users.</p>
-                    </div>
-                {% endif %}
+                </div>
             </div>
 
-            <!-- SECTION 3: RECOMMENDED AI TOOLS & CONTEXTUAL PROMPTS -->
-            <div class="card card-modern p-4 mb-4 border-0 shadow-sm">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold mb-0 text-dark">
-                        <i class="fas fa-robot text-info me-2"></i> 🤖 Smart AI Tool Advisor & Project-Specific Prompts
-                    </h5>
-                    <span class="badge bg-info bg-opacity-10 text-dark">{{ ai_recommendations|length }} AI Guides</span>
-                </div>
-                <p class="text-muted small mb-4">
-                    Specialized AI assistants recommended for each software engineering phase (Research, Coding, Debugging, UI/UX, Database, Documentation, Testing) with ready-to-run engineered prompts pre-populated with your project specifics.
-                </p>
+            <!-- CATEGORY 4: REFERENCES -->
+            <div id="res-cat-references" class="res-category-content" style="display: none;">
+                <div class="card card-modern p-4 mb-4 border-0 shadow-sm">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold mb-0 text-dark">
+                            <i class="fas fa-book-open text-warning me-2"></i> 📖 References: Official Documentation & Tech Manuals
+                        </h5>
+                        <span class="badge bg-warning bg-opacity-10 text-dark">Official Docs</span>
+                    </div>
+                    <p class="text-muted small mb-4">
+                        Reliable official documentation links so you can look up syntax, error codes, and standard patterns.
+                    </p>
 
-                <div class="row g-4">
-                    {% for tool in ai_recommendations %}
-                        <div class="col-lg-6">
-                            <div class="card card-modern resource-card h-100 p-3 shadow-xs d-flex flex-column">
-                                <div class="d-flex justify-content-between align-items-start mb-2">
-                                    <div>
-                                        <span class="badge bg-primary bg-opacity-10 text-primary fw-bold text-uppercase small">{{ tool.purpose }}</span>
-                                        <h6 class="fw-bold text-dark mt-1 mb-0 fs-6">{{ tool.tool_name }}</h6>
-                                    </div>
-                                    <span class="badge bg-success small"><i class="fas fa-check-circle me-1"></i>{{ tool.verification_status }}</span>
-                                </div>
-
-                                <p class="small text-secondary mb-2 mt-1">
-                                    <strong>Why Recommended:</strong> {{ tool.reason }}
-                                </p>
-
-                                <!-- Action Buttons -->
-                                <div class="d-flex flex-wrap gap-2 mb-3">
-                                    {% if tool.official_url %}
-                                        <a href="{{ tool.official_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-sm py-1">
-                                            <i class="fas fa-external-link-alt me-1"></i> Open Tool
-                                        </a>
-                                    {% endif %}
-                                    {% if tool.documentation_url %}
-                                        <a href="{{ tool.documentation_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-secondary btn-sm py-1">
-                                            <i class="fas fa-graduation-cap me-1"></i> Learn How to Use
-                                        </a>
-                                    {% endif %}
-                                </div>
-
-                                <!-- Project-Specific AI Prompt Box -->
-                                <div class="p-3 bg-light rounded-3 border mt-auto">
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <strong class="small text-dark"><i class="fas fa-terminal text-success me-1"></i> Generated Prompt for Your Project:</strong>
-                                        <div class="d-flex gap-1">
-                                            <button type="button" class="btn btn-outline-primary btn-sm py-0 px-2 fw-semibold"
-                                                    onclick="copyPrompt(this, `{{ tool.generated_prompt|replace('`', '\\`') }}`)">
-                                                <i class="fas fa-copy me-1"></i> Copy Prompt
-                                            </button>
-                                            <button type="button" class="btn btn-outline-dark btn-sm py-0 px-2 fw-semibold"
-                                                    onclick="usePromptInMentor(`{{ tool.generated_prompt|replace('`', '\\`') }}`)">
-                                                <i class="fas fa-paper-plane me-1"></i> AI Mentor
-                                            </button>
+                    <div class="row g-4">
+                        {% for tool in ai_recommendations %}
+                            {% if tool.documentation_url %}
+                                <div class="col-lg-6">
+                                    <div class="card card-modern resource-card h-100 p-3 shadow-xs d-flex flex-column">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <h6 class="fw-bold text-dark mb-0 fs-6">{{ tool.tool_name }} Official Docs</h6>
+                                            <span class="badge bg-light text-secondary border small">Documentation</span>
+                                        </div>
+                                        <p class="small text-secondary mb-2"><strong>Subject:</strong> {{ tool.purpose }}</p>
+                                        <p class="small text-muted mb-3 fst-italic"><strong>Why it is useful:</strong> Verified authoritative source for code examples.</p>
+                                        <div class="mt-auto pt-2 border-top">
+                                            <a href="{{ tool.documentation_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary btn-sm fw-semibold">
+                                                <i class="fas fa-book me-1"></i> Open Documentation
+                                            </a>
                                         </div>
                                     </div>
-                                    <div class="small text-secondary bg-white p-2 rounded-2 border font-monospace" style="font-size: 0.82rem; white-space: pre-wrap;">
-{{ tool.generated_prompt }}
-                                    </div>
                                 </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- TAB 7: 📈 PROJECT PROGRESS -->
+        <div class="tab-pane fade" id="progress">
+            <div class="card card-modern p-4 mb-4 border-0 shadow-sm">
+                {% set prog_total = tasks|length %}
+                {% set prog_completed = tasks|selectattr('status', 'equalto', 'Completed')|list|length %}
+                {% set prog_pct = (prog_completed * 100 // prog_total) if prog_total > 0 else 0 %}
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <span class="badge bg-primary bg-opacity-10 text-primary fw-bold text-uppercase small">Project Health & Milestones</span>
+                        <h4 class="fw-bold text-dark mt-1 mb-0">Project Progress</h4>
+                    </div>
+                    <span class="badge {% if prog_pct >= 80 %}bg-success{% elif prog_pct >= 40 %}bg-primary{% else %}bg-warning text-dark{% endif %} fs-6 px-3 py-2 rounded-pill">
+                        {{ prog_pct }}% Overall Complete
+                    </span>
+                </div>
+                <p class="text-secondary small mb-4">
+                    Track your journey step-by-step. Keep completing tasks to move forward in your project stages.
+                </p>
+
+                <!-- Quick Progress Summary Cards -->
+                <div class="row g-3 mb-4">
+                    <div class="col-6 col-md-3">
+                        <div class="p-3 bg-light rounded-3 border text-center">
+                            <div class="text-muted small">Overall Progress</div>
+                            <div class="fs-4 fw-bold text-primary">{{ prog_pct }}%</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="p-3 bg-light rounded-3 border text-center">
+                            <div class="text-muted small">Completed Tasks</div>
+                            <div class="fs-4 fw-bold text-success">{{ prog_completed }} / {{ prog_total }}</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="p-3 bg-light rounded-3 border text-center">
+                            <div class="text-muted small">Remaining Tasks</div>
+                            <div class="fs-4 fw-bold text-warning">{{ prog_total - prog_completed }}</div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="p-3 bg-light rounded-3 border text-center">
+                            <div class="text-muted small">Current Stage</div>
+                            <div class="fs-6 fw-bold text-dark text-truncate mt-1">{{ project.stage or 'Development' }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Progress Bar -->
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between small fw-semibold mb-1">
+                        <span>Total Project Completion</span>
+                        <span>{{ prog_completed }} of {{ prog_total }} tasks done ({{ prog_pct }}%)</span>
+                    </div>
+                    <div class="progress" style="height: 12px; border-radius: 6px;">
+                        <div class="progress-bar bg-success progress-bar-striped progress-bar-animated" role="progressbar"
+                             style="width: {{ prog_pct }}%;"></div>
+                    </div>
+                </div>
+
+                <!-- Stage-by-Stage Breakdown -->
+                <h6 class="fw-bold text-dark mb-3">Stage-by-Stage Progress</h6>
+                {% set stage_progress = [
+                    {'name': 'Planning', 'pct': (100 if prog_pct > 20 else 50), 'status': ('✓ Done' if prog_pct > 20 else 'In Progress')},
+                    {'name': 'UI Design', 'pct': (100 if prog_pct > 40 else (60 if prog_pct > 15 else 20)), 'status': ('✓ Done' if prog_pct > 40 else 'In Progress')},
+                    {'name': 'Backend', 'pct': (80 if prog_pct > 60 else (prog_pct * 1.2)|round|int), 'status': (prog_pct ~ '%')},
+                    {'name': 'Database', 'pct': (100 if prog_pct > 50 else 40), 'status': ('✓ Done' if prog_pct > 50 else '40%')},
+                    {'name': 'Testing', 'pct': (80 if prog_pct > 85 else (20 if prog_pct > 50 else 0)), 'status': ('80%' if prog_pct > 85 else (prog_pct ~ '%'))},
+                    {'name': 'Deployment', 'pct': (100 if prog_pct == 100 else 0), 'status': ('✓ Done' if prog_pct == 100 else '0%')}
+                ] %}
+
+                <div class="d-flex flex-column gap-3 mb-4">
+                    {% for sp in stage_progress %}
+                        {% set clamped_pct = [sp.pct, 100]|min %}
+                        <div class="p-3 bg-light rounded-3 border">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="fw-bold text-dark">{{ sp.name }}</span>
+                                <span class="badge {% if clamped_pct >= 100 %}bg-success{% elif clamped_pct > 0 %}bg-primary{% else %}bg-secondary{% endif %}">
+                                    {{ sp.status }}
+                                </span>
                             </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar {% if clamped_pct >= 100 %}bg-success{% else %}bg-primary{% endif %}"
+                                     role="progressbar" style="width: {{ clamped_pct }}%;"></div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Upcoming Tasks Box -->
+                <h6 class="fw-bold text-dark mb-2">Upcoming Tasks to Work On</h6>
+                <div class="d-flex flex-column gap-2">
+                    {% for t in tasks if t.status != 'Completed' %}
+                        {% if loop.index <= 4 %}
+                            <div class="p-2 px-3 bg-white rounded-2 border d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="fw-semibold text-dark small">{{ t.title }}</span>
+                                    {% if t.due_date %}<span class="text-muted small ms-2"><i class="fas fa-calendar-alt me-1"></i>Due: {{ t.due_date.strftime('%b %d') }}</span>{% endif %}
+                                </div>
+                                <span class="badge {% if t.priority == 'High' %}bg-danger{% elif t.priority == 'Medium' %}bg-warning text-dark{% else %}bg-secondary{% endif %} small">
+                                    {{ t.priority }}
+                                </span>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="p-3 bg-light rounded-3 text-center text-success small">
+                            <i class="fas fa-check-circle me-1"></i> All tasks are complete! Great work!
                         </div>
                     {% endfor %}
                 </div>
             </div>
         </div>
-            </div> <!-- closes #projectTabContent -->
+
+        <!-- TAB 8: 📄 PROJECT DOCUMENTATION -->
+        <div class="tab-pane fade" id="docs">
+            <div class="card card-modern p-4 mb-4 border-0 shadow-sm">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+                    <div>
+                        <span class="badge bg-purple bg-opacity-10 fw-bold text-uppercase small" style="color: #8b5cf6;">Academic & Project Report</span>
+                        <h4 class="fw-bold text-dark mt-1 mb-0">Project Documentation</h4>
+                        <p class="text-secondary small mb-0">
+                            Complete ready-to-submit documentation for college submissions, viva, and portfolio.
+                        </p>
+                    </div>
+                    <button type="button" class="btn btn-primary btn-sm fw-semibold shadow-sm" onclick="generateAiDocs()">
+                        <i class="fas fa-magic me-1"></i> Generate / Refresh with AI
+                    </button>
+                </div>
+
+                <div id="aiDocsLoadingBanner" class="alert alert-info py-2 small d-none">
+                    <i class="fas fa-spinner fa-spin me-2"></i> Generating complete academic documentation for your project... Please wait a moment.
+                </div>
+
+                <!-- Documentation 10 Sections -->
+                <div class="d-flex flex-column gap-3" id="docSectionsContainer">
+                    <!-- 1. Project Description -->
+                    <div class="doc-section-card p-3 bg-light rounded-3 border">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="fw-bold text-dark mb-0"><i class="fas fa-file-alt text-primary me-2"></i> 1. Project Description</h6>
+                            <span class="badge bg-light text-secondary border">Section 1</span>
+                        </div>
+                        <p class="small text-secondary mb-0" id="doc-desc">
+                            {{ project.description or 'A web-based intelligent project management and tracking system designed for university students to guide them through development milestones.' }}
+                        </p>
+                    </div>
+
+                    <!-- 2. Problem Statement -->
+                    <div class="doc-section-card p-3 bg-light rounded-3 border">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="fw-bold text-dark mb-0"><i class="fas fa-exclamation-triangle text-danger me-2"></i> 2. Problem Statement</h6>
+                            <span class="badge bg-light text-secondary border">Section 2</span>
+                        </div>
+                        <p class="small text-secondary mb-0" id="doc-problem">
+                            {{ structured_analysis.overview.problem or 'Students struggle with project planning, structuring databases, selecting technology stacks, and meeting deadlines.' }}
+                        </p>
+                    </div>
+
+                    <!-- 3. Objectives -->
+                    <div class="doc-section-card p-3 bg-light rounded-3 border">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="fw-bold text-dark mb-0"><i class="fas fa-bullseye text-success me-2"></i> 3. Objectives</h6>
+                            <span class="badge bg-light text-secondary border">Section 3</span>
+                        </div>
+                        <p class="small text-secondary mb-0" id="doc-objectives">
+                            {{ structured_analysis.overview.goal or 'To provide step-by-step guidance, automated milestone tracking, and AI-driven architectural advice for successful project delivery.' }}
+                        </p>
+                    </div>
+
+                    <!-- 4. Features -->
+                    <div class="doc-section-card p-3 bg-light rounded-3 border">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="fw-bold text-dark mb-0"><i class="fas fa-list-check text-info me-2"></i> 4. Features</h6>
+                            <span class="badge bg-light text-secondary border">Section 4</span>
+                        </div>
+                        <ul class="small text-secondary mb-0 ps-3" id="doc-features">
+                            {% for f in structured_analysis.what_to_build.features %}
+                                <li><strong>{{ f.name }}:</strong> {{ f.description }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+
+                    <!-- 5. Technology Used -->
+                    <div class="doc-section-card p-3 bg-light rounded-3 border">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="fw-bold text-dark mb-0"><i class="fas fa-laptop-code text-warning me-2"></i> 5. Technology Used</h6>
+                            <span class="badge bg-light text-secondary border">Section 5</span>
+                        </div>
+                        <p class="small text-secondary mb-0" id="doc-tech">
+                            {% for tool in structured_analysis.tools_to_use %}{{ tool.category }}: {{ tool.name }}{% if not loop.last %} | {% endif %}{% endfor %}
+                        </p>
+                    </div>
+
+                    <!-- 6. System Architecture -->
+                    <div class="doc-section-card p-3 bg-light rounded-3 border">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="fw-bold text-dark mb-0"><i class="fas fa-sitemap text-primary me-2"></i> 6. System Architecture</h6>
+                            <span class="badge bg-light text-secondary border">Section 6</span>
+                        </div>
+                        <p class="small text-secondary mb-0" id="doc-arch">
+                            {{ structured_analysis.how_it_works.diagram_summary or 'Client-Server architecture utilizing a modern responsive UI layer, RESTful backend services, and structured SQL database persistence.' }}
+                        </p>
+                    </div>
+
+                    <!-- 7. Database Design -->
+                    <div class="doc-section-card p-3 bg-light rounded-3 border">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="fw-bold text-dark mb-0"><i class="fas fa-database text-purple me-2" style="color: #8b5cf6;"></i> 7. Database Design</h6>
+                            <span class="badge bg-light text-secondary border">Section 7</span>
+                        </div>
+                        <p class="small text-secondary mb-0" id="doc-database">
+                            Relational database schema includes tables for: {% for t in structured_analysis.database %}{{ t.name }}{% if not loop.last %}, {% endif %}{% endfor %}.
+                        </p>
+                    </div>
+
+                    <!-- 8. Implementation -->
+                    <div class="doc-section-card p-3 bg-light rounded-3 border">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="fw-bold text-dark mb-0"><i class="fas fa-code text-danger me-2"></i> 8. Implementation</h6>
+                            <span class="badge bg-light text-secondary border">Section 8</span>
+                        </div>
+                        <p class="small text-secondary mb-0" id="doc-impl">
+                            Developed following an 8-stage roadmap from initial schema definition to backend API controllers, UI integration, and testing.
+                        </p>
+                    </div>
+
+                    <!-- 9. Testing -->
+                    <div class="doc-section-card p-3 bg-light rounded-3 border">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="fw-bold text-dark mb-0"><i class="fas fa-vial text-success me-2"></i> 9. Testing</h6>
+                            <span class="badge bg-light text-secondary border">Section 9</span>
+                        </div>
+                        <p class="small text-secondary mb-0" id="doc-testing">
+                            Functional validation and integration testing performed across key user stories, authentication verification, and data handling workflows.
+                        </p>
+                    </div>
+
+                    <!-- 10. Future Improvements -->
+                    <div class="doc-section-card p-3 bg-light rounded-3 border">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="fw-bold text-dark mb-0"><i class="fas fa-rocket text-primary me-2"></i> 10. Future Improvements</h6>
+                            <span class="badge bg-light text-secondary border">Section 10</span>
+                        </div>
+                        <p class="small text-secondary mb-0" id="doc-future">
+                            Future enhancements include mobile application support, real-time collaboration via WebSockets, and advanced analytics for performance monitoring.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        </div> <!-- closes #projectTabContent -->
         </div> <!-- closes right column (col-xl-9 col-lg-8 col-md-7) -->
     </div> <!-- closes main row (row g-4) -->
 </div> <!-- closes container-fluid -->
@@ -1651,6 +2062,67 @@
         sendPrompt(promptText);
     }
 
+    function switchSubSection(tabKey, sectionKey) {
+        // 1. Ensure the parent tab is activated in Bootstrap
+        const tabTrigger = document.querySelector('#' + tabKey + '-tab');
+        if (tabTrigger) {
+            bootstrap.Tab.getOrCreateInstance(tabTrigger).show();
+        }
+
+        // 2. Update active status on horizontal in-tab toolbar pill buttons
+        const tabPane = document.getElementById(tabKey);
+        if (tabPane) {
+            const pillBtns = tabPane.querySelectorAll('.subnav-pill-btn');
+            pillBtns.forEach(btn => {
+                if (btn.dataset.subTarget === sectionKey) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+
+            // 3. Filter / reveal matching sub-sections in the tab
+            const sectionSelector = `[data-${tabKey}-section]`;
+            const sections = tabPane.querySelectorAll(sectionSelector);
+            
+            if (sections.length > 0) {
+                if (sectionKey === 'all') {
+                    sections.forEach(sec => {
+                        sec.style.display = '';
+                    });
+                } else {
+                    let firstVisible = null;
+                    sections.forEach(sec => {
+                        const secValue = sec.getAttribute(`data-${tabKey}-section`);
+                        if (secValue === sectionKey) {
+                            sec.style.display = '';
+                            if (!firstVisible) firstVisible = sec;
+                        } else {
+                            sec.style.display = 'none';
+                        }
+                    });
+
+                    if (firstVisible) {
+                        firstVisible.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+                }
+            }
+        }
+
+        // 4. Update active status on sidebar sub-nav items
+        const sidebarSubNav = document.getElementById(tabKey + 'SubNavSidebar');
+        if (sidebarSubNav) {
+            const subLinks = sidebarSubNav.querySelectorAll('.subnav-link');
+            subLinks.forEach(link => {
+                if (link.dataset.subTarget === sectionKey) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+        }
+    }
+
     const regenFormEl = document.getElementById("regenForm");
     if (regenFormEl) {
         regenFormEl.addEventListener("submit", function() {
@@ -1660,6 +2132,124 @@
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Gemini Regenerating...';
             }
         });
+    }
+
+    // AI Analysis Secondary Navigation Controller
+    function switchAiSubNav(sectionKey) {
+        // 1. Ensure guidance tab is active
+        const guidanceTabBtn = document.getElementById('guidance-tab') || document.querySelector('[data-bs-target="#guidance"]');
+        if (guidanceTabBtn) {
+            bootstrap.Tab.getOrCreateInstance(guidanceTabBtn).show();
+        }
+
+        // 2. Toggle active style on sub-nav buttons
+        const subNavButtons = document.querySelectorAll('.ai-subnav-btn');
+        subNavButtons.forEach(btn => {
+            if (btn.getAttribute('data-ai-sub') === sectionKey) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+
+        // 3. Toggle section visibility
+        const allSections = document.querySelectorAll('.ai-sub-section');
+        allSections.forEach(sec => {
+            sec.style.display = 'none';
+        });
+
+        const targetSection = document.getElementById(`ai-sub-${sectionKey}`);
+        if (targetSection) {
+            targetSection.style.display = 'block';
+            targetSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    }
+
+    // Smart Resources Category Switcher (Learn, Build, Examples, References)
+    function switchResourceCategory(categoryKey) {
+        // 1. Ensure resources tab is active
+        const resTabBtn = document.getElementById('resources-tab') || document.querySelector('[data-bs-target="#resources"]');
+        if (resTabBtn) {
+            bootstrap.Tab.getOrCreateInstance(resTabBtn).show();
+        }
+
+        // 2. Update active style on resource buttons
+        const pillBtns = document.querySelectorAll('[data-res-cat]');
+        pillBtns.forEach(btn => {
+            if (btn.getAttribute('data-res-cat') === categoryKey) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+
+        // 3. Toggle category view
+        const allCategories = document.querySelectorAll('.res-category-content');
+        allCategories.forEach(cat => {
+            cat.style.display = 'none';
+        });
+
+        const targetCat = document.getElementById(`res-cat-${categoryKey}`);
+        if (targetCat) {
+            targetCat.style.display = 'block';
+        }
+    }
+
+    // AI Mentor Direct Tab Opener
+    function openMentorTab() {
+        const mentorTabBtn = document.getElementById('mentor-tab') || document.querySelector('[data-bs-target="#mentor"]');
+        if (mentorTabBtn) {
+            bootstrap.Tab.getOrCreateInstance(mentorTabBtn).show();
+        }
+    }
+
+    // AI Documentation Generator API Caller
+    async function generateAiDocs() {
+        const loadingBanner = document.getElementById('aiDocsLoadingBanner');
+        if (loadingBanner) loadingBanner.classList.remove('d-none');
+
+        try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || 
+                              document.querySelector('input[name="csrf_token"]')?.value;
+            const resp = await fetch('{{ url_for("student.generate_documentation", project_id=project.id) }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                }
+            });
+
+            const data = await resp.json();
+            if (data.status === 'success' && data.documentation) {
+                const doc = data.documentation;
+                if (document.getElementById('doc-desc')) document.getElementById('doc-desc').textContent = doc.project_description || '';
+                if (document.getElementById('doc-problem')) document.getElementById('doc-problem').textContent = doc.problem_statement || '';
+                if (document.getElementById('doc-objectives')) document.getElementById('doc-objectives').textContent = doc.objectives || '';
+                if (document.getElementById('doc-tech')) document.getElementById('doc-tech').textContent = doc.technology_used || '';
+                if (document.getElementById('doc-arch')) document.getElementById('doc-arch').textContent = doc.system_architecture || '';
+                if (document.getElementById('doc-database')) document.getElementById('doc-database').textContent = doc.database_design || '';
+                if (document.getElementById('doc-impl')) document.getElementById('doc-impl').textContent = doc.implementation || '';
+                if (document.getElementById('doc-testing')) document.getElementById('doc-testing').textContent = doc.testing || '';
+                if (document.getElementById('doc-future')) document.getElementById('doc-future').textContent = doc.future_improvements || '';
+
+                if (doc.features && Array.isArray(doc.features) && document.getElementById('doc-features')) {
+                    const ul = document.getElementById('doc-features');
+                    ul.innerHTML = '';
+                    doc.features.forEach(f => {
+                        const li = document.createElement('li');
+                        li.textContent = f;
+                        ul.appendChild(li);
+                    });
+                }
+                alert('Documentation updated successfully with AI!');
+            } else {
+                alert('Documentation updated using project template.');
+            }
+        } catch (err) {
+            console.error('Error generating docs:', err);
+        } finally {
+            if (loadingBanner) loadingBanner.classList.add('d-none');
+        }
     }
 </script>
 {% endblock %}

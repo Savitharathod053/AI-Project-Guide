@@ -1,0 +1,904 @@
+{% extends "base.html" %}
+
+{% block title %}Projexa — Check Your Project Idea{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Simple, clean styling tailored for college students */
+.pg-simple-container {
+    max-width: 680px;
+    margin: 0 auto;
+}
+
+.pg-hero-simple {
+    text-align: center;
+    padding: 2.5rem 1rem 2rem 1rem;
+}
+
+.pg-hero-tag {
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--pg-gold);
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.pg-hero-title {
+    font-size: 1.85rem;
+    font-weight: 700;
+    color: var(--pg-text-heading);
+    margin-bottom: 0.65rem;
+}
+
+.pg-hero-desc {
+    font-size: 0.98rem;
+    color: var(--pg-text-secondary);
+    max-width: 520px;
+    margin: 0 auto 1.5rem auto;
+    line-height: 1.5;
+}
+
+.pg-flow-dots {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+    font-size: 0.82rem;
+    color: var(--pg-text-muted);
+}
+.pg-flow-dot-active {
+    font-weight: 600;
+    color: var(--pg-text-heading);
+}
+
+.pg-form-card {
+    background-color: var(--pg-bg-surface);
+    border: 1px solid var(--pg-border);
+    border-radius: var(--radius-md);
+    padding: 2rem;
+    box-shadow: var(--shadow-xs);
+    margin-bottom: 2.5rem;
+}
+
+.pg-form-label {
+    font-weight: 600;
+    font-size: 0.92rem;
+    color: var(--pg-text-heading);
+    margin-bottom: 0.25rem;
+}
+
+.pg-form-helper {
+    font-size: 0.8rem;
+    color: var(--pg-text-muted);
+    margin-bottom: 0.5rem;
+}
+
+.pg-feature-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+/* Loading box */
+.pg-loading-box {
+    background: var(--pg-bg-surface);
+    border: 1px solid var(--pg-border);
+    border-radius: var(--radius-md);
+    padding: 3rem 1.5rem;
+    text-align: center;
+    margin: 2rem auto;
+}
+
+.pg-loading-steps {
+    display: inline-flex;
+    flex-direction: column;
+    text-align: left;
+    gap: 0.75rem;
+    margin: 1.5rem auto;
+    font-size: 0.95rem;
+}
+
+.pg-step-line {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--pg-text-muted);
+}
+.pg-step-line.done {
+    color: var(--risk-low);
+    font-weight: 500;
+}
+.pg-step-line.active {
+    color: var(--pg-text-heading);
+    font-weight: 600;
+}
+
+/* Result Screen */
+.pg-result-hero {
+    background: var(--pg-bg-surface);
+    border: 1px solid var(--pg-border);
+    border-radius: var(--radius-md);
+    padding: 2rem;
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.pg-level-pill {
+    display: inline-block;
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    padding: 0.5rem 1.25rem;
+    border-radius: 9999px;
+    margin: 0.75rem 0 0.5rem 0;
+}
+
+.pg-level-very-different {
+    background: rgba(16, 185, 129, 0.12);
+    color: var(--risk-low);
+    border: 1px solid var(--risk-low);
+}
+
+.pg-level-somewhat-different {
+    background: rgba(197, 160, 89, 0.15);
+    color: #8c6d23;
+    border: 1px solid var(--pg-gold);
+}
+
+[data-theme="dark"] .pg-level-somewhat-different {
+    color: var(--pg-gold-light);
+}
+
+.pg-level-very-similar {
+    background: rgba(245, 158, 11, 0.12);
+    color: #b45309;
+    border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.pg-section-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--pg-text-heading);
+    margin-bottom: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.pg-simple-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.5rem 0;
+}
+
+.pg-simple-list-item {
+    padding: 0.65rem 0.85rem;
+    border-radius: var(--radius-sm);
+    background: var(--pg-bg-surface);
+    border: 1px solid var(--pg-border);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    font-size: 0.88rem;
+    line-height: 1.45;
+}
+
+.pg-item-card {
+    background: var(--pg-bg-surface);
+    border: 1px solid var(--pg-border);
+    border-radius: var(--radius-sm);
+    padding: 1rem 1.15rem;
+    margin-bottom: 0.75rem;
+}
+
+.pg-source-pill {
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 0.15rem 0.45rem;
+    border-radius: 4px;
+    background: var(--pg-bg-subtle);
+    color: var(--pg-text-secondary);
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-xl py-3">
+    <div class="pg-simple-container">
+
+        <!-- ====================================================================
+             1. SIMPLE 3-STEP FLOW INDICATOR
+             ==================================================================== -->
+        <div class="pg-flow-dots">
+            <span class="pg-flow-dot-active" id="dotStep1">1. Enter project</span>
+            <span>→</span>
+            <span id="dotStep2">2. Check project</span>
+            <span>→</span>
+            <span id="dotStep3">3. See result</span>
+        </div>
+
+        <!-- ====================================================================
+             2. HOME / INTRO SCREEN
+             ==================================================================== -->
+        <div class="pg-hero-simple" id="homeHero">
+            <span class="pg-hero-tag">Projexa</span>
+            <div class="badge badge-neutral mb-2" style="font-size: 0.75rem;">Project Innovation &amp; Uniqueness Analyzer</div>
+            <h1 class="pg-hero-title">Is your project idea different?</h1>
+            <p class="pg-hero-desc">
+                We will check your idea against similar projects and help you improve it.
+            </p>
+            <div class="alert alert-secondary py-1 px-3 mx-auto mb-3 border text-start small" style="max-width: 540px; font-size: 0.78rem;">
+                <i class="fas fa-circle-info text-gold me-1"></i>
+                <strong>AI Comparison Notice:</strong> Results are AI-assisted estimates from available projects and do not guarantee global uniqueness.
+            </div>
+            <div class="d-flex justify-content-center gap-2">
+                <button type="button" class="btn btn-primary px-4 py-2" onclick="scrollToForm()">
+                    Check My Project
+                </button>
+                <button type="button" class="btn btn-outline-secondary px-3 py-2" onclick="fillSampleIdea()">
+                    Try Example Idea
+                </button>
+            </div>
+            {% if recent_analyses %}
+            <div class="mt-3">
+                <button type="button" class="btn btn-link btn-sm text-secondary text-decoration-none" data-bs-toggle="modal" data-bs-target="#historyModal">
+                    <i class="fas fa-history me-1"></i> View Past Results ({{ recent_analyses|length }})
+                </button>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- ====================================================================
+             3. PROJECT FORM (SINGLE CLEAN CARD, ONLY WHAT'S NEEDED)
+             ==================================================================== -->
+        <div id="formContainer">
+            <div class="pg-form-card">
+                <div class="mb-4 text-center">
+                    <h2 class="h4 fw-bold mb-1">Check your project idea</h2>
+                    <p class="text-secondary small mb-0">Fill in the details below. Simple and short answers work best.</p>
+                </div>
+
+                <form id="simpleProjectForm" onsubmit="handleSimpleSubmit(event)">
+                    <!-- 1. Project Name -->
+                    <div class="mb-3">
+                        <label for="project_title" class="pg-form-label">
+                            Project name <span class="text-danger">*</span>
+                        </label>
+                        <div class="pg-form-helper">Example: "Smart Bus Tracking System"</div>
+                        <input type="text" class="form-control" id="project_title" name="project_title"
+                               placeholder="e.g. Smart Bus Tracking System" required>
+                    </div>
+
+                    <!-- 2. What problem are you solving? -->
+                    <div class="mb-3">
+                        <label for="problem_statement" class="pg-form-label">
+                            What problem are you solving? <span class="text-danger">*</span>
+                        </label>
+                        <div class="pg-form-helper">What problem does your project solve?</div>
+                        <textarea class="form-control" id="problem_statement" name="problem_statement" rows="2"
+                                  placeholder="Explain the problem in 1–3 short sentences..." required></textarea>
+                    </div>
+
+                    <!-- 3. What does your project do? -->
+                    <div class="mb-3">
+                        <label for="project_description" class="pg-form-label">
+                            What does your project do? <span class="text-danger">*</span>
+                        </label>
+                        <div class="pg-form-helper">Explain what your project does in 2–4 sentences.</div>
+                        <textarea class="form-control" id="project_description" name="project_description" rows="3"
+                                  placeholder="Explain your project in simple words..." required></textarea>
+                    </div>
+
+                    <!-- 4. Main features -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="pg-form-label mb-0">Main features</label>
+                            <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2" style="font-size: 0.78rem;" onclick="addFeatureInput()">
+                                + Add feature
+                            </button>
+                        </div>
+                        <div class="pg-form-helper">List the main things your project can do.</div>
+                        
+                        <div id="featuresList">
+                            <div class="pg-feature-row">
+                                <input type="text" class="form-control form-control-sm feature-field" placeholder="Feature 1 (e.g. Live GPS map tracking)">
+                                <button type="button" class="btn btn-sm btn-outline-secondary py-1 px-2 border-0" onclick="removeFeatureInput(this)" title="Remove">✕</button>
+                            </div>
+                            <div class="pg-feature-row">
+                                <input type="text" class="form-control form-control-sm feature-field" placeholder="Feature 2 (e.g. Bus arrival time alerts)">
+                                <button type="button" class="btn btn-sm btn-outline-secondary py-1 px-2 border-0" onclick="removeFeatureInput(this)" title="Remove">✕</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 5. Technology used -->
+                    <div class="mb-3">
+                        <label for="technologies_used" class="pg-form-label">
+                            What technology are you using? <span class="text-danger">*</span>
+                        </label>
+                        <div class="pg-form-helper">Example: Python, React, AI, IoT</div>
+                        <input type="text" class="form-control" id="technologies_used" name="technologies_used"
+                               placeholder="e.g. Python, React, AI, IoT" required>
+                    </div>
+
+                    <!-- 6. Optional GitHub link -->
+                    <div class="mb-4">
+                        <label for="github_url" class="pg-form-label">GitHub link (optional)</label>
+                        <input type="url" class="form-control" id="github_url" name="github_url"
+                               placeholder="https://github.com/username/project">
+                    </div>
+
+                    <!-- Hidden helper fields for backend compatibility -->
+                    <input type="hidden" id="proposed_solution" name="proposed_solution" value="">
+                    <input type="hidden" id="target_users" name="target_users" value="">
+                    <input type="hidden" id="additional_notes" name="additional_notes" value="">
+
+                    <!-- Submit Button -->
+                    <div class="text-center pt-2">
+                        <button type="submit" class="btn btn-primary btn-lg w-100 py-2 fw-semibold" id="submitCheckBtn">
+                            Check My Project
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- ====================================================================
+             4. ANALYZING / LOADING SCREEN (SIMPLE WORDS ONLY)
+             ==================================================================== -->
+        <div class="pg-loading-box d-none" id="loadingBox">
+            <div class="spinner-border text-gold mb-3" style="width: 2.5rem; height: 2.5rem;" role="status">
+                <span class="visually-hidden">Checking...</span>
+            </div>
+            <h3 class="h4 fw-bold mb-1">Checking your project...</h3>
+            <p class="text-secondary small mb-3">Please wait a few seconds while we check your idea.</p>
+
+            <div class="pg-loading-steps">
+                <div class="pg-step-line active" id="loadStep1">
+                    <span id="loadStepIcon1">●</span>
+                    <span>Reading your project</span>
+                </div>
+                <div class="pg-step-line" id="loadStep2">
+                    <span id="loadStepIcon2">○</span>
+                    <span>Finding similar projects</span>
+                </div>
+                <div class="pg-step-line" id="loadStep3">
+                    <span id="loadStepIcon3">○</span>
+                    <span>Comparing the results</span>
+                </div>
+                <div class="pg-step-line" id="loadStep4">
+                    <span id="loadStepIcon4">○</span>
+                    <span>Preparing suggestions</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ====================================================================
+             5. RESULTS SCREEN (ANSWERS 4 SIMPLE QUESTIONS)
+             ==================================================================== -->
+        <div class="d-none" id="resultContainer">
+
+            <!-- Back Action -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="showFormAgain()">
+                    ← Check Another Project
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="window.print()">
+                    <i class="fas fa-print me-1"></i> Print Result
+                </button>
+            </div>
+
+            <!-- 1. How different is your idea? -->
+            <div class="pg-result-hero">
+                <div class="text-uppercase small fw-bold text-muted" style="letter-spacing: 0.08em;">
+                    YOUR RESULT
+                </div>
+                <h2 class="h3 fw-bold mt-1 mb-2">How different is your idea?</h2>
+
+                <div id="resultLevelPill" class="pg-level-pill pg-level-somewhat-different">
+                    SOMEWHAT DIFFERENT
+                </div>
+
+                <div class="text-muted small mt-1 mb-2" id="resultScoreText">
+                    Score: <strong>72 / 100</strong>
+                </div>
+
+                <p class="text-secondary mb-0 mt-2" id="resultLevelExplanation" style="max-width: 540px; margin: 0 auto; font-size: 0.92rem;">
+                    Your idea is similar to some existing projects, but it also has some different parts.
+                </p>
+
+                <!-- Reassuring encouragement note -->
+                <div class="p-2 bg-light rounded-2 border mt-3 text-secondary small d-inline-block text-start" style="font-size: 0.8rem; max-width: 560px;" id="resultEncouragement">
+                    <i class="fas fa-circle-info text-gold me-1"></i>
+                    This is an AI-assisted comparison. Having similar projects is completely normal and means your idea is useful.
+                </div>
+            </div>
+
+            <!-- 2. What already exists? -->
+            <div class="mb-4">
+                <div class="pg-section-title">
+                    <span>Similar projects already exist</span>
+                </div>
+                <p class="text-secondary small mb-2">
+                    Here are parts of your idea that are already found in existing projects:
+                </p>
+                <div id="existingPointsList" class="pg-simple-list">
+                    <!-- Populated dynamically with short simple points -->
+                </div>
+            </div>
+
+            <!-- 3. What is different about your idea? -->
+            <div class="mb-4">
+                <div class="pg-section-title">
+                    <span>What is different about your idea?</span>
+                </div>
+                <p class="text-secondary small mb-2">
+                    These parts look different or less common:
+                </p>
+                <div id="differentPointsList" class="pg-simple-list">
+                    <!-- Populated dynamically with checkmarked points -->
+                </div>
+            </div>
+
+            <!-- 4. Projects like yours (Top 3-5 only) -->
+            <div class="mb-4">
+                <div class="pg-section-title">
+                    <span>Projects like yours</span>
+                </div>
+                <p class="text-secondary small mb-2">
+                    These are some similar projects we found. This does not mean your idea is copied.
+                </p>
+                <div id="similarProjectsList">
+                    <!-- Populated with 3-5 clean items -->
+                </div>
+            </div>
+
+            <!-- 5. How can I improve it? -->
+            <div class="mb-4">
+                <div class="pg-section-title">
+                    <span>Want to make your project better?</span>
+                </div>
+                <p class="text-secondary small mb-2">
+                    Here are realistic ways to make your idea stronger:
+                </p>
+                <div id="suggestionsList">
+                    <!-- Populated with numbered suggestions and "How can I add this?" buttons -->
+                </div>
+            </div>
+
+            <!-- 6. Where we found similar ideas (Sources) -->
+            <div class="mb-4">
+                <div class="pg-section-title">
+                    <span>Where we found similar ideas</span>
+                </div>
+                <div id="sourcesList">
+                    <!-- Populated with clean source links -->
+                </div>
+            </div>
+
+            <!-- Bottom Actions -->
+            <div class="p-3 bg-light rounded-3 border text-center mt-4">
+                <h4 class="h6 fw-bold mb-2">Ready to work on this project?</h4>
+                <div class="d-flex flex-wrap justify-content-center gap-2">
+                    <a href="{{ url_for('student.create_project') }}" class="btn btn-primary btn-sm">
+                        Create Project Workspace
+                    </a>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="showFormAgain()">
+                        Check Another Project
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<!-- ========================================================================
+     PAST RESULTS MODAL (PRESERVED)
+     ======================================================================== -->
+<div class="modal fade" id="historyModal" tabindex="-1" aria-labelledby="historyModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title h6 fw-bold" id="historyModalLabel">Past Project Results</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for a in recent_analyses %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center p-3">
+                        <div>
+                            <div class="fw-semibold small">{{ a.project_title }}</div>
+                            <div class="small text-muted" style="font-size: 0.78rem;">
+                                {{ a.created_at.strftime('%b %d, %Y') }}
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="loadSavedAnalysis({{ a.id }})" data-bs-dismiss="modal">
+                            See Result
+                        </button>
+                    </div>
+                    {% else %}
+                    <div class="p-4 text-center text-muted small">
+                        No projects checked yet.
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// 1. ADD / REMOVE FEATURES DYNAMICALLY
+function addFeatureInput(defaultValue = "") {
+    const list = document.getElementById("featuresList");
+    const count = list.querySelectorAll(".pg-feature-row").length + 1;
+    const div = document.createElement("div");
+    div.className = "pg-feature-row";
+    div.innerHTML = `
+        <input type="text" class="form-control form-control-sm feature-field" placeholder="Feature ${count}" value="${escapeHtml(defaultValue)}">
+        <button type="button" class="btn btn-sm btn-outline-secondary py-1 px-2 border-0" onclick="removeFeatureInput(this)" title="Remove">✕</button>
+    `;
+    list.appendChild(div);
+}
+
+function removeFeatureInput(btn) {
+    const list = document.getElementById("featuresList");
+    if (list.querySelectorAll(".pg-feature-row").length > 1) {
+        btn.closest(".pg-feature-row").remove();
+    } else {
+        btn.closest(".pg-feature-row").querySelector("input").value = "";
+    }
+}
+
+function getFeatures() {
+    const fields = document.querySelectorAll(".feature-field");
+    const res = [];
+    fields.forEach(f => {
+        const val = f.value.trim();
+        if (val) res.push(val);
+    });
+    return res;
+}
+
+// 2. FILL EXAMPLE IDEA
+function fillSampleIdea() {
+    document.getElementById("project_title").value = "Smart Bus Tracking System";
+    document.getElementById("problem_statement").value = "Students often waste time waiting at campus bus stops because they do not know the exact location or arrival time of the college bus.";
+    document.getElementById("project_description").value = "A mobile and web application that tracks campus buses in real-time using GPS. It predicts arrival times and notifies students before the bus arrives at their stop.";
+    document.getElementById("technologies_used").value = "Python, React, GPS, IoT, Leaflet.js";
+    document.getElementById("github_url").value = "";
+
+    const list = document.getElementById("featuresList");
+    list.innerHTML = "";
+    addFeatureInput("Live GPS map tracking for campus buses");
+    addFeatureInput("Estimated arrival time countdown for each stop");
+    addFeatureInput("Automated push alert when bus is 5 minutes away");
+
+    scrollToForm();
+}
+
+function scrollToForm() {
+    const el = document.getElementById("formContainer");
+    if (el) {
+        el.scrollIntoView({ behavior: "smooth" });
+    }
+}
+
+function updateFlowStep(step) {
+    const d1 = document.getElementById("dotStep1");
+    const d2 = document.getElementById("dotStep2");
+    const d3 = document.getElementById("dotStep3");
+    if (d1) d1.className = step === 1 ? "pg-flow-dot-active" : "";
+    if (d2) d2.className = step === 2 ? "pg-flow-dot-active" : "";
+    if (d3) d3.className = step === 3 ? "pg-flow-dot-active" : "";
+}
+
+function showFormAgain() {
+    document.getElementById("formContainer").classList.remove("d-none");
+    document.getElementById("homeHero").classList.remove("d-none");
+    document.getElementById("loadingBox").classList.add("d-none");
+    document.getElementById("resultContainer").classList.add("d-none");
+    updateFlowStep(1);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+// 3. SUBMIT FORM
+async function handleSimpleSubmit(event) {
+    event.preventDefault();
+    const title = document.getElementById("project_title").value.trim();
+    const problem = document.getElementById("problem_statement").value.trim();
+    const desc = document.getElementById("project_description").value.trim();
+    const tech = document.getElementById("technologies_used").value.trim();
+    const github = document.getElementById("github_url").value.trim();
+    const featuresList = getFeatures();
+
+    if (!title) {
+        alert("Please enter a project name.");
+        return;
+    }
+
+    const payload = {
+        project_title: title,
+        problem_statement: problem,
+        project_description: desc,
+        proposed_solution: desc, // Reuse description to keep form short
+        main_features: featuresList.length > 0 ? featuresList.map(f => "- " + f).join("\n") : "",
+        technologies_used: tech,
+        target_users: "College students and faculty",
+        github_url: github,
+        additional_notes: "",
+        use_cache: true
+    };
+
+    // Transition to loading screen
+    document.getElementById("formContainer").classList.add("d-none");
+    document.getElementById("homeHero").classList.add("d-none");
+    document.getElementById("resultContainer").classList.add("d-none");
+    document.getElementById("loadingBox").classList.remove("d-none");
+    updateFlowStep(2);
+
+    // Progressive step indicator
+    let currentStep = 1;
+    const stepTimer = setInterval(() => {
+        if (currentStep < 4) {
+            const curEl = document.getElementById("loadStep" + currentStep);
+            const curIcon = document.getElementById("loadStepIcon" + currentStep);
+            if (curEl) {
+                curEl.className = "pg-step-line done";
+                if (curIcon) curIcon.textContent = "✓";
+            }
+            currentStep++;
+            const nextEl = document.getElementById("loadStep" + currentStep);
+            const nextIcon = document.getElementById("loadStepIcon" + currentStep);
+            if (nextEl) {
+                nextEl.className = "pg-step-line active";
+                if (nextIcon) nextIcon.textContent = "●";
+            }
+        }
+    }, 1200);
+
+    try {
+        const response = await fetch("{{ url_for('api.api_analyze_project_uniqueness') }}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-Requested-With": "XMLHttpRequest"
+            },
+            body: JSON.stringify(payload)
+        });
+
+        clearInterval(stepTimer);
+
+        // Mark all steps done
+        for (let i = 1; i <= 4; i++) {
+            const el = document.getElementById("loadStep" + i);
+            const ic = document.getElementById("loadStepIcon" + i);
+            if (el) el.className = "pg-step-line done";
+            if (ic) ic.textContent = "✓";
+        }
+
+        const resData = await response.json();
+        if (response.ok && resData.status === "success") {
+            renderSimpleResult(resData.data);
+        } else {
+            alert(resData.message || "Something went wrong. Please try again.");
+            showFormAgain();
+        }
+    } catch (err) {
+        clearInterval(stepTimer);
+        console.error("Check project error:", err);
+        alert("Something went wrong. Please check your connection and try again.");
+        showFormAgain();
+    }
+}
+
+// 4. RENDER SIMPLE RESULT
+function renderSimpleResult(data) {
+    const report = data.report || {};
+    const score = data.differentiation_score || report.differentiation_score || 50;
+    
+    // Map score to 3 clear, simple levels:
+    // VERY DIFFERENT (>= 75)
+    // SOMEWHAT DIFFERENT (45 - 74)
+    // VERY SIMILAR (< 45)
+    let levelLabel = "SOMEWHAT DIFFERENT";
+    let levelClass = "pg-level-somewhat-different";
+    let levelExplanation = "Your idea is similar to some existing projects, but it also has some different parts.";
+    let encouragementText = "Having similar projects is normal. You can add a few new ideas to make it stronger.";
+
+    if (score >= 75) {
+        levelLabel = "VERY DIFFERENT";
+        levelClass = "pg-level-very-different";
+        levelExplanation = "Your idea has several parts that are different from the projects we found.";
+        encouragementText = "Great job! Your idea stands out well compared to standard projects.";
+    } else if (score < 45) {
+        levelLabel = "VERY SIMILAR";
+        levelClass = "pg-level-very-similar";
+        levelExplanation = "Many parts of your idea are already found in existing projects.";
+        encouragementText = "That is okay! Most great projects build upon existing ideas. Check our suggestions below to add something new.";
+    }
+
+    const pill = document.getElementById("resultLevelPill");
+    pill.textContent = levelLabel;
+    pill.className = "pg-level-pill " + levelClass;
+
+    document.getElementById("resultScoreText").innerHTML = `Score: <strong>${score} / 100</strong>`;
+    document.getElementById("resultLevelExplanation").textContent = levelExplanation;
+    document.getElementById("resultEncouragement").innerHTML = `<i class="fas fa-circle-info text-gold me-1"></i> ${encouragementText}`;
+
+    // 2. What already exists
+    const existsList = report.what_already_exists || [];
+    const existingContainer = document.getElementById("existingPointsList");
+    existingContainer.innerHTML = "";
+    if (existsList.length === 0) {
+        existingContainer.innerHTML = '<div class="pg-simple-list-item text-muted">No common components were flagged.</div>';
+    } else {
+        existsList.slice(0, 4).forEach(item => {
+            const div = document.createElement("div");
+            div.className = "pg-simple-list-item";
+            div.innerHTML = `
+                <span class="text-muted">•</span>
+                <span>${escapeHtml(item)}</span>
+            `;
+            existingContainer.appendChild(div);
+        });
+    }
+
+    // 3. What is different about your idea?
+    const diffList = report.potentially_unique_aspects || [];
+    const diffContainer = document.getElementById("differentPointsList");
+    diffContainer.innerHTML = "";
+    if (diffList.length === 0) {
+        diffContainer.innerHTML = '<div class="pg-simple-list-item text-muted">No unique parts found yet. Look at the suggestions below.</div>';
+    } else {
+        diffList.slice(0, 4).forEach(item => {
+            const div = document.createElement("div");
+            div.className = "pg-simple-list-item";
+            div.innerHTML = `
+                <span class="text-success fw-bold">✓</span>
+                <span>${escapeHtml(item)}</span>
+            `;
+            diffContainer.appendChild(div);
+        });
+    }
+
+    // 4. Projects like yours (Top 3-5 only)
+    const externals = report.similar_external_projects || [];
+    const projectsContainer = document.getElementById("similarProjectsList");
+    projectsContainer.innerHTML = "";
+    if (externals.length === 0) {
+        projectsContainer.innerHTML = '<div class="text-muted small p-2">We did not find any directly matching projects online.</div>';
+    } else {
+        externals.slice(0, 4).forEach(proj => {
+            const div = document.createElement("div");
+            div.className = "pg-item-card";
+            div.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <strong class="text-heading" style="font-size: 0.92rem;">${escapeHtml(proj.title || 'Similar Project')}</strong>
+                    ${proj.url ? `<a href="${escapeHtml(proj.url)}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-secondary btn-sm py-0 px-2" style="font-size: 0.75rem;">See Project →</a>` : ''}
+                </div>
+                <p class="text-secondary small mb-0">${escapeHtml(proj.relation_to_student_project || proj.summary || 'Shares similar features and technology.')}</p>
+            `;
+            projectsContainer.appendChild(div);
+        });
+    }
+
+    // 5. Want to make your project better? (Suggestions)
+    const suggestions = report.improvement_suggestions || [];
+    const suggestionsContainer = document.getElementById("suggestionsList");
+    suggestionsContainer.innerHTML = "";
+    if (suggestions.length === 0) {
+        suggestionsContainer.innerHTML = '<div class="text-muted small p-2">Your project already has good differentiation.</div>';
+    } else {
+        suggestions.slice(0, 4).forEach((sug, idx) => {
+            const div = document.createElement("div");
+            div.className = "pg-item-card";
+            const detailId = `sugDetail_${idx}`;
+            div.innerHTML = `
+                <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
+                    <strong class="text-heading" style="font-size: 0.94rem;">
+                        ${idx + 1}. ${escapeHtml(sug.title || 'Add new feature')}
+                    </strong>
+                    ${sug.implementation_hint ? `
+                        <button type="button" class="btn btn-link btn-sm p-0 text-gold text-decoration-none" style="font-size: 0.78rem;" onclick="toggleSuggestionDetail('${detailId}')">
+                            How can I add this?
+                        </button>
+                    ` : ''}
+                </div>
+                <div class="text-secondary small mb-1">
+                    ${escapeHtml(sug.suggested_direction || '')}
+                </div>
+                <div class="small text-muted" style="font-size: 0.8rem;">
+                    <strong>Why?</strong> ${escapeHtml(sug.why_it_improves_uniqueness || 'Makes your project stand out.')}
+                </div>
+                ${sug.implementation_hint ? `
+                    <div id="${detailId}" class="p-2 bg-light rounded-2 border mt-2 small text-secondary d-none" style="font-size: 0.8rem;">
+                        <i class="fas fa-lightbulb text-gold me-1"></i> ${escapeHtml(sug.implementation_hint)}
+                    </div>
+                ` : ''}
+            `;
+            suggestionsContainer.appendChild(div);
+        });
+    }
+
+    // 6. Sources where we found similar ideas
+    const sourcesContainer = document.getElementById("sourcesList");
+    sourcesContainer.innerHTML = "";
+    if (externals.length === 0) {
+        sourcesContainer.innerHTML = '<div class="text-muted small p-2">No external citations needed.</div>';
+    } else {
+        externals.slice(0, 3).forEach(src => {
+            const div = document.createElement("div");
+            div.className = "d-flex justify-content-between align-items-center p-2 mb-2 bg-light rounded-2 border small";
+            div.innerHTML = `
+                <div class="text-truncate me-2">
+                    <span class="pg-source-pill me-1">${escapeHtml(src.source_type || 'Web')}</span>
+                    <span class="text-heading fw-semibold">${escapeHtml(src.title || 'Source')}</span>
+                </div>
+                ${src.url ? `
+                    <a href="${escapeHtml(src.url)}" target="_blank" rel="noopener noreferrer" class="text-gold text-decoration-none flex-shrink-0" style="font-size: 0.78rem;">
+                        View Source <i class="fas fa-external-link-alt ms-1"></i>
+                    </a>
+                ` : ''}
+            `;
+            sourcesContainer.appendChild(div);
+        });
+    }
+
+    // Switch view
+    document.getElementById("loadingBox").classList.add("d-none");
+    document.getElementById("formContainer").classList.add("d-none");
+    document.getElementById("homeHero").classList.add("d-none");
+    document.getElementById("resultContainer").classList.remove("d-none");
+    updateFlowStep(3);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function toggleSuggestionDetail(id) {
+    const el = document.getElementById(id);
+    if (el) {
+        el.classList.toggle("d-none");
+    }
+}
+
+// 5. LOAD SAVED ANALYSIS
+async function loadSavedAnalysis(id) {
+    try {
+        const response = await fetch(`{{ url_for('api.api_analyze_project_uniqueness') }}`.replace('/analyze', `/${id}`), {
+            headers: { "X-Requested-With": "XMLHttpRequest" }
+        });
+        const resData = await response.json();
+        if (response.ok && resData.status === "success") {
+            renderSimpleResult(resData.data);
+        } else {
+            alert(resData.message || "Could not load saved result.");
+        }
+    } catch (e) {
+        console.error("Error loading past result:", e);
+        alert("Could not load saved result. Please try again.");
+    }
+}
+
+function escapeHtml(text) {
+    if (!text) return "";
+    return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+</script>
+{% endblock %}

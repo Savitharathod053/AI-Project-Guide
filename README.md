@@ -1,4 +1,4 @@
-# PROJECTGUARD — AI-Based Student Project Failure Prediction & Early Warning System
+# PROJEXA — AI-Based Student Project Failure Prediction & Early Warning System
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![Flask](https://img.shields.io/badge/Flask-3.0%2B-green.svg)](https://flask.palletsprojects.com/)
@@ -7,7 +7,7 @@
 [![Status](https://img.shields.io/badge/Status-Production--Ready-brightgreen.svg)]()
 
 > **"Know Your Project Risk Before It's Too Late."**  
-> *ProjectGuard uses project progress data and machine learning to identify academic project risks early and provide actionable recommendations.*
+> *Projexa uses project progress data and machine learning to identify academic project risks early and provide actionable recommendations.*
 
 ---
 
@@ -15,10 +15,10 @@
 
 In academic environments, undergraduate and graduate engineering students frequently embark on multi-month capstone and mini-projects without early feedback on milestone velocity. Many realize too late that their project has fallen behind schedule, has high delayed tasks, insufficient testing coverage, poor documentation, or unaddressed bugs.
 
-**ProjectGuard** acts as an **early-warning and project-risk monitoring platform**. It continuously evaluates project progression metrics through trained Machine Learning models to estimate failure/success probabilities, extract driving risk factors using Explainable AI (SHAP), generate supportive actionable recommendations, simulate hypothetical adjustments via a real-time **What-If Simulator**, and provide faculty advisors with cohort monitoring tools.
+**Projexa** acts as an **early-warning and project-risk monitoring platform**. It continuously evaluates project progression metrics through trained Machine Learning models to estimate failure/success probabilities, extract driving risk factors using Explainable AI (SHAP), generate supportive actionable recommendations, simulate hypothetical adjustments via a real-time **What-If Simulator**, and provide faculty advisors with cohort monitoring tools.
 
 ### Core Guiding Principle
-The purpose of ProjectGuard is **never to discourage students** by stating "your project will fail." Instead, it probabilistically flags risks early and guides students with prioritized engineering steps to recover and succeed.
+The purpose of Projexa is **never to discourage students** by stating "your project will fail." Instead, it probabilistically flags risks early and guides students with prioritized engineering steps to recover and succeed.
 
 ---
 
@@ -32,6 +32,7 @@ The purpose of ProjectGuard is **never to discourage students** by stating "your
   - `61% – 100%` Failure Probability: **CRITICAL RISK**
 - 🔍 **Explainable AI (SHAP / Feature Attribution)**: Pinpoints exact risk drivers (e.g. testing lag behind progress, blocked tasks, high schedule pressure, defect density).
 - 💡 **Actionable Recommendation Engine**: Supportive, prioritized engineering advice targeting bug triage, testing requirements, and scope management.
+- 🚀 **Project Innovation & Uniqueness Analyzer**: Prior art discovery across public GitHub repositories, arXiv research papers, and college project records. Evaluates differentiation, details common vs. distinct modules, and delivers 3–5 actionable engineering recommendations to elevate novelty.
 - 🎛️ **Interactive What-If Scenario Simulator**: Allows students to test hypothetical adjustments ("What if I finish 4 more tasks and boost testing to 60%?") using the real ML model without mutating stored project data.
 - 📈 **Risk Progression Tracking**: Visualizes milestone risk history over time with interactive Chart.js line graphs.
 - ⚠️ **Early Warning Alerts**: Automatically detects risk leaps ($\ge 15\%$) between consecutive evaluations and alerts students and advisors.
@@ -127,14 +128,28 @@ Students enter only raw milestone values. Derived features are computed automati
 
 ---
 
-## 7. Dataset & Synthetic Data Notice
+## 7. Project Innovation & Uniqueness Analyzer
+
+The **Project Innovation & Uniqueness Analyzer** enables students to submit capstone or mini-project proposals and receive objective feedback on prior art, market differentiation, and academic novelty before committing months to development.
+
+### How It Works:
+1. **Multi-Query Concept Extraction**: Dissects problem statements, proposed solutions, feature sets, and tech stacks into 3–5 targeted technical search queries (never relying solely on exact titles).
+2. **Authentic External Prior Art**: Queries public GitHub APIs for open-source repositories and arXiv APIs for published scientific papers (strictly verified URLs, zero fabricated links).
+3. **Privacy-Preserving Internal College Comparison**: Scans previous student projects in the database for overlapping concepts and technologies while strictly anonymizing student identities (names and emails are never exposed).
+4. **Gemini AI Novelty Synthesis**: Calculates an **AI-Assisted Differentiation Score (0–100)** with clear disclaimers that it is an estimate, breaks down standard vs. distinct components, and generates 3–5 realistic improvement suggestions with difficulty ratings and implementation paths.
+5. **SHA-256 Input Caching**: Deduplicates identical submissions to conserve LLM API quotas.
+6. **Robust Rule-Based Fallback**: Seamlessly generates structured heuristic evaluations if external APIs or network connectivity are unavailable.
+
+---
+
+## 8. Dataset & Synthetic Data Notice
 
 > **IMPORTANT DISCLAIMER**:  
 > The training dataset (`data/raw/demo_student_projects.csv`) contains **synthetic/simulated academic project data** generated for development, testing, and demonstration purposes. It does not represent actual institutional student records. The system is designed so institutions can seamlessly replace `demo_student_projects.csv` with real historical academic data.
 
 ---
 
-## 8. Installation & Quick Start
+## 9. Installation & Quick Start
 
 ### Step 1: Clone or Navigate to Directory
 ```bash
@@ -178,7 +193,7 @@ Open your browser and navigate to: **`http://127.0.0.1:5000`**
 
 ---
 
-## 9. Pre-Configured Demo Accounts
+## 10. Pre-Configured Demo Accounts
 
 When started for the first time, `run.py` automatically initializes SQLite and seeds demo users with pre-loaded projects across different risk tiers:
 
@@ -190,11 +205,11 @@ When started for the first time, `run.py` automatically initializes SQLite and s
 
 ---
 
-## 10. Running Automated Tests
+## 11. Running Automated Tests
 
 Run the complete test suite using Pytest:
 ```bash
-python -m pytest -v
+python run_tests.py
 ```
 
 All unit, integration, ML inference, and security tests will execute:
@@ -203,23 +218,32 @@ All unit, integration, ML inference, and security tests will execute:
 - `test_ml_pipeline.py`: Feature engineering edge-cases, model loading, and probability outputs.
 - `test_recommendations.py`: Constructive guidance rules engine.
 - `test_api.py`: REST API endpoints and What-If simulations without DB mutation.
+- `test_uniqueness_analyzer.py`: 12 automated tests for the Innovation & Uniqueness Analyzer (page load, submissions, validation, Gemini parsing, fallback, real URLs, access control 403, history API, and API key protection).
 
 ---
 
-## 11. REST API Reference
+## 12. REST API Reference
 
 All protected endpoints require an authenticated session or Bearer authorization.
 
+### Project & Risk APIs:
 - `GET /api/projects`: List projects for current student / faculty.
 - `GET /api/projects/<id>`: Retrieve specific project metadata, latest progress, and predictions.
 - `GET /api/projects/<id>/history`: Retrieve chronological risk history data points.
 - `POST /api/projects/<id>/what-if`: Execute real-time What-If scenario simulation via the ML model.
 - `GET /api/model/info`: Returns active model metadata, version, and training status.
 
+### Innovation & Uniqueness Analyzer APIs:
+- `POST /api/project-analyzer/analyze`: Submit project proposal for multi-query prior art discovery and uniqueness scoring.
+- `GET /api/project-analyzer/history`: Retrieve past innovation analyses for authenticated student.
+- `GET /api/project-analyzer/<id>`: Retrieve specific innovation report with student privacy & access control (403).
+
 ---
 
-## 12. Ethical Considerations & AI Transparency
+## 13. Ethical Considerations & AI Transparency
 
-- **Statistical Estimation**: ProjectGuard explicitly states on every view that all predictions represent estimated statistical risks based on historical patterns and do not guarantee academic outcomes.
+- **Statistical Estimation**: Projexa explicitly states on every view that all predictions represent estimated statistical risks based on historical patterns and do not guarantee academic outcomes.
+- **Uniqueness Disclaimer**: The Project Innovation Analyzer clearly notes that uniqueness scores are AI-assisted comparative estimates based on publicly indexed samples and institutional records, and cannot guarantee global novelty or patentability.
+- **Privacy Protections**: Internal comparisons strictly omit student names and user IDs when matching similar historical projects.
 - **Supportive Tone**: The recommendation engine never utilizes discouraging language (e.g. "your project will fail"). It provides actionable guidance to improve testing, unblock delays, and manage scope.
 - **Explainability**: Every prediction highlights the underlying drivers via Explainable AI attributions, ensuring decisions are transparent to students and mentors.

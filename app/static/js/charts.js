@@ -1,5 +1,5 @@
 /**
- * ProjectGuard Chart.js Utilities
+ * Projexa Chart.js Utilities
  */
 
 // Initialize Risk History Trend Chart

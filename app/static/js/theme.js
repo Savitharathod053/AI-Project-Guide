@@ -1,5 +1,5 @@
 /**
- * ProjectGuard — Production UI Engine & Theme Manager
+ * Projexa — Production UI Engine & Theme Manager
  * Clean • High Performance • Production Standard
  */
 
@@ -7,10 +7,10 @@
     "use strict";
 
     // 1. THEME MANAGER (DARK / LIGHT MODE)
-    const THEME_STORAGE_KEY = "projectguard_theme";
+    const THEME_STORAGE_KEY = "projexa_theme";
 
     function getPreferredTheme() {
-        const saved = localStorage.getItem(THEME_STORAGE_KEY);
+        const saved = localStorage.getItem(THEME_STORAGE_KEY) || localStorage.getItem("projectguard_theme");
         if (saved === "dark" || saved === "light") {
             return saved;
         }
@@ -150,22 +150,81 @@
         toastEl.addEventListener("hidden.bs.toast", () => toastEl.remove());
     };
 
-    // 5. DOM INITIALIZATION
+    // 5. SIDEBAR CONTROLLER (RESPONSIVE APP SHELL)
+    window.toggleAppSidebar = function () {
+        const sidebar = document.getElementById("appSidebar");
+        const backdrop = document.getElementById("sidebarBackdrop");
+        if (sidebar) {
+            sidebar.classList.toggle("show");
+        }
+        if (backdrop) {
+            backdrop.classList.toggle("show");
+        }
+    };
+
+    // 6. COMMAND PALETTE CONTROLLER (⌘K / Ctrl+K)
+    window.openCommandPalette = function () {
+        const modalEl = document.getElementById("cmdPaletteModal");
+        if (!modalEl) return;
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.show();
+        setTimeout(() => {
+            const input = document.getElementById("cmdPaletteInput");
+            if (input) {
+                input.value = "";
+                input.focus();
+                filterCommands("");
+            }
+        }, 150);
+    };
+
+    function filterCommands(query) {
+        const q = (query || "").toLowerCase().trim();
+        const items = document.querySelectorAll(".cmd-palette-item");
+        items.forEach(item => {
+            const text = item.textContent.toLowerCase();
+            if (!q || text.includes(q)) {
+                item.style.display = "flex";
+            } else {
+                item.style.display = "none";
+            }
+        });
+    }
+
+    // Keyboard shortcut listener for Cmd+K / Ctrl+K
+    document.addEventListener("keydown", (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+            e.preventDefault();
+            window.openCommandPalette();
+        }
+    });
+
+    // 7. DOM INITIALIZATION
     document.addEventListener("DOMContentLoaded", () => {
         const themeBtn = document.getElementById("themeToggleBtn");
         if (themeBtn) {
             themeBtn.addEventListener("click", toggleTheme);
         }
+
+        const cmdInput = document.getElementById("cmdPaletteInput");
+        if (cmdInput) {
+            cmdInput.addEventListener("input", (e) => {
+                filterCommands(e.target.value);
+            });
+        }
     });
 
-    // Backwards-compatible stubs
-    window.ProjectGuardTheme = {
+    // Public API & Backwards-compatible stubs
+    window.ProjexaTheme = {
         applyTheme,
         toggleTheme,
+        openCommandPalette: window.openCommandPalette,
         initGeminiLoadingSteps,
         init3DTiltCards: function () {},
         AIAssistantOrb: function () {
             return { setState: function () {} };
         }
     };
+    window.ProjectGuardTheme = window.ProjexaTheme;
 })();
+

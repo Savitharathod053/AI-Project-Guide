@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ProjectGuard — Clean, Minimal, Intelligent Design System
+   Projexa — Clean, Minimal, Intelligent Design System
    Palette: Black • White • Dark Gray • Light Gray • Silver • Gold (Accent)
    Zero Jitter • High Usability • Clear Visual Hierarchy
    ========================================================================== */
@@ -820,6 +820,103 @@ p {
 }
 
 /* --------------------------------------------------------------------------
+   13b. SUB-NAVIGATION SYSTEM (SIDEBAR & HORIZONTAL TOOLBARS)
+   -------------------------------------------------------------------------- */
+.workspace-subnav {
+  list-style: none;
+  padding-left: 0.5rem;
+  margin: 0.25rem 0 0.4rem 1.15rem;
+  border-left: 2px solid var(--pg-border);
+}
+
+.workspace-subnav .subnav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: 100%;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.775rem;
+  font-weight: 500;
+  color: var(--pg-text-secondary);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+}
+
+.workspace-subnav .subnav-link:hover {
+  color: var(--pg-text-heading);
+  background-color: var(--pg-bg-subtle);
+}
+
+.workspace-subnav .subnav-link.active {
+  color: var(--gold-accent, #c99738);
+  font-weight: 600;
+  background-color: rgba(201, 151, 56, 0.1);
+  border-color: rgba(201, 151, 56, 0.2);
+}
+
+.subnav-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.375rem;
+  background-color: var(--pg-bg-surface);
+  border: 1px solid var(--pg-border);
+  border-radius: var(--radius-md);
+  margin-bottom: 1.25rem;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.subnav-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--pg-text-secondary);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.subnav-pill-btn:hover {
+  color: var(--pg-text-heading);
+  background-color: var(--pg-bg-subtle);
+}
+
+.subnav-pill-btn.active {
+  background-color: #12151b;
+  color: #ffffff;
+  border-color: #232834;
+  font-weight: 600;
+}
+
+[data-theme="dark"] .subnav-pill-btn.active {
+  background-color: #1e2430;
+  color: #ffffff;
+  border-color: #333d52;
+}
+
+.clickable-metric-card {
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.clickable-metric-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--gold-accent, #c99738) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* --------------------------------------------------------------------------
    14. MODALS (CENTERED, MINIMAL, ZERO JITTER)
    -------------------------------------------------------------------------- */
 .modal-content {
@@ -840,7 +937,183 @@ p {
 }
 
 /* --------------------------------------------------------------------------
-   15. FOOTER
+   16. STUDENT-FRIENDLY WORKSPACE, SIDEBAR & AI ANALYSIS SUB-NAVIGATION
+   -------------------------------------------------------------------------- */
+.workspace-sidebar-clean {
+  background-color: var(--pg-bg-surface);
+  border: 1px solid var(--pg-border);
+  border-radius: var(--radius-md);
+  padding: 1.25rem 1rem;
+}
+
+.sidebar-brand-title {
+  font-size: 1.125rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--pg-text-heading);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--pg-border);
+}
+
+.sidebar-nav-clean .nav-link {
+  color: var(--pg-text-secondary);
+  font-weight: 500;
+  font-size: 0.875rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  transition: all 0.15s ease;
+  margin-bottom: 0.25rem;
+  border: 1px solid transparent;
+}
+
+.sidebar-nav-clean .nav-link:hover {
+  color: var(--pg-text-heading);
+  background-color: var(--pg-bg-subtle);
+}
+
+.sidebar-nav-clean .nav-link.active {
+  color: #ffffff !important;
+  background-color: #12151b !important;
+  border-color: #232834;
+  font-weight: 600;
+}
+
+[data-theme="dark"] .sidebar-nav-clean .nav-link.active {
+  background-color: #1e2430 !important;
+  border-color: #333d52;
+}
+
+.sidebar-section-header {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--pg-text-muted);
+  font-weight: 700;
+  padding: 0.875rem 0.85rem 0.35rem 0.85rem;
+}
+
+/* Secondary Sub-Navigation at Top of AI Analysis */
+.ai-analysis-subnav {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem;
+  background-color: var(--pg-bg-surface);
+  border: 1px solid var(--pg-border);
+  border-radius: var(--radius-md);
+  margin-bottom: 1.5rem;
+  overflow-x: auto;
+  white-space: nowrap;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ai-subnav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--pg-text-secondary);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.ai-subnav-btn:hover {
+  color: var(--pg-text-heading);
+  background-color: var(--pg-bg-subtle);
+}
+
+.ai-subnav-btn.active {
+  background-color: #12151b;
+  color: #ffffff;
+  border-color: #232834;
+  font-weight: 600;
+}
+
+[data-theme="dark"] .ai-subnav-btn.active {
+  background-color: #1e2430;
+  color: #ffffff;
+  border-color: #333d52;
+}
+
+/* Flow Chart & Step Visuals */
+.flow-step-card {
+  border: 1px solid var(--pg-border);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  background-color: var(--pg-bg-surface);
+  position: relative;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.flow-step-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--gold-accent, #c99738);
+}
+
+.flow-step-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: rgba(201, 151, 56, 0.15);
+  color: var(--gold-accent, #c99738);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.8125rem;
+}
+
+/* Roadmap step item */
+.roadmap-step-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--pg-border);
+  border-radius: var(--radius-md);
+  background-color: var(--pg-bg-surface);
+  margin-bottom: 0.75rem;
+}
+
+.roadmap-badge {
+  padding: 0.25rem 0.65rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* Documentation sections */
+.doc-section-card {
+  border: 1px solid var(--pg-border);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  background-color: var(--pg-bg-surface);
+  margin-bottom: 1.25rem;
+}
+
+.doc-section-card h5 {
+  color: var(--pg-text-heading);
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* --------------------------------------------------------------------------
+   17. FOOTER
    -------------------------------------------------------------------------- */
 .footer-modern {
   background-color: #0d0f14;
@@ -860,3 +1133,5 @@ p {
 .footer-modern a:hover {
   color: var(--pg-gold);
 }
+
+

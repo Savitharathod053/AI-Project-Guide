@@ -1,5 +1,5 @@
 /**
- * ProjectGuard What-If Scenario Simulator Client Logic
+ * Projexa What-If Scenario Simulator Client Logic
  */
 
 document.addEventListener("DOMContentLoaded", function () {

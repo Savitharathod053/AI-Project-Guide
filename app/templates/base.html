@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}ProjectGuard — AI Project Risk & Early Warning Platform{% endblock %}</title>
+    <title>{% block title %}Projexa — AI Project Risk & Early Warning Platform{% endblock %}</title>
     
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,7 +16,7 @@
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
-    <!-- ProjectGuard Production Design System CSS -->
+    <!-- Projexa Production Design System CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
     
     {% block extra_css %}{% endblock %}
@@ -28,7 +28,7 @@
             <!-- Brand -->
             <a class="navbar-brand" href="{{ url_for('main.index') }}">
                 <span class="brand-shield"><i class="fas fa-shield-alt"></i></span>
-                <span>ProjectGuard</span>
+                <span>Projexa</span>
             </a>
             
             <!-- Mobile Toggle -->
@@ -49,6 +49,11 @@
                             <li class="nav-item">
                                 <a class="nav-link {% if request.endpoint == 'student.create_project' %}active{% endif %}" href="{{ url_for('student.create_project') }}">
                                     <i class="fas fa-plus-circle me-1"></i> Create Project
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.endpoint == 'student.project_analyzer' %}active{% endif %}" href="{{ url_for('student.project_analyzer') }}">
+                                    <i class="fas fa-sparkles me-1 text-gold"></i> Innovation Analyzer
                                 </a>
                             </li>
                             <li class="nav-item">
@@ -153,7 +158,7 @@
                 <div class="col-lg-5">
                     <div class="d-flex align-items-center gap-2 mb-2">
                         <span class="brand-shield" style="width: 24px; height: 24px; font-size: 0.75rem;"><i class="fas fa-shield-alt"></i></span>
-                        <span class="fw-bold text-white">ProjectGuard</span>
+                        <span class="fw-bold text-white">Projexa</span>
                     </div>
                     <p class="text-secondary small mb-2" style="max-width: 440px;">
                         Professional AI project management, requirement decomposition, and delivery risk forecasting platform.
@@ -183,7 +188,7 @@
             </div>
             <hr class="my-3 border-secondary border-opacity-25">
             <div class="d-flex flex-wrap justify-content-between align-items-center text-muted small">
-                <span>© {{ current_year }} ProjectGuard. All rights reserved.</span>
+                <span>© {{ current_year }} Projexa. All rights reserved.</span>
                 <span>Production Standard Architecture</span>
             </div>
         </div>

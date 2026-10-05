@@ -8,7 +8,7 @@ load_dotenv(BASE_DIR / ".env")
 
 class Config:
     """Base application configuration."""
-    SECRET_KEY = os.environ.get("SECRET_KEY", "projectguard-dev-secret-key-998822")
+    SECRET_KEY = os.environ.get("SECRET_KEY", "projexa-dev-secret-key-998822")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # ML & Data paths
@@ -33,7 +33,7 @@ class Config:
 class DevelopmentConfig(Config):
     """Development environment configuration."""
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL", f"sqlite:///{BASE_DIR / 'projectguard.db'}")
+    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL", f"sqlite:///{BASE_DIR / 'projexa.db'}")
 
 
 class TestingConfig(Config):

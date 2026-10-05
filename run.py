@@ -1,6 +1,6 @@
 """
-APPLICATION RUNNER & DATABASE SEEDER FOR PROJECTGUARD
-=====================================================
+APPLICATION RUNNER & DATABASE SEEDER FOR PROJEXA
+=================================================
 Initializes SQLite database tables and seeds demo student and faculty
 accounts and representative academic projects with AI task breakdowns and ML predictions.
 """
@@ -254,5 +254,5 @@ def seed_demo_database():
 if __name__ == "__main__":
     seed_demo_database()
     port = int(os.environ.get("PORT", 5000))
-    print(f"[*] Starting ProjectGuard on http://127.0.0.1:{port}")
+    print(f"[*] Starting Projexa on http://127.0.0.1:{port}")
     app.run(host="0.0.0.0", port=port, debug=True)
