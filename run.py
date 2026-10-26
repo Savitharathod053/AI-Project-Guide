@@ -251,8 +251,14 @@ def seed_demo_database():
         print("[+] Demo database seeded successfully with AI Mentor tasks and project states.")
 
 
-if __name__ == "__main__":
+# Ensure DB tables & demo data exist when imported by Gunicorn
+try:
     seed_demo_database()
+except Exception as e:
+    print(f"[*] Database check note: {e}")
+
+
+if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     print(f"[*] Starting Projexa on http://127.0.0.1:{port}")
     app.run(host="0.0.0.0", port=port, debug=True)
