@@ -364,7 +364,11 @@ Return ONLY valid JSON matching this schema:
             seen_titles.add(title_clean)
 
             # 4. Requirement Source Assignment
-            req_source = t.get("requirement_source", "").strip()
+            raw_req = t.get("requirement_source", "")
+            if isinstance(raw_req, list):
+                req_source = ", ".join(str(x) for x in raw_req).strip()
+            else:
+                req_source = str(raw_req or "").strip()
             if not req_source or req_source.lower() in ["none", "general", "n/a"]:
                 if req_features:
                     best_match = req_features[0]

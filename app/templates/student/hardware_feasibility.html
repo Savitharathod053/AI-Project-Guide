@@ -4,43 +4,39 @@
 
 {% block extra_css %}
 <style>
-    /* Dark Futuristic Engineering Theme */
+    /* Lavender Cloud Engineering Theme */
     .buildcheck-container {
-        color: #e2e8f0;
+        color: #272044;
     }
     
     .buildcheck-hero {
-        background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.9));
-        border: 1px solid rgba(59, 130, 246, 0.3);
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+        background: linear-gradient(135deg, #F0EDFF 0%, #FFFFFF 100%);
+        border: 1px solid #E5DFF7;
+        box-shadow: 0 4px 16px rgba(39, 32, 68, 0.05);
         border-radius: 16px;
         position: relative;
         overflow: hidden;
     }
 
-    .buildcheck-hero::before {
-        content: "";
-        position: absolute;
-        top: -50%;
-        right: -20%;
-        width: 400px;
-        height: 400px;
-        background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
-        pointer-events: none;
+    .buildcheck-hero h1,
+    .buildcheck-hero .text-white {
+        color: #272044 !important;
+    }
+    .buildcheck-hero .text-light {
+        color: #6B6485 !important;
     }
 
     .card-dark-glass {
-        background: rgba(17, 24, 39, 0.85);
-        backdrop-filter: blur(12px);
-        border: 1px solid rgba(75, 85, 99, 0.4);
+        background: #FFFFFF;
+        border: 1px solid #E5DFF7;
         border-radius: 14px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 4px 15px rgba(39, 32, 68, 0.04);
         transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
     }
 
     .card-dark-glass:hover {
-        border-color: rgba(99, 102, 241, 0.5);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+        border-color: #C4B5FD;
+        box-shadow: 0 8px 25px rgba(124, 58, 237, 0.08);
     }
 
     /* Score Ring Gauge */
@@ -59,7 +55,7 @@
 
     .score-circle-bg {
         fill: none;
-        stroke: rgba(255, 255, 255, 0.1);
+        stroke: #E5DFF7;
         stroke-width: 10;
     }
 
@@ -78,11 +74,14 @@
         transform: translate(-50%, -50%);
         text-align: center;
     }
+    .score-center-text .text-white {
+        color: #272044 !important;
+    }
 
     /* Architecture Visualizer Nodes */
     .arch-flow-col {
-        background: rgba(15, 23, 42, 0.7);
-        border: 1px solid rgba(59, 130, 246, 0.25);
+        background: #F0EDFF;
+        border: 1px solid #E5DFF7;
         border-radius: 12px;
         padding: 1.25rem;
         height: 100%;
@@ -91,26 +90,27 @@
     }
 
     .arch-node-item {
-        background: rgba(30, 41, 59, 0.8);
-        border: 1px solid rgba(100, 116, 139, 0.3);
-        border-left: 4px solid #3b82f6;
+        background: #FFFFFF;
+        border: 1px solid #E5DFF7;
+        border-left: 4px solid #7C3AED;
         border-radius: 8px;
         padding: 0.75rem 0.9rem;
         margin-bottom: 0.75rem;
         font-size: 0.88rem;
+        color: #272044;
         transition: all 0.2s ease;
     }
 
     .arch-node-item:hover {
         transform: translateX(3px);
-        background: rgba(30, 41, 59, 1);
-        border-color: rgba(99, 102, 241, 0.6);
+        background: #F8F7FF;
+        border-color: #C4B5FD;
     }
 
     .arch-node-input { border-left-color: #06b6d4; }
-    .arch-node-proc  { border-left-color: #8b5cf6; }
-    .arch-node-output{ border-left-color: #10b981; }
-    .arch-node-comm  { border-left-color: #f59e0b; }
+    .arch-node-proc  { border-left-color: #7C3AED; }
+    .arch-node-output{ border-left-color: #16A34A; }
+    .arch-node-comm  { border-left-color: #D97706; }
 
     .bus-tag {
         display: inline-block;
@@ -121,88 +121,79 @@
         text-transform: uppercase;
         letter-spacing: 0.5px;
     }
-    .bus-i2c { background: rgba(139, 92, 246, 0.25); color: #c4b5fd; border: 1px solid rgba(139, 92, 246, 0.4); }
-    .bus-spi { background: rgba(245, 158, 11, 0.25); color: #fde68a; border: 1px solid rgba(245, 158, 11, 0.4); }
-    .bus-uart { background: rgba(59, 130, 246, 0.25); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.4); }
-    .bus-pwm { background: rgba(16, 185, 129, 0.25); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.4); }
-    .bus-analog { background: rgba(236, 72, 153, 0.25); color: #fbcfe8; border: 1px solid rgba(236, 72, 153, 0.4); }
-    .bus-digital { background: rgba(100, 116, 139, 0.25); color: #cbd5e1; border: 1px solid rgba(100, 116, 139, 0.4); }
+    .bus-i2c { background: rgba(124, 58, 237, 0.12); color: #7C3AED; border: 1px solid rgba(124, 58, 237, 0.3); }
+    .bus-spi { background: rgba(217, 119, 6, 0.12); color: #D97706; border: 1px solid rgba(217, 119, 6, 0.3); }
+    .bus-uart { background: rgba(59, 130, 246, 0.12); color: #2563EB; border: 1px solid rgba(59, 130, 246, 0.3); }
+    .bus-pwm { background: rgba(22, 163, 74, 0.12); color: #16A34A; border: 1px solid rgba(22, 163, 74, 0.3); }
+    .bus-analog { background: rgba(236, 72, 153, 0.12); color: #DB2777; border: 1px solid rgba(236, 72, 153, 0.3); }
+    .bus-digital { background: rgba(107, 100, 133, 0.12); color: #6B6485; border: 1px solid rgba(107, 100, 133, 0.3); }
 
-    /* Table responsive container within BuildCheck engineering theme */
     .buildcheck-container .table-responsive {
-        background-color: #0b1120 !important;
-        border: 1px solid rgba(75, 85, 99, 0.45) !important;
+        background-color: #FFFFFF !important;
+        border: 1px solid #E5DFF7 !important;
         border-radius: 10px;
     }
 
-    /* Tables in dark style with guaranteed high contrast */
     .table-dark-custom {
-        --bs-table-bg: #0b1120 !important;
-        --bs-table-color: #f1f5f9 !important;
-        --bs-table-border-color: rgba(75, 85, 99, 0.35) !important;
-        background-color: #0b1120 !important;
-        color: #f1f5f9 !important;
+        --bs-table-bg: #FFFFFF !important;
+        --bs-table-color: #272044 !important;
+        --bs-table-border-color: #E5DFF7 !important;
+        background-color: #FFFFFF !important;
+        color: #272044 !important;
         margin-bottom: 0;
     }
     .table-dark-custom th {
-        background-color: #1e293b !important;
-        color: #f8fafc !important;
+        background-color: #F0EDFF !important;
+        color: #6B6485 !important;
         font-size: 0.8rem;
         text-transform: uppercase;
         letter-spacing: 0.05em;
         font-weight: 700;
         padding: 0.85rem 1rem !important;
-        border-bottom: 2px solid rgba(100, 116, 139, 0.6) !important;
+        border-bottom: 2px solid #E5DFF7 !important;
         white-space: nowrap;
     }
     .table-dark-custom td {
-        background-color: #0b1120 !important;
-        color: #e2e8f0 !important;
+        background-color: #FFFFFF !important;
+        color: #272044 !important;
         padding: 0.85rem 1rem !important;
         vertical-align: middle;
         font-size: 0.88rem;
-        border-bottom: 1px solid rgba(75, 85, 99, 0.3) !important;
+        border-bottom: 1px solid #E5DFF7 !important;
     }
     .table-dark-custom tbody tr:hover td {
-        background-color: #172554 !important;
+        background-color: #F8F7FF !important;
     }
     .table-dark-custom strong,
     .table-dark-custom .text-white {
-        color: #ffffff !important;
+        color: #272044 !important;
     }
-    .table-dark-custom .text-light {
-        color: #cbd5e1 !important;
-    }
-    .table-dark-custom .text-light.text-opacity-75 {
-        color: #cbd5e1 !important;
-        opacity: 0.95 !important;
-    }
+    .table-dark-custom .text-light,
+    .table-dark-custom .text-light.text-opacity-75,
     .table-dark-custom .text-light.text-opacity-60,
     .table-dark-custom .text-light.text-opacity-50 {
-        color: #94a3b8 !important;
-        opacity: 0.9 !important;
+        color: #6B6485 !important;
+        opacity: 1 !important;
     }
 
-    /* Status Badges */
     .badge-buildable {
-        background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.3));
-        color: #34d399;
-        border: 1px solid rgba(52, 211, 153, 0.4);
+        background: rgba(22, 163, 74, 0.12);
+        color: #16A34A;
+        border: 1px solid rgba(22, 163, 74, 0.3);
     }
     .badge-modified {
-        background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.3));
-        color: #fbbf24;
-        border: 1px solid rgba(251, 191, 36, 0.4);
+        background: rgba(217, 119, 6, 0.12);
+        color: #D97706;
+        border: 1px solid rgba(217, 119, 6, 0.3);
     }
     .badge-notrec {
-        background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(185, 28, 28, 0.3));
-        color: #f87171;
-        border: 1px solid rgba(248, 113, 113, 0.4);
+        background: rgba(220, 38, 38, 0.12);
+        color: #DC2626;
+        border: 1px solid rgba(220, 38, 38, 0.3);
     }
 
-    /* Subdimension Progress Bars */
     .sub-prog-track {
-        background: rgba(51, 65, 85, 0.6);
+        background: #F0EDFF;
         border-radius: 6px;
         height: 7px;
         overflow: hidden;
@@ -213,23 +204,21 @@
         transition: width 1s ease-in-out;
     }
 
-    /* Modification Option Cards */
     .mod-card {
-        background: rgba(30, 41, 59, 0.7);
-        border: 1px solid rgba(99, 102, 241, 0.3);
+        background: #FFFFFF;
+        border: 1px solid #E5DFF7;
         border-radius: 10px;
         padding: 1.1rem;
         transition: all 0.2s ease;
     }
     .mod-card:hover {
-        border-color: rgba(129, 140, 248, 0.7);
+        border-color: #C4B5FD;
         transform: translateY(-2px);
     }
 
-    /* 4-Stage Architecture Pipeline Stepper */
     .pipeline-stage-card {
-        background: rgba(30, 41, 59, 0.6);
-        border: 1px solid rgba(100, 116, 139, 0.3);
+        background: #FFFFFF;
+        border: 1px solid #E5DFF7;
         border-radius: 12px;
         padding: 1rem;
         position: relative;
@@ -237,8 +226,8 @@
         transition: all 0.2s ease;
     }
     .pipeline-stage-card:hover {
-        border-color: rgba(99, 102, 241, 0.6);
-        background: rgba(30, 41, 59, 0.85);
+        border-color: #7C3AED;
+        background: #F8F7FF;
     }
     .pipeline-badge {
         width: 32px;
@@ -251,46 +240,43 @@
         font-size: 0.9rem;
     }
 
-    /* Troubleshooting Accordion Dark */
     .accordion-dark .accordion-item {
-        background: rgba(30, 41, 59, 0.6);
-        border: 1px solid rgba(75, 85, 99, 0.4);
+        background: #FFFFFF;
+        border: 1px solid #E5DFF7;
         margin-bottom: 0.5rem;
         border-radius: 8px !important;
         overflow: hidden;
     }
     .accordion-dark .accordion-button {
-        background: rgba(30, 41, 59, 0.8);
-        color: #e2e8f0;
+        background: #F0EDFF;
+        color: #272044;
         font-weight: 600;
         font-size: 0.92rem;
         box-shadow: none;
     }
     .accordion-dark .accordion-button:not(.collapsed) {
-        background: rgba(15, 23, 42, 0.9);
-        color: #93c5fd;
-        border-bottom: 1px solid rgba(59, 130, 246, 0.3);
+        background: #E9E4FF;
+        color: #7C3AED;
+        border-bottom: 1px solid #E5DFF7;
     }
     .accordion-dark .accordion-body {
-        background: rgba(15, 23, 42, 0.6);
-        color: #cbd5e1;
+        background: #FFFFFF;
+        color: #6B6485;
         font-size: 0.88rem;
     }
 
-    /* Terminal Simulation Box */
     .terminal-box {
-        background: #090d16;
-        border: 1px solid rgba(59, 130, 246, 0.3);
+        background: #272044;
+        border: 1px solid #E5DFF7;
         border-radius: 8px;
         font-family: 'Courier New', Courier, monospace;
-        color: #34d399;
+        color: #A78BFA;
         padding: 1rem;
         white-space: pre-wrap;
         font-size: 0.85rem;
         line-height: 1.5;
     }
 
-    /* Wiring Badge Indicators */
     .pin-badge {
         font-family: monospace;
         padding: 0.2rem 0.5rem;
@@ -298,11 +284,11 @@
         font-size: 0.8rem;
         font-weight: 600;
     }
-    .pin-power { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.4); }
-    .pin-gnd   { background: rgba(100, 116, 139, 0.3); color: #cbd5e1; border: 1px solid rgba(100, 116, 139, 0.5); }
-    .pin-data  { background: rgba(59, 130, 246, 0.2); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.4); }
-    .pin-analog{ background: rgba(236, 72, 153, 0.2); color: #fbcfe8; border: 1px solid rgba(236, 72, 153, 0.4); }
-    .pin-i2c   { background: rgba(139, 92, 246, 0.2); color: #c4b5fd; border: 1px solid rgba(139, 92, 246, 0.4); }
+    .pin-power { background: rgba(220, 38, 38, 0.12); color: #DC2626; border: 1px solid rgba(220, 38, 38, 0.25); }
+    .pin-gnd   { background: #F0EDFF; color: #6B6485; border: 1px solid #E5DFF7; }
+    .pin-data  { background: rgba(124, 58, 237, 0.12); color: #7C3AED; border: 1px solid rgba(124, 58, 237, 0.25); }
+    .pin-analog{ background: rgba(236, 72, 153, 0.12); color: #DB2777; border: 1px solid rgba(236, 72, 153, 0.25); }
+    .pin-i2c   { background: rgba(124, 58, 237, 0.12); color: #7C3AED; border: 1px solid rgba(124, 58, 237, 0.25); }
 </style>
 {% endblock %}
 

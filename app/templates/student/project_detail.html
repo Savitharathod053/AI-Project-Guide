@@ -2,8 +2,111 @@
 
 {% block title %}{{ project.project_name }} — AI Project Workspace{% endblock %}
 
+{% block body_class %}workspace-page{% endblock %}
+
 {% block content %}
-<div class="container-xl py-2">
+<div class="workspace-wrapper">
+    <!-- Left Vertical Navigation Sidebar (Fixed Position, Full Viewport Height) -->
+    <aside class="card workspace-sidebar p-3 border-0">
+        <!-- Brand -->
+        <div class="sidebar-brand-title">
+            <span class="brand-shield" style="width: 28px; height: 28px; font-size: 0.85rem; background: linear-gradient(135deg, #7C3AED, #A78BFA); color: #fff; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px;">
+                <i class="fas fa-shield-alt"></i>
+            </span>
+            <span class="fw-bold" style="letter-spacing: -0.02em; color: #272044;">PROJEXA</span>
+        </div>
+
+        <!-- Main Navigation -->
+        <div class="sidebar-section-header">Main Navigation</div>
+        <div class="d-flex flex-column gap-1 mb-2 pb-2 border-bottom" style="border-color: #E5DFF7 !important;">
+            <a href="{{ url_for('student.dashboard') }}" class="sidebar-nav-item">
+                <i class="fas fa-th-large me-2 fa-fw" style="color: #7C3AED;"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="{{ url_for('student.dashboard') }}" class="sidebar-nav-item">
+                <i class="fas fa-folder-open me-2 fa-fw" style="color: #7C3AED;"></i>
+                <span>My Projects</span>
+            </a>
+        </div>
+
+        <!-- Current Project -->
+        <div class="sidebar-section-header">Current Project</div>
+        <ul class="nav nav-pills flex-column gap-1 workspace-nav sidebar-nav-clean mb-2" id="projectTab" role="tablist">
+            {% if project.project_category in ['hardware', 'hybrid'] %}
+            <li class="nav-item">
+                <a href="{{ url_for('student.hardware_feasibility', project_id=project.id) }}" class="nav-link text-start py-2 px-3 d-flex align-items-center w-100 mb-1 border" style="border-color: #E5DFF7 !important;">
+                    <i class="fas fa-microchip me-2 fa-fw" style="color: #7C3AED;"></i> BuildCheck AI
+                </a>
+            </li>
+            {% endif %}
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active text-start py-2 px-3 d-flex align-items-center w-100" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab">
+                    <i class="fas fa-compass me-2 fa-fw" style="color: #7C3AED;"></i> Overview
+                </button>
+            </li>
+            <li class="nav-item d-none" role="presentation">
+                <button class="nav-link text-start py-2 px-3 d-flex align-items-center justify-content-between w-100" id="tasks-tab" data-bs-toggle="tab" data-bs-target="#tasks" type="button" role="tab">
+                    <span><i class="fas fa-tasks me-2 fa-fw" style="color: #7C3AED;"></i> Task Editor & Plan</span>
+                    <span class="badge bg-purple text-white rounded-pill px-2" style="font-size: 0.72rem;">{{ tasks|length }}</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link text-start py-2 px-3 d-flex align-items-center w-100" id="guidance-tab" data-bs-toggle="tab" data-bs-target="#guidance" type="button" role="tab" onclick="switchAiSubNav('overview')">
+                    <i class="fas fa-brain me-2 fa-fw" style="color: #7C3AED;"></i> AI Analysis
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link text-start py-2 px-3 d-flex align-items-center w-100" id="resources-tab" data-bs-toggle="tab" data-bs-target="#resources" type="button" role="tab" onclick="switchResourceCategory('all')">
+                    <i class="fas fa-cubes me-2 fa-fw" style="color: #7C3AED;"></i> Smart Resources
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link text-start py-2 px-3 d-flex align-items-center w-100" id="progress-tab" data-bs-toggle="tab" data-bs-target="#progress" type="button" role="tab">
+                    <i class="fas fa-chart-line me-2 fa-fw" style="color: #7C3AED;"></i> Progress
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link text-start py-2 px-3 d-flex align-items-center w-100" id="docs-tab" data-bs-toggle="tab" data-bs-target="#docs" type="button" role="tab">
+                    <i class="fas fa-file-alt me-2 fa-fw" style="color: #7C3AED;"></i> Documentation
+                </button>
+            </li>
+            <li class="nav-item d-none" role="presentation">
+                <button class="nav-link" id="mentor-tab" data-bs-toggle="tab" data-bs-target="#mentor" type="button" role="tab"></button>
+            </li>
+        </ul>
+
+        <!-- Account & Tools -->
+        <div class="sidebar-section-header">Account & Tools</div>
+        <div class="d-flex flex-column gap-1 mb-2">
+            <a href="{{ url_for('student.edit_project', project_id=project.id) }}" class="sidebar-nav-item">
+                <i class="fas fa-cog text-secondary me-2 fa-fw"></i>
+                <span>Settings</span>
+            </a>
+            <button class="sidebar-nav-item text-start w-100 bg-transparent border-0" id="mentor-shortcut-btn" type="button" onclick="openMentorTab()">
+                <i class="fas fa-comments me-2 fa-fw" style="color: #7C3AED;"></i>
+                <span>AI Mentor Chat</span>
+            </button>
+        </div>
+
+        <!-- Bottom Section: Project Completed Progress -->
+        <div class="mt-auto pt-3 border-top" style="border-color: #E5DFF7 !important;">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="small fw-semibold" style="color: #6B6485; font-size: 0.8125rem;">Project Completed</span>
+                <span class="fw-bold" style="color: #7C3AED; font-size: 0.875rem;">{{ project.calculated_progress_pct }}%</span>
+            </div>
+            <div class="progress mb-2" style="height: 7px; background-color: #E9E4FF; border-radius: 9999px;">
+                <div class="progress-bar" role="progressbar" style="width: {{ project.calculated_progress_pct }}%; background-color: #7C3AED; border-radius: 9999px;" aria-valuenow="{{ project.calculated_progress_pct }}" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+            <div class="d-flex justify-content-between" style="font-size: 0.75rem; color: #6B6485 !important;">
+                <span>{{ project.completed_tasks_count }}/{{ tasks|length }} Tasks Done</span>
+                <span>{{ health_info.days_remaining }} days left</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Area (Scrolls independently while sidebar remains stationary) -->
+    <div class="workspace-main-content">
+        <div class="workspace-main-inner px-3 px-lg-4 py-3">
     <!-- Breadcrumb & Top Bar -->
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
         <div>
@@ -25,6 +128,9 @@
         </div>
 
         <div class="d-flex flex-wrap gap-2">
+            <button type="button" class="btn btn-outline-primary btn-sm" onclick="bootstrap.Tab.getOrCreateInstance(document.querySelector('#tasks-tab')).show()">
+                <i class="fas fa-tasks me-1"></i> Task Editor
+            </button>
             {% if project.project_category in ['hardware', 'hybrid'] %}
                 <a href="{{ url_for('student.hardware_feasibility', project_id=project.id) }}" class="btn btn-outline-secondary btn-sm">
                     <i class="fas fa-microchip me-1 text-gold"></i> Hardware Feasibility
@@ -102,92 +208,6 @@
         </div>
     {% endif %}
 
-    <!-- Main Content Layout with Left Vertical Sidebar Navigation -->
-    <div class="row g-4">
-        <!-- Left Vertical Navigation Sidebar -->
-        <div class="col-xl-3 col-lg-4 col-md-5">
-            <div class="card workspace-sidebar p-3 border-0 sticky-top">
-                <div class="sidebar-brand-title">
-                    <span class="brand-shield" style="width: 24px; height: 24px; font-size: 0.75rem;"><i class="fas fa-shield-alt"></i></span>
-                    <span>PROJEXA</span>
-                </div>
-
-                <!-- Global Links -->
-                <div class="mb-2 pb-2 border-bottom">
-                    <a href="{{ url_for('student.dashboard') }}" class="btn btn-outline-secondary btn-sm w-100 text-start py-2 px-3 mb-1">
-                        <i class="fas fa-th-large text-gold me-2"></i> Dashboard
-                    </a>
-                    <a href="{{ url_for('student.dashboard') }}" class="btn btn-outline-secondary btn-sm w-100 text-start py-2 px-3">
-                        <i class="fas fa-folder-open text-primary me-2"></i> My Projects
-                    </a>
-                </div>
-
-                <div class="sidebar-section-header">Current Project</div>
-
-                <ul class="nav nav-pills flex-column gap-1 workspace-nav sidebar-nav-clean" id="projectTab" role="tablist">
-                    {% if project.project_category in ['hardware', 'hybrid'] %}
-                    <li class="nav-item">
-                        <a href="{{ url_for('student.hardware_feasibility', project_id=project.id) }}" class="nav-link text-start py-2 px-3 d-flex align-items-center w-100 mb-1 border">
-                            <i class="fas fa-microchip text-gold me-2 fa-fw"></i> BuildCheck AI
-                        </a>
-                    </li>
-                    {% endif %}
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active text-start py-2 px-3 d-flex align-items-center w-100" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab">
-                            <i class="fas fa-compass text-gold me-2 fa-fw"></i> Overview
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link text-start py-2 px-3 d-flex align-items-center w-100" id="guidance-tab" data-bs-toggle="tab" data-bs-target="#guidance" type="button" role="tab" onclick="switchAiSubNav('overview')">
-                            <i class="fas fa-brain text-primary me-2 fa-fw"></i> AI Analysis
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link text-start py-2 px-3 d-flex align-items-center w-100" id="resources-tab" data-bs-toggle="tab" data-bs-target="#resources" type="button" role="tab" onclick="switchResourceCategory('all')">
-                            <i class="fas fa-cubes text-success me-2 fa-fw"></i> Smart Resources
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link text-start py-2 px-3 d-flex align-items-center w-100" id="progress-tab" data-bs-toggle="tab" data-bs-target="#progress" type="button" role="tab">
-                            <i class="fas fa-chart-line text-info me-2 fa-fw"></i> Progress
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link text-start py-2 px-3 d-flex align-items-center w-100" id="docs-tab" data-bs-toggle="tab" data-bs-target="#docs" type="button" role="tab">
-                            <i class="fas fa-file-alt text-warning me-2 fa-fw"></i> Documentation
-                        </button>
-                    </li>
-                </ul>
-
-                <div class="sidebar-section-header mt-3">Account & Tools</div>
-                <div class="d-flex flex-column gap-1">
-                    <a href="{{ url_for('student.edit_project', project_id=project.id) }}" class="nav-link text-start py-2 px-3 d-flex align-items-center w-100 text-secondary">
-                        <i class="fas fa-cog text-muted me-2 fa-fw"></i> Settings
-                    </a>
-                    <button class="nav-link text-start py-2 px-3 d-flex align-items-center w-100 text-secondary bg-transparent border-0" id="mentor-shortcut-btn" onclick="openMentorTab()">
-                        <i class="fas fa-comments text-gold me-2 fa-fw"></i> AI Mentor Chat
-                    </button>
-                </div>
-
-                <!-- Quick Progress Summary in Sidebar -->
-                <div class="mt-3 pt-3 border-top">
-                    <div class="d-flex justify-content-between small text-muted mb-1">
-                        <span>Project Completed</span>
-                        <span class="fw-bold text-success">{{ project.calculated_progress_pct }}%</span>
-                    </div>
-                    <div class="progress mb-2" style="height: 6px;">
-                        <div class="progress-bar bg-success" style="width: {{ project.calculated_progress_pct }}%;"></div>
-                    </div>
-                    <div class="d-flex justify-content-between small text-muted">
-                        <span>{{ project.completed_tasks_count }}/{{ tasks|length }} Tasks Done</span>
-                        <span>{{ health_info.days_remaining }} days left</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Right Main Tab Content Area -->
-        <div class="col-xl-9 col-lg-8 col-md-7">
             <div class="tab-content" id="projectTabContent">
         
         <!-- TAB 1: OVERVIEW & HEALTH -->
@@ -290,7 +310,12 @@
                 <div class="col-lg-6">
                     <!-- Task Counts -->
                     <div class="card card-modern p-4 mb-4">
-                        <h5 class="fw-bold mb-3"><i class="fas fa-clipboard-list text-primary me-2"></i> Tasks Breakdown</h5>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="fw-bold mb-0"><i class="fas fa-clipboard-list text-primary me-2"></i> Tasks Breakdown</h5>
+                            <button type="button" class="btn btn-primary btn-sm" onclick="bootstrap.Tab.getOrCreateInstance(document.querySelector('#tasks-tab')).show()">
+                                <i class="fas fa-tasks me-1"></i> Open Task Editor
+                            </button>
+                        </div>
                         <div class="row g-3 text-center">
                             <div class="col-3">
                                 <div class="p-2 bg-light rounded-3">
@@ -360,29 +385,58 @@
             </div>
         </div>
 
-        <!-- TAB 2: TASKS BOARD -->
+        <!-- TAB 2: TASKS BOARD / TASK EDITOR -->
         <div class="tab-pane fade" id="tasks">
-            <!-- Toolbar & Filter Bar -->
-            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4 p-3 bg-white rounded-3 border">
-                <div class="d-flex gap-2 align-items-center flex-wrap">
-                    <span class="fw-semibold text-dark small"><i class="fas fa-filter text-muted me-1"></i> Filter Tasks:</span>
-                    <button class="btn btn-outline-secondary btn-sm active" onclick="filterTasks('all')">All ({{ tasks|length }})</button>
-                    <button class="btn btn-outline-secondary btn-sm" onclick="filterTasks('Not Started')">Not Started ({{ tasks|selectattr('status', 'equalto', 'Not Started')|list|length }})</button>
-                    <button class="btn btn-outline-secondary btn-sm" onclick="filterTasks('In Progress')">In Progress ({{ project.in_progress_tasks_count }})</button>
-                    <button class="btn btn-outline-secondary btn-sm" onclick="filterTasks('Completed')">Completed ({{ project.completed_tasks_count }})</button>
-                    <button class="btn btn-outline-secondary btn-sm" onclick="filterTasks('Blocked')">Blocked ({{ project.blocked_tasks_count }})</button>
+            <!-- Task Editor Header -->
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3 p-3 bg-white rounded-3 border">
+                <div>
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <span class="badge badge-ai"><i class="fas fa-tasks me-1"></i> Task Editor</span>
+                        <span class="badge badge-neutral">{{ tasks|length }} Total Tasks</span>
+                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">
+                            <i class="fas fa-check-circle me-1"></i>{{ project.completed_tasks_count }} Completed
+                        </span>
+                        {% if project.blocked_tasks_count > 0 %}
+                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25">
+                            <i class="fas fa-ban me-1"></i>{{ project.blocked_tasks_count }} Blocked
+                        </span>
+                        {% endif %}
+                    </div>
+                    <h3 class="h4 mb-0 fw-bold" style="color: var(--lc-text-main);">Development Plan & Task Editor</h3>
+                    <p class="small text-secondary mb-0">Organize, customize, and track all development milestone tasks for {{ project.project_name }}.</p>
                 </div>
-
-                <div class="d-flex gap-2">
+                <div class="d-flex flex-wrap gap-2">
+                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addTaskModal">
+                        <i class="fas fa-plus me-1"></i> Add Task
+                    </button>
                     <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#regenerateModal">
                         <i class="fas fa-robot me-1"></i> Regenerate Tasks
                     </button>
-                    <form method="POST" action="{{ url_for('student.scan_missing_tasks', project_id=project.id) }}" class="d-inline">
+                    <form method="POST" action="{{ url_for('student.scan_missing_tasks', project_id=project.id) }}" class="d-inline m-0">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                         <button type="submit" class="btn btn-outline-secondary btn-sm">
                             <i class="fas fa-search-plus me-1"></i> Scan Missing Tasks
                         </button>
                     </form>
+                </div>
+            </div>
+
+            <!-- Toolbar & Filter Bar -->
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4 p-3 bg-white rounded-3 border">
+                <div class="d-flex gap-2 align-items-center flex-wrap">
+                    <span class="fw-semibold text-dark small"><i class="fas fa-filter text-muted me-1"></i> Filter Tasks:</span>
+                    <button type="button" class="task-status-filter-btn active" data-filter="all" onclick="filterTasks('all', this)">All ({{ tasks|length }})</button>
+                    <button type="button" class="task-status-filter-btn" data-filter="Not Started" onclick="filterTasks('Not Started', this)">Not Started ({{ tasks|selectattr('status', 'equalto', 'Not Started')|list|length }})</button>
+                    <button type="button" class="task-status-filter-btn" data-filter="In Progress" onclick="filterTasks('In Progress', this)">In Progress ({{ project.in_progress_tasks_count }})</button>
+                    <button type="button" class="task-status-filter-btn" data-filter="Completed" onclick="filterTasks('Completed', this)">Completed ({{ project.completed_tasks_count }})</button>
+                    <button type="button" class="task-status-filter-btn" data-filter="Blocked" onclick="filterTasks('Blocked', this)">Blocked ({{ project.blocked_tasks_count }})</button>
+                </div>
+
+                <div class="d-flex align-items-center gap-2" style="min-width: 240px;">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-light border-end-0"><i class="fas fa-search text-muted"></i></span>
+                        <input type="text" id="taskSearchInput" class="form-control border-start-0" placeholder="Search tasks..." onkeyup="filterTasksByQuery()">
+                    </div>
                 </div>
             </div>
 
@@ -480,9 +534,17 @@
                                 </div>
 
                                 <!-- Edit Task Button -->
-                                <button type="button" class="btn btn-outline-primary btn-sm py-0 px-2" title="Edit Task"
-                                        onclick="openEditModal({{ task.id }}, '{{ task.title|replace("'", "\\'") }}', '{{ (task.description or '')|replace("'", "\\'") }}', '{{ task.category }}', '{{ task.priority }}', '{{ task.difficulty }}', '{{ task.phase }}', {{ task.estimated_hours }})">
-                                    <i class="fas fa-pencil-alt"></i>
+                                <button type="button" class="btn btn-outline-primary btn-sm py-1 px-2 btn-edit-task" title="Edit Task"
+                                        data-task-id="{{ task.id }}"
+                                        data-title="{{ task.title|e }}"
+                                        data-description="{{ (task.description or '')|e }}"
+                                        data-status="{{ task.status }}"
+                                        data-category="{{ task.category }}"
+                                        data-priority="{{ task.priority }}"
+                                        data-difficulty="{{ task.difficulty }}"
+                                        data-phase="{{ task.phase or ('Phase ' ~ task.phase_number) }}"
+                                        data-hours="{{ task.estimated_hours }}">
+                                    <i class="fas fa-pencil-alt me-1"></i> Edit
                                 </button>
 
                                 <!-- Delete Task Button -->
@@ -847,41 +909,134 @@
             <!-- SECTION 5: DATABASE -->
             <div id="ai-sub-database" class="ai-sub-section" style="display: none;">
                 <div class="card card-modern p-4 mb-4 border-0 shadow-sm">
-                    <div class="mb-3">
-                        <span class="badge bg-purple bg-opacity-10 fw-bold text-uppercase small" style="color: #8b5cf6;">Data Structure</span>
-                        <h4 class="fw-bold text-dark mt-1 mb-0">Database Tables & Fields</h4>
-                        <p class="text-secondary small mb-0">
-                            Simple tables and columns needed to store your project data safely.
-                        </p>
+                    <!-- Section Header Group -->
+                    <div class="db-section-header">
+                        <div class="db-title-group">
+                            <span class="badge bg-purple bg-opacity-10 fw-bold text-uppercase small" style="color: var(--lc-primary);">Data Architecture</span>
+                            <h4 class="fw-bold text-dark mt-1 mb-1">
+                                <i class="fas fa-database text-primary me-2"></i>Database Tables & Schema Relationships
+                            </h4>
+                            <p class="text-secondary small mb-0">
+                                Normalized relational tables, foreign key constraints, and column structures engineered for {{ project.project_name }}.
+                            </p>
+                        </div>
+                        <div class="db-actions-group">
+                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleErDiagram()">
+                                <i class="fas fa-project-diagram me-1"></i> <span id="erToggleText">Toggle ER Visualizer</span>
+                            </button>
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="copyPrompt(this, 'Act as a Principal Database Architect. Design a production-grade relational SQL schema (PostgreSQL and SQLite compatible) for {{ project.project_name }}. Provide CREATE TABLE statements with primary keys, foreign keys with ON DELETE CASCADE, NOT NULL constraints, unique indexes, and representative sample seed data.')">
+                                <i class="far fa-copy me-1"></i> Copy Schema Prompt
+                            </button>
+                        </div>
                     </div>
 
-                    <!-- Tables -->
-                    <div class="row g-4 mb-4">
-                        {% for table in structured_analysis.database %}
-                            <div class="col-md-6">
-                                <div class="card p-3 h-100 border shadow-xs">
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <h6 class="fw-bold text-dark mb-0">
-                                            <i class="fas fa-table text-primary me-2"></i>{{ table.name }}
-                                        </h6>
-                                        <span class="badge bg-light text-secondary border small">{{ table.explanation }}</span>
-                                    </div>
-                                    <div class="mb-2">
-                                        <strong class="text-muted small">Fields:</strong>
-                                        <div class="d-flex flex-wrap gap-1 mt-1">
-                                            {% for field in table.fields %}
-                                                <span class="badge bg-light text-dark border font-monospace" title="{{ field.desc }}">
-                                                    {{ field.name }} ({{ field.type }})
-                                                </span>
-                                            {% endfor %}
+                    <!-- ER Relationship Diagram Visualization (Horizontal Scroll Safe, No Overlaps) -->
+                    <div id="db-er-diagram" class="db-schema-diagram-container">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="small fw-bold text-dark"><i class="fas fa-sitemap text-primary me-1"></i> Entity-Relationship Blueprint</span>
+                            <span class="badge badge-neutral small">Scroll horizontally on small viewports</span>
+                        </div>
+                        <div class="db-schema-diagram-viewport">
+                            {% for table in structured_analysis.database %}
+                                <div class="db-diagram-node">
+                                    <div class="d-flex align-items-center justify-content-between mb-1 pb-1 border-bottom">
+                                        <div class="d-flex align-items-center gap-1 min-w-0">
+                                            <i class="fas fa-table text-primary fs-6"></i>
+                                            <strong class="font-monospace small text-dark text-truncate">{{ table.name }}</strong>
                                         </div>
+                                        <span class="badge badge-neutral px-1 py-0" style="font-size: 0.65rem;">{{ table.fields|length }} cols</span>
                                     </div>
-                                    <div class="small text-muted mt-auto pt-2 border-top">
-                                        <i class="fas fa-link text-primary me-1"></i> <strong>Connection:</strong> {{ table.relationships }}
+                                    <div class="small text-secondary" style="font-size: 0.72rem; line-height: 1.35;">
+                                        {% for field in table.fields[:3] %}
+                                            <div class="text-truncate">
+                                                {% if 'Primary Key' in field.type %}🔑{% elif 'Foreign Key' in field.type %}🔗{% else %}•{% endif %} {{ field.name }}
+                                            </div>
+                                        {% endfor %}
+                                        {% if table.fields|length > 3 %}
+                                            <div class="text-muted">+{{ table.fields|length - 3 }} more fields</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% if not loop.last %}
+                                    <div class="db-diagram-connector">
+                                        <div class="db-diagram-connector-line"></div>
+                                        <span class="db-diagram-connector-label">1 : N</span>
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Database Tables Grid (Responsive CSS Grid, Zero Overlapping) -->
+                    <div class="db-tables-grid">
+                        {% for table in structured_analysis.database %}
+                            <div class="db-table-card">
+                                <!-- Card Header -->
+                                <div class="db-table-header">
+                                    <div class="db-table-title-area">
+                                        <i class="fas fa-table text-primary fs-5 flex-shrink-0"></i>
+                                        <h6 class="db-table-name">{{ table.name }}</h6>
+                                    </div>
+                                    <span class="db-table-badge">Relational Table</span>
+                                </div>
+
+                                <!-- Explanation / Description -->
+                                <div class="db-table-explanation">
+                                    {{ table.explanation }}
+                                </div>
+
+                                <!-- Columns & Types Container -->
+                                <div class="db-fields-section">
+                                    <div class="db-fields-header">
+                                        <strong class="text-dark small"><i class="fas fa-columns text-primary me-1"></i> Columns &amp; Constraints</strong>
+                                        <span class="badge badge-neutral" style="font-size: 0.7rem;">{{ table.fields|length }} fields</span>
+                                    </div>
+                                    <div class="db-fields-list">
+                                        {% for field in table.fields %}
+                                            <div class="db-field-item">
+                                                <div class="db-field-name-group">
+                                                    {% if 'Primary Key' in field.type %}
+                                                        <span class="db-key-pill db-key-pk" title="Primary Key">PK</span>
+                                                    {% elif 'Foreign Key' in field.type %}
+                                                        <span class="db-key-pill db-key-fk" title="Foreign Key">FK</span>
+                                                    {% else %}
+                                                        <span class="db-key-pill db-key-col"><i class="fas fa-circle" style="font-size: 0.45rem;"></i></span>
+                                                    {% endif %}
+                                                    <span class="db-field-name" title="{{ field.desc }}">{{ field.name }}</span>
+                                                </div>
+                                                <div class="text-end">
+                                                    <span class="db-field-type-badge">{{ field.type }}</span>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+
+                                <!-- Connection & Relationship Footer -->
+                                <div class="db-table-relationships">
+                                    <i class="fas fa-link text-primary mt-1 flex-shrink-0"></i>
+                                    <div>
+                                        <strong>Connection:</strong> {{ table.relationships }}
                                     </div>
                                 </div>
                             </div>
                         {% endfor %}
+                    </div>
+
+                    <!-- SQL DDL Helper Box -->
+                    <div class="db-sql-preview-card mt-3">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                            <div>
+                                <span class="badge bg-primary bg-opacity-10 text-primary fw-bold text-uppercase small">Developer Fast-Track</span>
+                                <h6 class="fw-bold text-dark mt-1 mb-0"><i class="fas fa-terminal text-primary me-1"></i> Quick SQL DDL Generation</h6>
+                            </div>
+                            <button type="button" class="btn btn-primary btn-sm" onclick="copyPrompt(this, 'CREATE TABLE users (\n    id SERIAL PRIMARY KEY,\n    name VARCHAR(255) NOT NULL,\n    email VARCHAR(255) UNIQUE NOT NULL,\n    password_hash VARCHAR(255) NOT NULL,\n    role VARCHAR(50) DEFAULT 'student',\n    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n);\n\nCREATE TABLE items (\n    id SERIAL PRIMARY KEY,\n    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,\n    title VARCHAR(255) NOT NULL,\n    status VARCHAR(50) DEFAULT 'Not Started',\n    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n);\n\nCREATE TABLE activity_logs (\n    id SERIAL PRIMARY KEY,\n    item_id INTEGER REFERENCES items(id) ON DELETE CASCADE,\n    notes TEXT,\n    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n);')">
+                                <i class="far fa-copy me-1"></i> Copy SQL Schema
+                            </button>
+                        </div>
+                        <p class="small text-secondary mb-0">
+                            Need ready-to-run database migrations? Click to copy sanitized standard SQL DDL queries matching these entities for PostgreSQL and SQLite.
+                        </p>
                     </div>
                 </div>
             </div>
@@ -1408,7 +1563,8 @@
             <div class="card card-modern p-4 mb-4 border-0 shadow-sm">
                 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
                     <div>
-                        <span class="badge bg-primary bg-opacity-10 text-primary fw-bold text-uppercase small">Curated Developer Hub</span>
+                        <span class="badge bg-primary bg-opacity-10 text-primary fw-bold text-uppercase small">Curated Developer Hub &bull; Recommended APIs &bull; Recommended Datasets</span>
+                        <button type="button" class="btn btn-outline-primary btn-sm d-none" onclick="copyPrompt(this, "")"><i class="far fa-copy me-1"></i> Copy Prompt</button>
                         <h4 class="fw-bold mb-1 text-dark mt-1">
                             <i class="fas fa-lightbulb text-warning me-2"></i> Smart Resources for {{ project.project_name }}
                         </h4>
@@ -1862,33 +2018,42 @@
             </div>
         </div>
 
-        </div> <!-- closes #projectTabContent -->
-        </div> <!-- closes right column (col-xl-9 col-lg-8 col-md-7) -->
-    </div> <!-- closes main row (row g-4) -->
-</div> <!-- closes container-fluid -->
+            </div> <!-- closes #projectTabContent -->
+        </div> <!-- closes workspace-main-inner -->
+    </div> <!-- closes workspace-main-content -->
+</div> <!-- closes workspace-wrapper -->
 
 <!-- ================= MODALS ================= -->
 
 <!-- 1. EDIT TASK MODAL -->
-<div class="modal fade" id="editTaskModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
+<div class="modal fade" id="editTaskModal" tabindex="-1" aria-labelledby="editTaskModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content shadow-lg border">
             <div class="modal-header">
-                <h5 class="modal-title fw-bold"><i class="fas fa-edit text-primary me-2"></i> ✏️ Edit Task</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <h5 class="modal-title fw-bold" id="editTaskModalLabel"><i class="fas fa-edit text-primary me-2"></i> Edit Project Task</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form method="POST" id="editTaskForm">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                <div class="modal-body">
+                <div class="modal-body p-4">
                     <div class="mb-3">
                         <label class="form-label fw-semibold small">Task Title <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="edit_title" name="title" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-semibold small">Description & Goals</label>
-                        <textarea class="form-control" id="edit_description" name="description" rows="3"></textarea>
+                        <textarea class="form-control" id="edit_description" name="description" rows="3" placeholder="Outline specific technical deliverables..."></textarea>
                     </div>
                     <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Status</label>
+                            <select class="form-select" id="edit_status" name="status">
+                                <option value="Not Started">Not Started</option>
+                                <option value="In Progress">In Progress</option>
+                                <option value="Completed">Completed</option>
+                                <option value="Blocked">Blocked</option>
+                            </select>
+                        </div>
                         <div class="col-md-6">
                             <label class="form-label fw-semibold small">Phase</label>
                             <select class="form-select" id="edit_phase" name="phase">
@@ -1900,7 +2065,9 @@
                                 <option value="Phase 6 — Documentation & Deployment">Phase 6 — Documentation & Deployment</option>
                             </select>
                         </div>
-                        <div class="col-md-6">
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
                             <label class="form-label fw-semibold small">Category</label>
                             <select class="form-select" id="edit_category" name="category">
                                 <option value="Research">Research</option>
@@ -1914,8 +2081,6 @@
                                 <option value="Presentation">Presentation</option>
                             </select>
                         </div>
-                    </div>
-                    <div class="row g-3">
                         <div class="col-md-4">
                             <label class="form-label fw-semibold small">Priority</label>
                             <select class="form-select" id="edit_priority" name="priority">
@@ -1934,15 +2099,97 @@
                                 <option value="Hard">Hard</option>
                             </select>
                         </div>
-                        <div class="col-md-4">
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
                             <label class="form-label fw-semibold small">Estimated Hours</label>
                             <input type="number" step="0.5" class="form-control" id="edit_hours" name="estimated_hours" min="0.5" max="100">
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="btn btn-primary fw-semibold"><i class="fas fa-save me-1"></i> Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ADD TASK MODAL -->
+<div class="modal fade" id="addTaskModal" tabindex="-1" aria-labelledby="addTaskModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content shadow-lg border">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="addTaskModalLabel"><i class="fas fa-plus-circle text-primary me-2"></i> Add Milestone Task</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ url_for('student.add_task', project_id=project.id) }}" id="addTaskModalForm">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Task Title <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="title" placeholder="e.g. Implement input validation and automated test suite" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Description & Goals</label>
+                        <textarea class="form-control" name="description" rows="3" placeholder="Outline specific deliverables and completion criteria..."></textarea>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Phase</label>
+                            <select class="form-select" name="phase">
+                                <option value="Phase 1 — Research & Planning">Phase 1 — Research & Planning</option>
+                                <option value="Phase 2 — UI/UX Design">Phase 2 — UI/UX Design</option>
+                                <option value="Phase 3 — Development" selected>Phase 3 — Development</option>
+                                <option value="Phase 4 — Database">Phase 4 — Database</option>
+                                <option value="Phase 5 — Testing">Phase 5 — Testing</option>
+                                <option value="Phase 6 — Documentation & Deployment">Phase 6 — Documentation & Deployment</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold small">Category</label>
+                            <select class="form-select" name="category">
+                                <option value="Research">Research</option>
+                                <option value="Frontend">Frontend</option>
+                                <option value="Backend" selected>Backend</option>
+                                <option value="Database">Database</option>
+                                <option value="Machine Learning">Machine Learning</option>
+                                <option value="Testing">Testing</option>
+                                <option value="Documentation">Documentation</option>
+                                <option value="Deployment">Deployment</option>
+                                <option value="Presentation">Presentation</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold small">Priority</label>
+                            <select class="form-select" name="priority">
+                                <option value="Critical">Critical</option>
+                                <option value="High" selected>High</option>
+                                <option value="Medium">Medium</option>
+                                <option value="Low">Low</option>
+                                <option value="Optional">Optional</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold small">Difficulty</label>
+                            <select class="form-select" name="difficulty">
+                                <option value="Easy">Easy</option>
+                                <option value="Medium" selected>Medium</option>
+                                <option value="Hard">Hard</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold small">Estimated Hours</label>
+                            <input type="number" step="0.5" class="form-control" name="estimated_hours" value="4" min="0.5" max="100">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary fw-semibold"><i class="fas fa-plus me-1"></i> Add Task</button>
                 </div>
             </form>
         </div>
@@ -1990,43 +2237,85 @@
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
 
-        // Keep active tab on reload if anchor exists
+        // Keep active tab on reload if anchor exists (supports both #tasks and #tasks-tab)
         const hash = window.location.hash;
         if (hash) {
-            const triggerEl = document.querySelector(`button[data-bs-target="${hash.replace('-tab', '')}"]`);
+            let target = hash.replace('-tab', '');
+            if (!target.startsWith('#')) target = '#' + target;
+            const triggerEl = document.querySelector(`button[data-bs-target="${target}"], button#${hash.replace('#', '')}`);
             if (triggerEl) {
                 bootstrap.Tab.getOrCreateInstance(triggerEl).show();
             }
         }
     });
 
-    function filterTasks(status) {
+    // Task Search & Filter Functions
+    function filterTasksByQuery() {
+        const query = (document.getElementById('taskSearchInput')?.value || '').toLowerCase().trim();
+        const activeBtn = document.querySelector('.task-status-filter-btn.active');
+        const filterStatus = activeBtn ? activeBtn.dataset.filter : 'all';
+        
         const cards = document.querySelectorAll('.task-card');
         cards.forEach(card => {
-            if (status === 'all' || card.dataset.status === status) {
-                card.style.display = 'block';
-            } else {
-                card.style.display = 'none';
-            }
+            const matchesStatus = (filterStatus === 'all' || card.dataset.status === filterStatus);
+            const matchesText = !query || card.textContent.toLowerCase().includes(query);
+            card.style.display = (matchesStatus && matchesText) ? 'block' : 'none';
         });
+    }
+
+    function filterTasks(status, btn) {
+        document.querySelectorAll('.task-status-filter-btn').forEach(b => b.classList.remove('active'));
+        if (btn) {
+            btn.classList.add('active');
+        } else {
+            const matchBtn = document.querySelector(`.task-status-filter-btn[data-filter="${status}"]`);
+            if (matchBtn) matchBtn.classList.add('active');
+        }
+        filterTasksByQuery();
+    }
+
+    // Event delegation for Edit Task button (immune to quotes or newlines)
+    document.addEventListener("click", function(e) {
+        const editBtn = e.target.closest(".btn-edit-task");
+        if (!editBtn) return;
+        
+        const taskId = editBtn.dataset.taskId;
+        const form = document.getElementById("editTaskForm");
+        form.action = `/student/projects/{{ project.id }}/tasks/${taskId}/edit`;
+        
+        document.getElementById("edit_title").value = editBtn.dataset.title || "";
+        document.getElementById("edit_description").value = editBtn.dataset.description || "";
+        if (document.getElementById("edit_status")) {
+            document.getElementById("edit_status").value = editBtn.dataset.status || "Not Started";
+        }
+        document.getElementById("edit_category").value = editBtn.dataset.category || "Backend";
+        document.getElementById("edit_priority").value = editBtn.dataset.priority || "High";
+        document.getElementById("edit_difficulty").value = editBtn.dataset.difficulty || "Medium";
+        document.getElementById("edit_phase").value = editBtn.dataset.phase || "Phase 3 — Development";
+        document.getElementById("edit_hours").value = editBtn.dataset.hours || "4";
+        
+        bootstrap.Modal.getOrCreateInstance(document.getElementById("editTaskModal")).show();
+    });
+
+    function openEditModal(taskId, title, desc, cat, priority, diff, phase, hours, status) {
+        document.getElementById("editTaskForm").action = `/student/projects/{{ project.id }}/tasks/${taskId}/edit`;
+        document.getElementById("edit_title").value = title || "";
+        document.getElementById("edit_description").value = desc || "";
+        if (document.getElementById("edit_status")) {
+            document.getElementById("edit_status").value = status || "Not Started";
+        }
+        document.getElementById("edit_category").value = cat || "Backend";
+        document.getElementById("edit_priority").value = priority || "High";
+        document.getElementById("edit_difficulty").value = diff || "Medium";
+        document.getElementById("edit_phase").value = phase || "Phase 3 — Development";
+        document.getElementById("edit_hours").value = hours || "4";
+        
+        bootstrap.Modal.getOrCreateInstance(document.getElementById("editTaskModal")).show();
     }
 
     function sendPrompt(text) {
         document.getElementById('chatInput').value = text;
         document.getElementById('chatInput').focus();
-    }
-
-    function openEditModal(taskId, title, desc, cat, priority, diff, phase, hours) {
-        document.getElementById("editTaskForm").action = "{{ url_for('student.create_project') }}".replace('/projects/new', `/projects/{{ project.id }}/tasks/${taskId}/edit`);
-        document.getElementById("edit_title").value = title;
-        document.getElementById("edit_description").value = desc;
-        document.getElementById("edit_category").value = cat;
-        document.getElementById("edit_priority").value = priority;
-        document.getElementById("edit_difficulty").value = diff;
-        document.getElementById("edit_phase").value = phase;
-        document.getElementById("edit_hours").value = hours;
-        
-        new bootstrap.Modal(document.getElementById("editTaskModal")).show();
     }
 
     function copyPrompt(button, promptText) {
@@ -2135,6 +2424,20 @@
     }
 
     // AI Analysis Secondary Navigation Controller
+    
+    function toggleErDiagram() {
+        const diag = document.getElementById('db-er-diagram');
+        const txt = document.getElementById('erToggleText');
+        if (!diag) return;
+        if (diag.style.display === 'none') {
+            diag.style.display = 'block';
+            if (txt) txt.innerText = 'Hide ER Visualizer';
+        } else {
+            diag.style.display = 'none';
+            if (txt) txt.innerText = 'Show ER Visualizer';
+        }
+    }
+
     function switchAiSubNav(sectionKey) {
         // 1. Ensure guidance tab is active
         const guidanceTabBtn = document.getElementById('guidance-tab') || document.querySelector('[data-bs-target="#guidance"]');
@@ -2200,8 +2503,18 @@
         const mentorTabBtn = document.getElementById('mentor-tab') || document.querySelector('[data-bs-target="#mentor"]');
         if (mentorTabBtn) {
             bootstrap.Tab.getOrCreateInstance(mentorTabBtn).show();
+            document.querySelectorAll('#projectTab .nav-link').forEach(el => el.classList.remove('active'));
+            document.getElementById('mentor-shortcut-btn')?.classList.add('active');
         }
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('#projectTab button[data-bs-toggle="tab"]').forEach(tab => {
+            tab.addEventListener('shown.bs.tab', function() {
+                document.getElementById('mentor-shortcut-btn')?.classList.remove('active');
+            });
+        });
+    });
 
     // AI Documentation Generator API Caller
     async function generateAiDocs() {

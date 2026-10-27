@@ -217,8 +217,16 @@
 
                                 <!-- Actions -->
                                 <div class="d-flex align-items-center gap-1">
-                                    <button type="button" class="btn btn-outline-secondary btn-sm"
-                                            onclick="openEditModal({{ task.id }}, '{{ task.title|replace("'", "\\'") }}', '{{ (task.description or '')|replace("'", "\\'") }}', '{{ task.category }}', '{{ task.priority }}', '{{ task.difficulty }}', '{{ task.phase }}', {{ task.estimated_hours }})"
+                                    <button type="button" class="btn btn-outline-secondary btn-sm btn-edit-task"
+                                            data-task-id="{{ task.id }}"
+                                            data-title="{{ task.title|e }}"
+                                            data-description="{{ (task.description or '')|e }}"
+                                            data-status="{{ task.status }}"
+                                            data-category="{{ task.category }}"
+                                            data-priority="{{ task.priority }}"
+                                            data-difficulty="{{ task.difficulty }}"
+                                            data-phase="{{ task.phase }}"
+                                            data-hours="{{ task.estimated_hours }}"
                                             title="Edit Task">
                                         <i class="fas fa-pencil-alt"></i>
                                     </button>
@@ -276,6 +284,15 @@
                         <textarea class="form-control" name="description" id="edit_description" rows="2"></textarea>
                     </div>
                     <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" name="status" id="edit_status">
+                                <option value="Not Started">Not Started</option>
+                                <option value="In Progress">In Progress</option>
+                                <option value="Completed">Completed</option>
+                                <option value="Blocked">Blocked</option>
+                            </select>
+                        </div>
                         <div class="col-md-6">
                             <label class="form-label">Category</label>
                             <select class="form-select" name="category" id="edit_category">
@@ -431,17 +448,41 @@
 
 {% block extra_js %}
 <script>
-    function openEditModal(taskId, title, desc, cat, priority, diff, phase, hours) {
-        document.getElementById("editTaskForm").action = "{{ url_for('student.create_project') }}".replace('/projects/new', `/projects/{{ project.id }}/tasks/${taskId}/edit`);
-        document.getElementById("edit_title").value = title;
-        document.getElementById("edit_description").value = desc;
-        document.getElementById("edit_category").value = cat;
-        document.getElementById("edit_priority").value = priority;
-        document.getElementById("edit_difficulty").value = diff;
-        document.getElementById("edit_phase").value = phase;
-        document.getElementById("edit_hours").value = hours;
+    // Delegated click handler for edit task buttons
+    document.addEventListener("click", function(e) {
+        const btn = e.target.closest(".btn-edit-task");
+        if (!btn) return;
         
-        new bootstrap.Modal(document.getElementById("editTaskModal")).show();
+        const taskId = btn.dataset.taskId;
+        document.getElementById("editTaskForm").action = `/student/projects/{{ project.id }}/tasks/${taskId}/edit`;
+        document.getElementById("edit_title").value = btn.dataset.title || "";
+        document.getElementById("edit_description").value = btn.dataset.description || "";
+        if (document.getElementById("edit_status")) {
+            document.getElementById("edit_status").value = btn.dataset.status || "Not Started";
+        }
+        document.getElementById("edit_category").value = btn.dataset.category || "Frontend";
+        document.getElementById("edit_priority").value = btn.dataset.priority || "Medium";
+        document.getElementById("edit_difficulty").value = btn.dataset.difficulty || "Medium";
+        document.getElementById("edit_phase").value = btn.dataset.phase || "";
+        document.getElementById("edit_hours").value = btn.dataset.hours || "4";
+        
+        bootstrap.Modal.getOrCreateInstance(document.getElementById("editTaskModal")).show();
+    });
+
+    function openEditModal(taskId, title, desc, cat, priority, diff, phase, hours, status) {
+        document.getElementById("editTaskForm").action = `/student/projects/{{ project.id }}/tasks/${taskId}/edit`;
+        document.getElementById("edit_title").value = title || "";
+        document.getElementById("edit_description").value = desc || "";
+        if (document.getElementById("edit_status")) {
+            document.getElementById("edit_status").value = status || "Not Started";
+        }
+        document.getElementById("edit_category").value = cat || "Frontend";
+        document.getElementById("edit_priority").value = priority || "Medium";
+        document.getElementById("edit_difficulty").value = diff || "Medium";
+        document.getElementById("edit_phase").value = phase || "";
+        document.getElementById("edit_hours").value = hours || "4";
+        
+        bootstrap.Modal.getOrCreateInstance(document.getElementById("editTaskModal")).show();
     }
 
     function openAddTaskForPhase(phaseName, phaseNumber) {

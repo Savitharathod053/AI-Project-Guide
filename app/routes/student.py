@@ -768,13 +768,17 @@ def add_task(project_id: int):
     else:
         flash(f"Task '{title}' added to {phase}.", "success")
 
-    return redirect(request.referrer or url_for("student.project_detail", project_id=project.id, _anchor="tasks-tab"))
+    ref = request.referrer
+    if ref and "/projects/" in ref and "review-tasks" not in ref:
+        base_ref = ref.split("#")[0]
+        return redirect(f"{base_ref}#tasks-tab")
+    return redirect(ref or url_for("student.project_detail", project_id=project.id, _anchor="tasks-tab"))
 
 
 @student_bp.route("/projects/<int:project_id>/tasks/<int:task_id>/edit", methods=["POST"])
 @student_required
 def edit_task(project_id: int, task_id: int):
-    """Allows student to edit task details (title, description, priority, category, phase, estimated_hours)."""
+    """Allows student to edit task details (title, description, priority, category, phase, estimated_hours, status)."""
     project = get_student_project_or_404(project_id)
     task = Task.query.filter_by(id=task_id, project_id=project.id).first_or_404()
 
@@ -795,17 +799,21 @@ def edit_task(project_id: int, task_id: int):
 
     try:
         task.estimated_hours = float(request.form.get("estimated_hours", task.estimated_hours))
-    except ValueError:
+    except (ValueError, TypeError):
         pass
 
     if "status" in request.form:
-        task.status = request.form.get("status", task.status)
+        task.status = request.form.get("status", task.status).strip()
 
     db.session.commit()
     _sync_project_metrics_and_predict(project)
 
     flash(f"Task '{task.title}' updated successfully.", "success")
-    return redirect(request.referrer or url_for("student.review_tasks", project_id=project.id))
+    ref = request.referrer
+    if ref and "/projects/" in ref and "review-tasks" not in ref:
+        base_ref = ref.split("#")[0]
+        return redirect(f"{base_ref}#tasks-tab")
+    return redirect(ref or url_for("student.project_detail", project_id=project.id, _anchor="tasks-tab"))
 
 
 @student_bp.route("/projects/<int:project_id>/tasks/regenerate", methods=["POST"])
@@ -919,7 +927,11 @@ def update_task_status(project_id: int, task_id: int):
     else:
         flash(f"Task '{task.title}' marked as {new_status}.", "success")
 
-    return redirect(request.referrer or url_for("student.project_detail", project_id=project.id, _anchor="tasks-tab"))
+    ref = request.referrer
+    if ref and "/projects/" in ref and "review-tasks" not in ref:
+        base_ref = ref.split("#")[0]
+        return redirect(f"{base_ref}#tasks-tab")
+    return redirect(ref or url_for("student.project_detail", project_id=project.id, _anchor="tasks-tab"))
 
 
 @student_bp.route("/projects/<int:project_id>/tasks/<int:task_id>/delete", methods=["POST"])
@@ -932,7 +944,11 @@ def delete_task(project_id: int, task_id: int):
     db.session.commit()
     _sync_project_metrics_and_predict(project)
     flash(f"Task '{title}' removed.", "info")
-    return redirect(request.referrer or url_for("student.project_detail", project_id=project.id, _anchor="tasks-tab"))
+    ref = request.referrer
+    if ref and "/projects/" in ref and "review-tasks" not in ref:
+        base_ref = ref.split("#")[0]
+        return redirect(f"{base_ref}#tasks-tab")
+    return redirect(ref or url_for("student.project_detail", project_id=project.id, _anchor="tasks-tab"))
 
 
 @student_bp.route("/projects/<int:project_id>/check-in", methods=["POST"])

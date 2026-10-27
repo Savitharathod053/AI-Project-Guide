@@ -14,9 +14,7 @@
         if (saved === "dark" || saved === "light") {
             return saved;
         }
-        return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches
-            ? "dark"
-            : "light";
+        return "light";
     }
 
     function applyTheme(theme) {
@@ -27,7 +25,7 @@
         if (toggleBtn) {
             const icon = toggleBtn.querySelector("i");
             if (icon) {
-                icon.className = theme === "dark" ? "fas fa-sun text-gold" : "fas fa-moon text-secondary";
+                icon.className = theme === "dark" ? "fas fa-sun text-primary" : "fas fa-moon text-secondary";
             }
             toggleBtn.setAttribute("title", "Switch to " + (theme === "dark" ? "Light" : "Dark") + " Mode");
         }
@@ -57,7 +55,7 @@
 
                 const icon = el.querySelector(".step-icon");
                 if (icon) {
-                    icon.innerHTML = '<i class="fas fa-circle-notch fa-spin text-gold"></i>';
+                    icon.innerHTML = '<i class="fas fa-circle-notch fa-spin text-primary"></i>';
                 }
 
                 setTimeout(() => {
